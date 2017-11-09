@@ -1,6 +1,8 @@
 # kafka-junit
 
-This library wraps Kafka Test Server.  This allows you to easily create and run tests against
+[![Build Status](https://travis-ci.org/salesforce/storm-dynamic-spout.svg?branch=master)](https://travis-ci.org/salesforce/kafka-junit)
+
+This library wraps Kafka Test Server and allows you to easily create and run tests against
 a "real" kafka server running within your tests, no more needing to stand up an external kafka cluster!
 
 ## Usage & Examples
