@@ -37,6 +37,7 @@ import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -180,7 +181,8 @@ public class KafkaTestUtils {
         }
 
         // Connect Consumer
-        KafkaConsumer<byte[], byte[]> kafkaConsumer = kafkaTestServer.getKafkaConsumer();
+        KafkaConsumer<byte[], byte[]> kafkaConsumer =
+            kafkaTestServer.getKafkaConsumer(ByteArrayDeserializer.class.getName(), ByteArraySerializer.class.getName());
 
         // Assign topic partitions & seek to head of them
         kafkaConsumer.assign(topicPartitions);
