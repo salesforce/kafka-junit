@@ -40,6 +40,8 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
+import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.io.File;
@@ -213,7 +215,9 @@ public class KafkaTestServer implements AutoCloseable {
     /**
      * Creates a kafka producer that is connected to our test server.
      */
-    public KafkaProducer getKafkaProducer(final String keySerializer, final String valueSerializer) {
+    public KafkaProducer getKafkaProducer(
+        final Class<? extends Serializer> keySerializer,
+        final Class<? extends Serializer> valueSerializer) {
         // Create producer
         final Map<String, Object> kafkaProducerConfig = Maps.newHashMap();
         kafkaProducerConfig.put("bootstrap.servers", getKafkaConnectString());
@@ -233,7 +237,9 @@ public class KafkaTestServer implements AutoCloseable {
      * @param keyDeserializer which deserializer to use for key
      * @param valueDeserializer which deserializer to use for value
      */
-    public KafkaConsumer getKafkaConsumer(final String keyDeserializer, final String valueDeserializer) {
+    public KafkaConsumer getKafkaConsumer(
+        final Class<? extends Deserializer> keyDeserializer,
+        final Class<? extends Deserializer> valueDeserializer) {
         Map<String, Object> kafkaConsumerConfig = buildDefaultClientConfig();
         kafkaConsumerConfig.put("key.deserializer", keyDeserializer);
         kafkaConsumerConfig.put("value.deserializer", valueDeserializer);

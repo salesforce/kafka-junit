@@ -83,8 +83,8 @@ public class KafkaTestUtils {
         List<Future<RecordMetadata>> producerFutures = Lists.newArrayList();
 
         KafkaProducer producer = kafkaTestServer.getKafkaProducer(
-            ByteArraySerializer.class.getName(),
-            ByteArraySerializer.class.getName()
+            ByteArraySerializer.class,
+            ByteArraySerializer.class
         );
         for (Map.Entry<byte[], byte[]> entry: keysAndValues.entrySet()) {
             // Construct filter
@@ -154,8 +154,8 @@ public class KafkaTestUtils {
     public List<ConsumerRecord<byte[], byte[]>> consumeAllRecordsFromTopic(final String topic) {
         // Connect to broker to determine what partitions are available.
         KafkaConsumer<String, byte[]> kafkaConsumer = kafkaTestServer.getKafkaConsumer(
-            ByteArrayDeserializer.class.getName(),
-            ByteArrayDeserializer.class.getName()
+            ByteArrayDeserializer.class,
+            ByteArrayDeserializer.class
         );
 
         final List<Integer> partitionIds = new ArrayList<>();
@@ -182,7 +182,7 @@ public class KafkaTestUtils {
 
         // Connect Consumer
         KafkaConsumer<byte[], byte[]> kafkaConsumer =
-            kafkaTestServer.getKafkaConsumer(ByteArrayDeserializer.class.getName(), ByteArraySerializer.class.getName());
+            kafkaTestServer.getKafkaConsumer(ByteArrayDeserializer.class, ByteArrayDeserializer.class);
 
         // Assign topic partitions & seek to head of them
         kafkaConsumer.assign(topicPartitions);
