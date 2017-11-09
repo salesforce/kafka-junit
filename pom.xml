@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2017, Salesforce.com, Inc.
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+    following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+      disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials provided with the distribution.
+
+    * Neither the name of Salesforce.com nor the names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+    INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+    WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+    USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.salesforce.kafka.test</groupId>
+    <artifactId>kafka-junit</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+
+    <packaging>jar</packaging>
+    <name>kafka-junit</name>
+    <description>This library wraps Kafka's embedded test cluster, allowing you to more easily create and run integration tests using JUnit against a "real" kafka server running within the context of your tests.</description>
+    <inceptionYear>2017</inceptionYear>
+    <url>https://github.com/salesforce/kafka-junit</url>
+    <organization>
+        <name>Salesforce</name>
+        <url>http://www.salesforce.com</url>
+    </organization>
+    <licenses>
+        <license>
+            <name>BSD-3</name>
+            <url>https://github.com/salesforce/kafka-junit/blob/master/LICENSE.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Stephen Powis</name>
+            <email>spowis@salesforce.com</email>
+            <organization>Salesforce</organization>
+        </developer>
+        <developer>
+            <name>Stan Lemon</name>
+            <email>slemon@salesforce.com</email>
+            <organization>Salesforce</organization>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git://github.com/salesforce/kafka-junit.git</connection>
+        <developerConnection>scm:git:ssh://github.com:salesforce/kafka-junit.git</developerConnection>
+        <url>https://github.com/salesforce/kafka-junit/tree/master</url>
+    </scm>
+
+    <!-- Require Maven 3.3.9 -->
+    <prerequisites>
+        <maven>3.3.9</maven>
+    </prerequisites>
+
+    <!-- defined properties -->
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- output jar location -->
+        <jarOutputDir></jarOutputDir>
+
+        <!-- Define which kafka version -->
+        <kafkaVersion>0.11.0.1</kafkaVersion>
+
+        <!-- Define which Curator Test version -->
+        <curatorTestVersion>2.12.0</curatorTestVersion>
+
+        <!-- Define which JUnit version -->
+        <junit.version>4.12</junit.version>
+
+        <!-- test toggling -->
+        <skipTests>false</skipTests>
+        <skipCodeCoverage>true</skipCodeCoverage>
+        <skipCheckStyle>false</skipCheckStyle>
+    </properties>
+
+    <!-- For deploying to maven central -->
+    <distributionManagement>
+        <!-- Snapshot repository -->
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <!-- Module Scoped Dependencies -->
+    <dependencies>
+        <!-- Kafka -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka_2.11</artifactId>
+            <version>${kafkaVersion}</version>
+            <exclusions>
+                <!-- Don't bring in kafka's logging framework -->
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.mail</groupId>
+                    <artifactId>mail</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Kafka Client -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>${kafkaVersion}</version>
+        </dependency>
+
+        <!-- Apache Curator -->
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-test</artifactId>
+            <version>${curatorTestVersion}</version>
+        </dependency>
+
+        <!-- JUnit is Required -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <sourceDirectory>src/main/java</sourceDirectory>
+        <testSourceDirectory>src/test/java</testSourceDirectory>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources/</directory>
+            </testResource>
+        </testResources>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.6.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <!-- Build Jar with Dependencies -->
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass/>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Surefire plugin for running tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.19.1</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.surefire</groupId>
+                        <artifactId>surefire-junit47</artifactId>
+                        <version>2.19</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <argLine>-Xmx512M</argLine>
+                    <skipTests>${skipTests}</skipTests>
+                    <reportFormat>plain</reportFormat>
+                </configuration>
+            </plugin>
+
+            <!-- License Auditing -->
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>3.0</version>
+                <configuration>
+                    <header>LICENSE.txt</header>
+                    <excludes>
+                        <exclude>**/.md</exclude>
+                        <exclude>**/.bak</exclude>
+                        <exclude>**.yml</exclude>
+                        <exclude>**.yaml</exclude>
+                        <exclude>**.xml</exclude>
+                        <exclude>script/**</exclude>
+                        <exclude>src/test/resources/**</exclude>
+                        <exclude>src/main/resources/**</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Enforce Checkstyles Validation -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>2.17</version>
+                <executions>
+                    <execution>
+                        <id>checkstyle-validate</id>
+                        <phase>validate</phase><!-- when we need to run checkstyle::check -->
+                        <configuration>
+                            <configLocation>script/checkstyle-ruleset.xml</configLocation>
+                            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                            <encoding>utf-8</encoding>
+                            <consoleOutput>true</consoleOutput>
+                            <violationSeverity>warning</violationSeverity>
+                            <failsOnError>true</failsOnError>
+                            <enableRSS>false</enableRSS>
+
+                            <!-- By default we enable checkstyle validation -->
+                            <skip>${skipCheckStyle}</skip>
+                        </configuration>
+                        <goals>
+                            <!-- Generate site/html report -->
+                            <goal>checkstyle</goal>
+
+                            <!-- Enforce failing build on checkstyle failure -->
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Release plugin -->
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.7</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+        </plugins>
+
+        <pluginManagement>
+            <plugins>
+                <!-- Use a current version of checkstyle -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>2.17</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>com.puppycrawl.tools</groupId>
+                            <artifactId>checkstyle</artifactId>
+                            <version>8.0</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <reporting>
+        <plugins>
+            <!-- Generates Public API Docs -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.4</version>
+                <configuration>
+                    <show>public</show>
+                </configuration>
+            </plugin>
+
+            <!-- Code Style Results -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>2.17</version>
+                <configuration>
+                    <configLocation>script/checkstyle-ruleset.xml</configLocation>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <!-- Build Sources Jar -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Build Javadoc Jar -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.0.0-M1</version>
+                        <executions>
+                            <execution>
+                                <id>build-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- GPG Signing of Artifacts -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>
