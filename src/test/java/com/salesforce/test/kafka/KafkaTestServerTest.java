@@ -47,7 +47,8 @@ import java.time.Clock;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test of KafkaTestServer.
@@ -137,7 +138,8 @@ public class KafkaTestServerTest {
                 assertEquals("Key matches expected", expectedKey, record.key());
                 assertEquals("value matches expected", expectedValue, record.value());
             }
-        } while (!records.isEmpty());
+        }
+        while (!records.isEmpty());
 
         // close consumer
         kafkaConsumer.close();

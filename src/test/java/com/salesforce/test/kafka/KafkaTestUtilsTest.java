@@ -38,10 +38,10 @@ import java.time.Clock;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
- * Serves both as a test for the Utilities, but also as a good example of how to use them!
+ * Serves both as a test for the Utilities, but also as a good example of how to use them.
  */
 public class KafkaTestUtilsTest {
     private static final Logger logger = LoggerFactory.getLogger(KafkaTestUtilsTest.class);
@@ -87,7 +87,8 @@ public class KafkaTestUtilsTest {
         final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(getKafkaTestServer());
 
         // Produce some random records
-        final List<ProducedKafkaRecord<byte[], byte[]>> producedRecordsList = kafkaTestUtils.produceRecords(numberOfRecords, topicName, partitionId);
+        final List<ProducedKafkaRecord<byte[], byte[]>> producedRecordsList =
+            kafkaTestUtils.produceRecords(numberOfRecords, topicName, partitionId);
 
         // You can get details about what get produced
         for (ProducedKafkaRecord<byte[], byte[]> producedKafkaRecord: producedRecordsList) {
