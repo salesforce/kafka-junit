@@ -53,7 +53,7 @@ SharedKafkaTestResource has two accessors that you can make use of in your tests
 ### KafkaTestUtils
 
 Often times you'll end up rebuilding the same patterns around producing and consuming data from this internal
-kafka server.  We've tried to collect some of these within [KafkaTestUtils](src/main/java/com/salesforce/test/kafka/KafkaTestUtils.java)!
+kafka server.  We've tried to collect some of these within [KafkaTestUtils](src/main/java/com/salesforce/kafka/test/KafkaTestUtils.java)!
 
 For usage and examples, check out it's test at [KafkaTestUtilsTest](src/test/java/com/salesforce/test/kafka/KafkaTestUtilsTest.java).
 

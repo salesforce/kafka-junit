@@ -77,9 +77,6 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <!-- output jar location -->
-        <jarOutputDir></jarOutputDir>
-
         <!-- Define which kafka version -->
         <kafkaVersion>0.11.0.1</kafkaVersion>
 
@@ -91,18 +88,8 @@
 
         <!-- test toggling -->
         <skipTests>false</skipTests>
-        <skipCodeCoverage>true</skipCodeCoverage>
         <skipCheckStyle>false</skipCheckStyle>
     </properties>
-
-    <!-- For deploying to maven central -->
-    <distributionManagement>
-        <!-- Snapshot repository -->
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
 
     <!-- Module Scoped Dependencies -->
     <dependencies>
@@ -131,7 +118,7 @@
             <version>${kafkaVersion}</version>
         </dependency>
 
-        <!-- Apache Curator -->
+        <!-- Apache Curator Test -->
         <dependency>
             <groupId>org.apache.curator</groupId>
             <artifactId>curator-test</artifactId>
@@ -340,7 +327,7 @@
 
     <profiles>
         <profile>
-            <id>release</id>
+            <id>release-kafka-junit</id>
             <build>
                 <plugins>
                     <!-- Build Sources Jar -->
@@ -384,6 +371,10 @@
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
+                                <configuration>
+                                    <keyname>${gpg.keyname}</keyname>
+                                    <passphraseServerId>${gpg.keyname}</passphraseServerId>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
@@ -391,4 +382,13 @@
             </build>
         </profile>
     </profiles>
+
+    <!-- For deploying to maven central -->
+    <distributionManagement>
+        <!-- Snapshot repository -->
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>

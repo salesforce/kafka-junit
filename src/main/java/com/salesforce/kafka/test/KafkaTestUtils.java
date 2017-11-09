@@ -23,7 +23,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.test.kafka;
+package com.salesforce.kafka.test;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;

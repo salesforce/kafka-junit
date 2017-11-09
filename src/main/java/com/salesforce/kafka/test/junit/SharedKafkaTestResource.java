@@ -23,79 +23,106 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.test.kafka.junit;
+package com.salesforce.kafka.test.junit;
 
-import org.apache.curator.test.InstanceSpec;
+import com.salesforce.kafka.test.KafkaTestUtils;
+import com.salesforce.kafka.test.KafkaTestServer;
 import org.apache.curator.test.TestingServer;
 import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 /**
- * Creates and stands up an internal test Zookeeper server to be shared across test cases within the same test class.
+ * Creates and stands up an internal test kafka server to be shared across test cases within the same test class.
  *
  * Example within your Test class.
  *
  *   &#064;ClassRule
- *   public static final SharedZookeeperTestResource sharedZookeeperTestResource = new sharedZookeeperTestResource();
+ *   public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource();
  *
  * Within your test case method:
- *   sharedZookeeperTestResource.getZookeeperTestServer()...
+ *   sharedKafkaTestResource.getKafkaTestServer()...
  */
-public class SharedZookeeperTestResource extends ExternalResource {
-    private static final Logger logger = LoggerFactory.getLogger(SharedZookeeperTestResource.class);
+public class SharedKafkaTestResource extends ExternalResource {
+    private static final Logger logger = LoggerFactory.getLogger(SharedKafkaTestResource.class);
 
     /**
-     * Our internal Zookeeper test server instance.
+     * Our internal Kafka Test Server instance.
      */
-    private TestingServer zookeeperTestServer = null;
+    private KafkaTestServer kafkaTestServer = null;
 
     /**
-     * Here we stand up an internal test zookeeper service.
+     * Cached instance of KafkaTestUtils.
+     */
+    private KafkaTestUtils kafkaTestUtils = null;
+
+    /**
+     * Here we stand up an internal test kafka and zookeeper service.
      * Once for all tests that use this shared resource.
      */
     protected void before() throws Exception {
-        logger.info("Starting Zookeeper test server");
-        if (zookeeperTestServer != null) {
-            throw new IllegalStateException("Unknown State! Zookeeper test server already exists!");
+        logger.info("Starting kafka test server");
+        if (kafkaTestServer != null) {
+            throw new IllegalStateException("Unknown State!  Kafka Test Server already exists!");
         }
-        // Setup zookeeper test server
-        final InstanceSpec zkInstanceSpec = new InstanceSpec(null, -1, -1, -1, true, -1, -1, 1000);
-        zookeeperTestServer = new TestingServer(zkInstanceSpec, true);
+        // Setup kafka test server
+        kafkaTestServer = new KafkaTestServer();
+        kafkaTestServer.start();
     }
 
     /**
-     * Here we shut down the internal test zookeeper service.
+     * Here we shut down the internal test kafka and zookeeper services.
      */
     protected void after() {
-        logger.info("Shutting down zookeeper test server");
+        logger.info("Shutting down kafka test server");
 
-        // Close out zookeeper test server if needed
-        if (zookeeperTestServer == null) {
+        // Close out kafka test server if needed
+        if (kafkaTestServer == null) {
             return;
         }
         try {
-            zookeeperTestServer.stop();
-            zookeeperTestServer.close();
-        } catch (IOException e) {
+            kafkaTestServer.shutdown();
+        } catch (final Exception e) {
             throw new RuntimeException(e);
         }
-        zookeeperTestServer = null;
+        kafkaTestServer = null;
+    }
+
+    /**
+     * @return Shared Kafka Test server instance.
+     */
+    public KafkaTestServer getKafkaTestServer() {
+        return kafkaTestServer;
+    }
+
+    /**
+     * @return Instance of KafkaTestUtils configured and ready to go.
+     */
+    public KafkaTestUtils getKafkaTestUtils() {
+        if (kafkaTestUtils == null) {
+            kafkaTestUtils = new KafkaTestUtils(getKafkaTestServer());
+        }
+        return kafkaTestUtils;
     }
 
     /**
      * @return Shared Zookeeper test server instance.
      */
     public TestingServer getZookeeperTestServer() {
-        return zookeeperTestServer;
+        return getKafkaTestServer().getZookeeperServer();
     }
 
     /**
      * @return Connection string to connect to the Zookeeper instance.
      */
     public String getZookeeperConnectString() {
-        return zookeeperTestServer.getConnectString();
+        return getZookeeperTestServer().getConnectString();
+    }
+
+    /**
+     * @return The proper connect string to use for Kafka.
+     */
+    public String getKafkaConnectString() {
+        return getKafkaTestServer().getKafkaConnectString();
     }
 }

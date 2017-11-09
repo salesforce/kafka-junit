@@ -23,10 +23,10 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.test.kafka;
+package com.salesforce.kafka.test;
 
 import com.google.common.collect.Lists;
-import com.salesforce.test.kafka.junit.SharedKafkaTestResource;
+import com.salesforce.kafka.test.junit.SharedKafkaTestResource;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
