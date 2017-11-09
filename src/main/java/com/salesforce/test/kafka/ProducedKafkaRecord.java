@@ -44,8 +44,14 @@ public class ProducedKafkaRecord<K, V> {
 
     /**
      * Constructor.
+     *
+     * @param topic Topic that the record was published to.
+     * @param partition Partition that the record was published to.
+     * @param offset Offset that the record was published to.
+     * @param key The key that was published.
+     * @param value The message value that was published.
      */
-    public ProducedKafkaRecord(String topic, int partition, long offset, K key, V value) {
+    ProducedKafkaRecord(String topic, int partition, long offset, K key, V value) {
         this.topic = topic;
         this.partition = partition;
         this.offset = offset;
@@ -55,8 +61,15 @@ public class ProducedKafkaRecord<K, V> {
 
     /**
      * Utility factory.
+     * @param recordMetadata Metadata about the produced record.
+     * @param producerRecord The original record that was produced.
+     * @param <K> Type of key
+     * @param <V> Type of message
+     * @return A ProducedKafkaRecord that represents metadata about the original record, and the results of it being published.
      */
-    public static <K,V> ProducedKafkaRecord<K,V> newInstance(RecordMetadata recordMetadata, ProducerRecord<K,V> producerRecord) {
+    static <K,V> ProducedKafkaRecord<K,V> newInstance(
+        final RecordMetadata recordMetadata,
+        final ProducerRecord<K,V> producerRecord) {
         return new ProducedKafkaRecord<>(
             recordMetadata.topic(),
             recordMetadata.partition(),

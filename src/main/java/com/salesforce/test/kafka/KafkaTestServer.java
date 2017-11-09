@@ -115,6 +115,7 @@ public class KafkaTestServer implements AutoCloseable {
 
     /**
      * Creates and starts ZooKeeper and Kafka server instances.
+     * @throws Exception on startup errors.
      */
     public void start() throws Exception {
         // Start zookeeper
@@ -204,6 +205,7 @@ public class KafkaTestServer implements AutoCloseable {
     /**
      * Shuts down the ZooKeeper and Kafka server instances. This *must* be called before the integration
      * test completes in order to clean up any running processes and data that was created.
+     * @throws Exception on shutdown errors.
      */
     public void shutdown() throws Exception {
         close();
@@ -211,6 +213,11 @@ public class KafkaTestServer implements AutoCloseable {
 
     /**
      * Creates a kafka producer that is connected to our test server.
+     * @param <K> Type of message key
+     * @param <V> Type of message value
+     * @param keySerializer Class of serializer to be used for keys.
+     * @param valueSerializer Class of serializer to be used for values.
+     * @return KafkaProducer configured to produce into Test server.
      */
     public <K, V> KafkaProducer<K, V> getKafkaProducer(
         final Class<? extends Serializer<K>> keySerializer,
@@ -232,8 +239,11 @@ public class KafkaTestServer implements AutoCloseable {
 
     /**
      * Return Kafka Consumer configured to consume from internal Kafka Server.
-     * @param keyDeserializer which deserializer to use for key
-     * @param valueDeserializer which deserializer to use for value
+     * @param <K> Type of message key
+     * @param <V> Type of message value
+     * @param keyDeserializer Class of deserializer to be used for keys.
+     * @param valueDeserializer Class of deserializer to be used for values.
+     * @return KafkaProducer configured to produce into Test server.
      */
     public <K, V> KafkaConsumer<K, V> getKafkaConsumer(
         final Class<? extends Deserializer<K>> keyDeserializer,
