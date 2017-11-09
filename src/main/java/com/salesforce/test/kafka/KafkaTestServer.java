@@ -215,10 +215,11 @@ public class KafkaTestServer implements AutoCloseable {
     /**
      * Creates a kafka producer that is connected to our test server.
      */
-    public KafkaProducer getKafkaProducer(
-        final Class<? extends Serializer> keySerializer,
-        final Class<? extends Serializer> valueSerializer) {
-        // Create producer
+    public <K, V> KafkaProducer<K, V> getKafkaProducer(
+        final Class<? extends Serializer<K>> keySerializer,
+        final Class<? extends Serializer<V>> valueSerializer) {
+
+        // Build config
         final Map<String, Object> kafkaProducerConfig = Maps.newHashMap();
         kafkaProducerConfig.put("bootstrap.servers", getKafkaConnectString());
         kafkaProducerConfig.put("key.serializer", keySerializer);
@@ -228,8 +229,8 @@ public class KafkaTestServer implements AutoCloseable {
         kafkaProducerConfig.put("client.id", getClass().getSimpleName() + " Producer");
         kafkaProducerConfig.put("batch.size", 0);
 
-        // Return our producer
-        return new KafkaProducer(kafkaProducerConfig);
+        // Create and return Producer.
+        return new KafkaProducer<>(kafkaProducerConfig);
     }
 
     /**
@@ -237,15 +238,18 @@ public class KafkaTestServer implements AutoCloseable {
      * @param keyDeserializer which deserializer to use for key
      * @param valueDeserializer which deserializer to use for value
      */
-    public KafkaConsumer getKafkaConsumer(
-        final Class<? extends Deserializer> keyDeserializer,
-        final Class<? extends Deserializer> valueDeserializer) {
+    public <K, V> KafkaConsumer<K, V> getKafkaConsumer(
+        final Class<? extends Deserializer<K>> keyDeserializer,
+        final Class<? extends Deserializer<V>> valueDeserializer) {
+
+        // Build config
         Map<String, Object> kafkaConsumerConfig = buildDefaultClientConfig();
         kafkaConsumerConfig.put("key.deserializer", keyDeserializer);
         kafkaConsumerConfig.put("value.deserializer", valueDeserializer);
         kafkaConsumerConfig.put("partition.assignment.strategy", "org.apache.kafka.clients.consumer.RoundRobinAssignor");
 
-        return new KafkaConsumer(kafkaConsumerConfig);
+        // Create and return Consumer.
+        return new KafkaConsumer<>(kafkaConsumerConfig);
     }
 
     /**
