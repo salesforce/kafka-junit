@@ -57,7 +57,7 @@ public class ProducedKafkaRecord<K, V> {
      * Utility factory.
      */
     public static <K,V> ProducedKafkaRecord<K,V> newInstance(RecordMetadata recordMetadata, ProducerRecord<K,V> producerRecord) {
-        return new ProducedKafkaRecord<K,V>(
+        return new ProducedKafkaRecord<>(
             recordMetadata.topic(),
             recordMetadata.partition(),
             recordMetadata.offset(),

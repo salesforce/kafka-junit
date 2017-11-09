@@ -37,7 +37,6 @@ import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,7 +81,7 @@ public class KafkaTestUtils {
         // This holds futures returned
         List<Future<RecordMetadata>> producerFutures = Lists.newArrayList();
 
-        KafkaProducer producer = kafkaTestServer.getKafkaProducer(
+        KafkaProducer<byte[], byte[]> producer = kafkaTestServer.getKafkaProducer(
             ByteArraySerializer.class,
             ByteArraySerializer.class
         );
@@ -105,7 +104,7 @@ public class KafkaTestUtils {
         try {
             for (int x = 0; x < keysAndValues.size(); x++) {
                 final RecordMetadata metadata = producerFutures.get(x).get();
-                final ProducerRecord producerRecord = producedRecords.get(x);
+                final ProducerRecord<byte[], byte[]> producerRecord = producedRecords.get(x);
 
                 kafkaRecords.add(ProducedKafkaRecord.newInstance(metadata, producerRecord));
             }
@@ -153,7 +152,7 @@ public class KafkaTestUtils {
      */
     public List<ConsumerRecord<byte[], byte[]>> consumeAllRecordsFromTopic(final String topic) {
         // Connect to broker to determine what partitions are available.
-        KafkaConsumer<String, byte[]> kafkaConsumer = kafkaTestServer.getKafkaConsumer(
+        KafkaConsumer<byte[], byte[]> kafkaConsumer = kafkaTestServer.getKafkaConsumer(
             ByteArrayDeserializer.class,
             ByteArrayDeserializer.class
         );
