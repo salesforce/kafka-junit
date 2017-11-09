@@ -104,8 +104,7 @@ public class KafkaTestServerTest {
         ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topicName, partitionId, expectedKey, expectedValue);
 
         // Create a new producer
-        final String serializerClass = StringSerializer.class.getName();
-        KafkaProducer<String, String> producer = getKafkaTestServer().getKafkaProducer(serializerClass, serializerClass);
+        KafkaProducer<String, String> producer = getKafkaTestServer().getKafkaProducer(StringSerializer.class, StringSerializer.class);
 
         // Produce it & wait for it to complete.
         Future<RecordMetadata> future = producer.send(producerRecord);
@@ -118,8 +117,8 @@ public class KafkaTestServerTest {
         // Close producer!
         producer.close();
 
-        final String deserializerClass = StringDeserializer.class.getName();
-        KafkaConsumer<String, String> kafkaConsumer = getKafkaTestServer().getKafkaConsumer(deserializerClass, deserializerClass);
+        KafkaConsumer<String, String> kafkaConsumer =
+            getKafkaTestServer().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class);
 
         final List<TopicPartition> topicPartitionList = Lists.newArrayList();
         for (final PartitionInfo partitionInfo: kafkaConsumer.partitionsFor(topicName)) {

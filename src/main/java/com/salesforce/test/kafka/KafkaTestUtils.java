@@ -81,9 +81,9 @@ public class KafkaTestUtils {
         // This holds futures returned
         List<Future<RecordMetadata>> producerFutures = Lists.newArrayList();
 
-        KafkaProducer producer = kafkaTestServer.getKafkaProducer(
-            ByteArraySerializer.class.getName(),
-            ByteArraySerializer.class.getName()
+        KafkaProducer<byte[], byte[]> producer = kafkaTestServer.getKafkaProducer(
+            ByteArraySerializer.class,
+            ByteArraySerializer.class
         );
         for (Map.Entry<byte[], byte[]> entry: keysAndValues.entrySet()) {
             // Construct filter
@@ -104,7 +104,7 @@ public class KafkaTestUtils {
         try {
             for (int x = 0; x < keysAndValues.size(); x++) {
                 final RecordMetadata metadata = producerFutures.get(x).get();
-                final ProducerRecord producerRecord = producedRecords.get(x);
+                final ProducerRecord<byte[], byte[]> producerRecord = producedRecords.get(x);
 
                 kafkaRecords.add(ProducedKafkaRecord.newInstance(metadata, producerRecord));
             }
@@ -152,9 +152,9 @@ public class KafkaTestUtils {
      */
     public List<ConsumerRecord<byte[], byte[]>> consumeAllRecordsFromTopic(final String topic) {
         // Connect to broker to determine what partitions are available.
-        KafkaConsumer<String, byte[]> kafkaConsumer = kafkaTestServer.getKafkaConsumer(
-            ByteArrayDeserializer.class.getName(),
-            ByteArrayDeserializer.class.getName()
+        KafkaConsumer<byte[], byte[]> kafkaConsumer = kafkaTestServer.getKafkaConsumer(
+            ByteArrayDeserializer.class,
+            ByteArrayDeserializer.class
         );
 
         final List<Integer> partitionIds = new ArrayList<>();
@@ -180,7 +180,8 @@ public class KafkaTestUtils {
         }
 
         // Connect Consumer
-        KafkaConsumer<byte[], byte[]> kafkaConsumer = kafkaTestServer.getKafkaConsumer();
+        KafkaConsumer<byte[], byte[]> kafkaConsumer =
+            kafkaTestServer.getKafkaConsumer(ByteArrayDeserializer.class, ByteArrayDeserializer.class);
 
         // Assign topic partitions & seek to head of them
         kafkaConsumer.assign(topicPartitions);

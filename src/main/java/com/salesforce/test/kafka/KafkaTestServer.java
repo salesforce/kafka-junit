@@ -26,6 +26,7 @@
 package com.salesforce.test.kafka;
 
 import com.google.common.collect.Maps;
+import com.google.common.io.Files;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
 import org.apache.curator.test.InstanceSpec;
@@ -37,9 +38,8 @@ import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.common.errors.TopicExistsException;
-import org.apache.kafka.common.serialization.ByteArrayDeserializer;
-import org.apache.kafka.common.serialization.ByteArraySerializer;
-import org.apache.kafka.common.serialization.StringSerializer;
+import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.Serializer;
 
 import java.io.File;
 import java.util.Collections;
@@ -54,8 +54,36 @@ import java.util.concurrent.ExecutionException;
  * or use the AutoCloseable interface.
  */
 public class KafkaTestServer implements AutoCloseable {
+    /**
+     * Internal Test Zookeeper service.
+     */
     private TestingServer zkServer;
+
+    /**
+     * Internal Test Kafka service.
+     */
     private KafkaServerStartable kafka;
+
+    /**
+     * Defines what address the service advertises itself on.
+     * Sane default is 127.0.0.1.
+     */
+    private final String localHostname;
+
+    /**
+     * Default constructor using "127.0.0.1" as the advertised host.
+     */
+    public KafkaTestServer() {
+        this("127.0.0.1");
+    }
+
+    /**
+     * Alternative constructor allowing override of advertised host.
+     * @param localHostname What IP or hostname to advertise services on.
+     */
+    public KafkaTestServer(final String localHostname) {
+        this.localHostname = localHostname;
+    }
 
     /**
      * @return Internal Zookeeper Server.
@@ -75,14 +103,14 @@ public class KafkaTestServer implements AutoCloseable {
      * @return The proper connect string to use for Kafka.
      */
     public String getKafkaConnectString() {
-        return "127.0.0.1:" + getKafkaServer().serverConfig().advertisedPort();
+        return localHostname + ":" + getKafkaServer().serverConfig().advertisedPort();
     }
 
     /**
      * @return The proper connect string to use for Zookeeper.
      */
     public String getZookeeperConnectString() {
-        return "127.0.0.1:" + getZookeeperServer().getPort();
+        return localHostname + ":" + getZookeeperServer().getPort();
     }
 
     /**
@@ -95,14 +123,11 @@ public class KafkaTestServer implements AutoCloseable {
         final String zkConnectionString = getZookeeperServer().getConnectString();
 
         // Create temp path to store logs
-        final File logDir = new File("/tmp/kafka-logs-" + Double.toHexString(Math.random()));
+        final File logDir = Files.createTempDir();
         logDir.deleteOnExit();
 
         // Determine what port to run kafka on
         final String kafkaPort = String.valueOf(InstanceSpec.getRandomPort());
-
-        // Assume local host.
-        final String hostname = "127.0.0.1";
 
         // Build properties
         Properties kafkaProperties = new Properties();
@@ -115,11 +140,11 @@ public class KafkaTestServer implements AutoCloseable {
         kafkaProperties.setProperty("auto.offset.reset", "latest");
 
         // Ensure that we're advertising appropriately
-        kafkaProperties.setProperty("host.name", hostname);
-        kafkaProperties.setProperty("advertised.host.name", hostname);
+        kafkaProperties.setProperty("host.name", localHostname);
+        kafkaProperties.setProperty("advertised.host.name", localHostname);
         kafkaProperties.setProperty("advertised.port", kafkaPort);
-        kafkaProperties.setProperty("advertised.listeners", "PLAINTEXT://" + hostname + ":" + kafkaPort);
-        kafkaProperties.setProperty("listeners", "PLAINTEXT://" + hostname + ":" + kafkaPort);
+        kafkaProperties.setProperty("advertised.listeners", "PLAINTEXT://" + localHostname + ":" + kafkaPort);
+        kafkaProperties.setProperty("listeners", "PLAINTEXT://" + localHostname + ":" + kafkaPort);
 
         // Lower active threads.
         kafkaProperties.setProperty("num.io.threads", "2");
@@ -187,8 +212,11 @@ public class KafkaTestServer implements AutoCloseable {
     /**
      * Creates a kafka producer that is connected to our test server.
      */
-    public KafkaProducer getKafkaProducer(final String keySerializer, final String valueSerializer) {
-        // Create producer
+    public <K, V> KafkaProducer<K, V> getKafkaProducer(
+        final Class<? extends Serializer<K>> keySerializer,
+        final Class<? extends Serializer<V>> valueSerializer) {
+
+        // Build config
         final Map<String, Object> kafkaProducerConfig = Maps.newHashMap();
         kafkaProducerConfig.put("bootstrap.servers", getKafkaConnectString());
         kafkaProducerConfig.put("key.serializer", keySerializer);
@@ -198,17 +226,8 @@ public class KafkaTestServer implements AutoCloseable {
         kafkaProducerConfig.put("client.id", getClass().getSimpleName() + " Producer");
         kafkaProducerConfig.put("batch.size", 0);
 
-        // Return our producer
-        return new KafkaProducer(kafkaProducerConfig);
-    }
-
-    /**
-     * Creates a kafka producer that is connected to our test server.
-     * Uses the String serializer for key, and ByteArray Serializer for value.
-     * @Deprecated Use getKafkaConsumer(final String keyDeserializer, final String valueDeserializer)
-     */
-    public KafkaProducer getKafkaProducer() {
-        return getKafkaProducer(StringSerializer.class.getName(), ByteArraySerializer.class.getName());
+        // Create and return Producer.
+        return new KafkaProducer<>(kafkaProducerConfig);
     }
 
     /**
@@ -216,24 +235,18 @@ public class KafkaTestServer implements AutoCloseable {
      * @param keyDeserializer which deserializer to use for key
      * @param valueDeserializer which deserializer to use for value
      */
-    public KafkaConsumer getKafkaConsumer(final String keyDeserializer, final String valueDeserializer) {
+    public <K, V> KafkaConsumer<K, V> getKafkaConsumer(
+        final Class<? extends Deserializer<K>> keyDeserializer,
+        final Class<? extends Deserializer<V>> valueDeserializer) {
+
+        // Build config
         Map<String, Object> kafkaConsumerConfig = buildDefaultClientConfig();
         kafkaConsumerConfig.put("key.deserializer", keyDeserializer);
         kafkaConsumerConfig.put("value.deserializer", valueDeserializer);
         kafkaConsumerConfig.put("partition.assignment.strategy", "org.apache.kafka.clients.consumer.RoundRobinAssignor");
 
-        return new KafkaConsumer(kafkaConsumerConfig);
-    }
-
-    /**
-     * @return Kafka Consumer configured to consume from internal Kafka Server using byte array deserializer.
-     * @Deprecated Use getKafkaProducer(final String keySerializer, final String valueSerializer)
-     */
-    public KafkaConsumer<byte[], byte[]> getKafkaConsumer() {
-        return getKafkaConsumer(
-            ByteArrayDeserializer.class.getName(),
-            ByteArrayDeserializer.class.getName()
-        );
+        // Create and return Consumer.
+        return new KafkaConsumer<>(kafkaConsumerConfig);
     }
 
     /**
