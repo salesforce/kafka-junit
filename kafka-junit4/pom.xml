@@ -50,7 +50,7 @@
     <dependencies>
         <!-- Core module -->
         <dependency>
-            <groupId>com.salesforce.kafka.com.salesforce.kafka.test</groupId>
+            <groupId>com.salesforce.kafka.test</groupId>
             <artifactId>kafka-junit-core</artifactId>
             <version>1.0.0</version>
         </dependency>
