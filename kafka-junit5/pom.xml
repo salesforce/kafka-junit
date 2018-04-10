@@ -30,13 +30,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>kafka-junit</artifactId>
-        <groupId>com.salesforce.kafka.com.salesforce.kafka.test.junit5.test</groupId>
-        <version>2.0.0-SNAPSHOT</version>
+        <groupId>com.salesforce.kafka.com.salesforce.kafka.test</groupId>
+        <version>2.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kafka-junit5</artifactId>
-    <version>2.0.0</version>
+    <version>1.0.0</version>
 
     <!-- defined properties -->
     <properties>
@@ -47,6 +47,13 @@
     </properties>
 
     <dependencies>
+        <!-- Core module -->
+        <dependency>
+            <groupId>com.salesforce.kafka.com.salesforce.kafka.test</groupId>
+            <artifactId>kafka-junit-core</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
         <!-- JUnit is Required -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

@@ -26,6 +26,9 @@
 package com.salesforce.kafka.test.junit4;
 
 import com.google.common.base.Charsets;
+import com.salesforce.kafka.test.KafkaTestServer;
+import com.salesforce.kafka.test.KafkaTestUtils;
+import com.salesforce.kafka.test.ProducedKafkaRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.Before;
 import org.junit.ClassRule;

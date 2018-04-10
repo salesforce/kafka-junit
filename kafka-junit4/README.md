@@ -17,7 +17,7 @@ Include this in your project with scope test.
 <dependency>
     <groupId>com.salesforce.kafka.com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit4</artifactId>
-    <version>2.0.0</version>
+    <version>1.0.0</version>
     <scope>test</scope>
 </dependency>
 ```

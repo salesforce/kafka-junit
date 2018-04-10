@@ -25,6 +25,8 @@
 
 package com.salesforce.kafka.test.junit5;
 
+import com.salesforce.kafka.test.KafkaTestServer;
+import com.salesforce.kafka.test.KafkaTestUtils;
 import org.apache.curator.test.TestingServer;
 
 /**

@@ -25,8 +25,8 @@
 
 package com.salesforce.kafka.test.junit4;
 
-import com.salesforce.kafka.test.junit4.KafkaTestUtils;
-import com.salesforce.kafka.test.junit4.KafkaTestServer;
+import com.salesforce.kafka.test.KafkaTestServer;
+import com.salesforce.kafka.test.KafkaTestUtils;
 import org.apache.curator.test.TestingServer;
 import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;

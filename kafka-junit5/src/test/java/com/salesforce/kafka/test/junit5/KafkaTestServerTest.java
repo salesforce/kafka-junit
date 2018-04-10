@@ -26,6 +26,7 @@
 package com.salesforce.kafka.test.junit5;
 
 import com.google.common.collect.Lists;
+import com.salesforce.kafka.test.KafkaTestServer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
