@@ -1,11 +1,11 @@
-# kafka-junit
+# Kafka-JUnit4
 
 This library wraps Kafka Test Server and allows you to easily create and run tests against
 a "real" kafka server running within your tests, no more needing to stand up an external kafka cluster!
 
 Kafka-JUnit4 is built on-top of **JUnit 4** as a SharedResource using the **@ClassRule** annotation.
 
-For usage with JUnit5 or more project information please review top level [README](../README.md).
+For usage with JUnit5 or more project information please review top level [README](../).
 
 ## Using Kafka-JUnit with JUnit 4.
 

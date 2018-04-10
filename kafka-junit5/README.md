@@ -1,11 +1,11 @@
-# kafka-junit
+# Kafka-JUnit5
 
 This library wraps Kafka Test Server and allows you to easily create and run tests against
 a "real" kafka server running within your tests, no more needing to stand up an external kafka cluster!
 
 Kafka-JUnit5 is built on-top of **JUnit 5** as an Extension using the **@ExtendWith** annotation.
 
-For usage with JUnit4 or more project information please review top level [README](../README.md). 
+For usage with JUnit4 or more project information please review top level [README](../). 
 
 ## Using Kafka-JUnit with JUnit 5.
 
