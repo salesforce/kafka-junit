@@ -3,7 +3,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 2.0.0 (4/10/2018)
-- Built for JUnit 5.x
+- Created new modules to support both JUnit4 and JUnit 5.
 
 ## 1.0.0 (09/11/2017)
 - Initial release!
