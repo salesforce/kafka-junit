@@ -26,11 +26,14 @@
 package com.salesforce.kafka.test;
 
 import com.google.common.base.Charsets;
+import com.salesforce.kafka.test.junit.KafkaResourceExtension;
 import com.salesforce.kafka.test.junit.SharedKafkaTestResource;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.migrationsupport.rules.EnableRuleMigrationSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,11 +41,12 @@ import java.time.Clock;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Serves both as a test for the Utilities, but also as a good example of how to use them.
  */
+@ExtendWith(KafkaResourceExtension.class)
 public class KafkaTestUtilsTest {
     private static final Logger logger = LoggerFactory.getLogger(KafkaTestUtilsTest.class);
 
@@ -52,8 +56,7 @@ public class KafkaTestUtilsTest {
      * It's automatically started before any methods are run via the @ClassRule annotation.
      * It's automatically stopped after all of the tests are completed via the @ClassRule annotation.
      */
-    @ClassRule
-    public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource();
+    private final SharedKafkaTestResource sharedKafkaTestResource;
 
     /**
      * Before every test, we generate a random topic name and create it within the embedded kafka server.
@@ -62,11 +65,19 @@ public class KafkaTestUtilsTest {
     private String topicName;
 
     /**
+     * Constructor where KafkaResourceExtension provides the sharedKafkaTestResource object.
+     * @param sharedKafkaTestResource Provided by KafkaResourceExtension.
+     */
+    public KafkaTestUtilsTest(SharedKafkaTestResource sharedKafkaTestResource) {
+        this.sharedKafkaTestResource = sharedKafkaTestResource;
+    }
+
+    /**
      * This happens once before every test method.
      * Create a new empty namespace with randomly generated name.
      */
-    @Before
-    public void beforeTest() {
+    @BeforeEach
+    void beforeTest() {
         // Generate topic name
         topicName = getClass().getSimpleName() + Clock.systemUTC().millis();
 
@@ -79,7 +90,7 @@ public class KafkaTestUtilsTest {
      * Simple smoke test and example of how to use this Utility class.
      */
     @Test
-    public void testProducerAndConsumerUtils() {
+    void testProducerAndConsumerUtils() {
         final int numberOfRecords = 10;
         final int partitionId = 2;
 
@@ -106,7 +117,7 @@ public class KafkaTestUtilsTest {
         final List<ConsumerRecord<byte[], byte[]>> consumerRecords = kafkaTestUtils.consumeAllRecordsFromTopic(topicName);
 
         // Validate
-        assertEquals("Should have 10 records", numberOfRecords, consumerRecords.size());
+        assertEquals(numberOfRecords, consumerRecords.size(), "Should have 10 records");
 
         final Iterator<ConsumerRecord<byte[], byte[]>> consumerRecordIterator = consumerRecords.iterator();
         final Iterator<ProducedKafkaRecord<byte[], byte[]>> producedKafkaRecordIterator = producedRecordsList.iterator();
@@ -121,11 +132,11 @@ public class KafkaTestUtilsTest {
             final String actualValue = new String(consumerRecord.value(), Charsets.UTF_8);
 
             // Make sure they match
-            assertEquals("Has correct topic", producedKafkaRecord.getTopic(), consumerRecord.topic());
-            assertEquals("Has correct partition", producedKafkaRecord.getPartition(), consumerRecord.partition());
-            assertEquals("Has correct offset", producedKafkaRecord.getOffset(), consumerRecord.offset());
-            assertEquals("Has correct key", expectedKey, actualKey);
-            assertEquals("Has correct value", expectedValue, actualValue);
+            assertEquals(producedKafkaRecord.getTopic(), consumerRecord.topic(), "Has correct topic");
+            assertEquals(producedKafkaRecord.getPartition(), consumerRecord.partition(), "Has correct partition");
+            assertEquals(producedKafkaRecord.getOffset(), consumerRecord.offset(), "Has correct offset");
+            assertEquals(expectedKey, actualKey, "Has correct key");
+            assertEquals(expectedValue, actualValue, "Has correct value");
         }
     }
 
