@@ -5,7 +5,7 @@ a "real" kafka server running within your tests, no more needing to stand up an 
 
 Kafka-JUnit4 is built on-top of **JUnit 4** as a SharedResource using the **@ClassRule** annotation.
 
-For usage with JUnit5 or more project information please review top level [README](../).
+For usage with JUnit5 or more project information please review top level [README](../README.md).
 
 ## Using Kafka-JUnit with JUnit 4.
 

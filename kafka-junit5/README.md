@@ -5,7 +5,7 @@ a "real" kafka server running within your tests, no more needing to stand up an 
 
 Kafka-JUnit5 is built on-top of **JUnit 5** as an Extension using the **@ExtendWith** annotation.
 
-For usage with JUnit4 or more project information please review top level [README](../). 
+For usage with JUnit4 or more project information please review top level [README](../README.md). 
 
 ## Using Kafka-JUnit with JUnit 5.
 
