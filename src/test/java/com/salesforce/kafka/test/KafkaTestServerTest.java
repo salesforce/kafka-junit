@@ -63,8 +63,9 @@ public class KafkaTestServerTest {
     /**
      * We have a single embedded kafka server that gets started when this test class is initialized.
      *
-     * It's automatically started before any methods are run via the @ClassRule annotation.
-     * It's automatically stopped after all of the tests are completed via the @ClassRule annotation.
+     * It's automatically started before any methods are run via the @ExtendWith annotation.
+     * It's automatically stopped after all of the tests are completed via the @ExtendWith annotation.
+     * This instance is passed to this class's constructor via the @ExtendWith annotation.
      */
     private final SharedKafkaTestResource sharedKafkaTestResource;
 
@@ -72,7 +73,7 @@ public class KafkaTestServerTest {
      * Constructor where KafkaResourceExtension provides the sharedKafkaTestResource object.
      * @param sharedKafkaTestResource Provided by KafkaResourceExtension.
      */
-    public KafkaTestServerTest(SharedKafkaTestResource sharedKafkaTestResource) {
+    public KafkaTestServerTest(final SharedKafkaTestResource sharedKafkaTestResource) {
         this.sharedKafkaTestResource = sharedKafkaTestResource;
     }
 
@@ -87,7 +88,7 @@ public class KafkaTestServerTest {
      * Create a new empty namespace with randomly generated name.
      */
     @BeforeEach
-    public void beforeTest() {
+    void beforeTest() {
         // Generate topic name
         topicName = getClass().getSimpleName() + Clock.systemUTC().millis();
 
@@ -102,7 +103,7 @@ public class KafkaTestServerTest {
      * This also serves as a decent example of how to use the producer and consumer.
      */
     @Test
-    public void testProducerAndConsumer() throws Exception {
+    void testProducerAndConsumer() throws Exception {
         final int partitionId = 0;
 
         // Define our message
@@ -157,7 +158,7 @@ public class KafkaTestServerTest {
      * Test if we create a topic more than once, no errors occur.
      */
     @Test
-    public void testCreatingTopicMultipleTimes() {
+    void testCreatingTopicMultipleTimes() {
         final String myTopic = "myTopic";
         for (int creationCounter = 0; creationCounter < 5; creationCounter++) {
             getKafkaTestServer().createTopic(myTopic);
