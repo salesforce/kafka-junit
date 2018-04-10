@@ -15,7 +15,7 @@ Include this in your project's POM with scope test.
 
 ```
 <dependency>
-    <groupId>com.salesforce.kafka.com.salesforce.kafka.test</groupId>
+    <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit5</artifactId>
     <version>1.0.0</version>
     <scope>test</scope>

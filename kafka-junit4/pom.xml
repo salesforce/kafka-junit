@@ -31,7 +31,7 @@
 
     <parent>
         <artifactId>kafka-junit</artifactId>
-        <groupId>com.salesforce.kafka.com.salesforce.kafka.test</groupId>
+        <groupId>com.salesforce.kafka.test</groupId>
         <version>2.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
