@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright (c) 2017, Salesforce.com, Inc.
+    Copyright (c) 2017-2018, Salesforce.com, Inc.
     All rights reserved.
 
     Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
@@ -32,9 +32,16 @@
 
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>2.0.0</version>
 
-    <packaging>jar</packaging>
+    <!-- Submodules -->
+    <modules>
+        <module>kafka-junit-core</module>
+        <module>kafka-junit4</module>
+        <module>kafka-junit5</module>
+    </modules>
+
+    <packaging>pom</packaging>
     <name>kafka-junit</name>
     <description>This library wraps Kafka's embedded test cluster, allowing you to more easily create and run integration tests using JUnit against a "real" kafka server running within the context of your tests.</description>
     <inceptionYear>2017</inceptionYear>
@@ -83,8 +90,8 @@
         <!-- Define which Curator Test version -->
         <curatorTestVersion>2.12.0</curatorTestVersion>
 
-        <!-- Define which JUnit version -->
-        <junit.version>4.12</junit.version>
+        <!-- For logging in tests -->
+        <slf4j.version>1.7.25</slf4j.version>
 
         <!-- test toggling -->
         <skipTests>false</skipTests>
@@ -125,23 +132,16 @@
             <version>${curatorTestVersion}</version>
         </dependency>
 
-        <!-- JUnit is Required -->
+        <!-- Logging in tests -->
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
     <build>
-        <sourceDirectory>src/main/java</sourceDirectory>
-        <testSourceDirectory>src/test/java</testSourceDirectory>
-        <testResources>
-            <testResource>
-                <directory>src/test/resources/</directory>
-            </testResource>
-        </testResources>
-
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -165,48 +165,6 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
-            <!-- Build Jar with Dependencies -->
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <archive>
-                        <manifest>
-                            <mainClass/>
-                        </manifest>
-                    </archive>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Surefire plugin for running tests -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.19.1</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.maven.surefire</groupId>
-                        <artifactId>surefire-junit47</artifactId>
-                        <version>2.19</version>
-                    </dependency>
-                </dependencies>
-                <configuration>
-                    <argLine>-Xmx512M</argLine>
-                    <skipTests>${skipTests}</skipTests>
-                    <reportFormat>plain</reportFormat>
-                </configuration>
-            </plugin>
 
             <!-- License Auditing -->
             <plugin>
@@ -222,8 +180,6 @@
                         <exclude>**.yaml</exclude>
                         <exclude>**.xml</exclude>
                         <exclude>script/**</exclude>
-                        <exclude>src/test/resources/**</exclude>
-                        <exclude>src/main/resources/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -307,7 +263,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.0.0-M1</version>
+                <version>3.0.0</version>
                 <configuration>
                     <show>public</show>
                 </configuration>
@@ -348,7 +304,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.0.0-M1</version>
+                        <version>3.0.0</version>
                         <executions>
                             <execution>
                                 <id>build-javadocs</id>
@@ -372,8 +328,7 @@
                                     <goal>sign</goal>
                                 </goals>
                                 <configuration>
-                                    <keyname>${gpg.keyname}</keyname>
-                                    <passphraseServerId>${gpg.keyname}</passphraseServerId>
+                                    <keyname>KafkaJUnitReleaseKey</keyname>
                                 </configuration>
                             </execution>
                         </executions>

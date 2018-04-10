@@ -22,3 +22,41 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+package com.salesforce.kafka.test.junit5;
+
+import org.apache.curator.test.InstanceSpec;
+import org.apache.curator.test.TestingServer;
+
+/**
+ * Shared Zookeeper Test Resource instance.  Contains references to internal Zookeeper server instances.
+ */
+public class SharedZookeeperTestResource {
+    /**
+     * Our internal Zookeeper test server instance.
+     */
+    private TestingServer zookeeperTestServer = null;
+
+    /**
+     * @return Shared Zookeeper test server instance.
+     */
+    public TestingServer getZookeeperTestServer() {
+        if (zookeeperTestServer == null) {
+            // Setup zookeeper test server
+            final InstanceSpec zkInstanceSpec = new InstanceSpec(null, -1, -1, -1, true, -1, -1, 1000);
+            try {
+                zookeeperTestServer = new TestingServer(zkInstanceSpec, true);
+            } catch (Exception e) {
+                throw new RuntimeException(e.getMessage(), e);
+            }
+        }
+        return zookeeperTestServer;
+    }
+
+    /**
+     * @return Connection string to connect to the Zookeeper instance.
+     */
+    public String getZookeeperConnectString() {
+        return getZookeeperTestServer().getConnectString();
+    }
+}
