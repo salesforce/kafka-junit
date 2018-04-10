@@ -27,68 +27,29 @@ package com.salesforce.kafka.test.junit;
 
 import org.apache.curator.test.InstanceSpec;
 import org.apache.curator.test.TestingServer;
-import org.junit.rules.ExternalResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
- * Creates and stands up an internal test Zookeeper server to be shared across test cases within the same test class.
- *
- * Example within your Test class.
- *
- *   &#064;ClassRule
- *   public static final SharedZookeeperTestResource sharedZookeeperTestResource = new sharedZookeeperTestResource();
- *
- * Within your test case method:
- *   sharedZookeeperTestResource.getZookeeperTestServer()...
+ * Shared Zookeeper Test Resource instance.  Contains references to internal Zookeeper server instances.
  */
-public class SharedZookeeperTestResource extends ExternalResource {
-    private static final Logger logger = LoggerFactory.getLogger(SharedZookeeperTestResource.class);
-
+public class SharedZookeeperTestResource {
     /**
      * Our internal Zookeeper test server instance.
      */
     private TestingServer zookeeperTestServer = null;
 
     /**
-     * Here we stand up an internal test zookeeper service.
-     * Once for all tests that use this shared resource.
-     */
-    protected void before() throws Exception {
-        logger.info("Starting Zookeeper test server");
-        if (zookeeperTestServer != null) {
-            throw new IllegalStateException("Unknown State! Zookeeper test server already exists!");
-        }
-        // Setup zookeeper test server
-        final InstanceSpec zkInstanceSpec = new InstanceSpec(null, -1, -1, -1, true, -1, -1, 1000);
-        zookeeperTestServer = new TestingServer(zkInstanceSpec, true);
-    }
-
-    /**
-     * Here we shut down the internal test zookeeper service.
-     */
-    protected void after() {
-        logger.info("Shutting down zookeeper test server");
-
-        // Close out zookeeper test server if needed
-        if (zookeeperTestServer == null) {
-            return;
-        }
-        try {
-            zookeeperTestServer.stop();
-            zookeeperTestServer.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        zookeeperTestServer = null;
-    }
-
-    /**
      * @return Shared Zookeeper test server instance.
      */
     public TestingServer getZookeeperTestServer() {
+        if (zookeeperTestServer == null) {
+            // Setup zookeeper test server
+            final InstanceSpec zkInstanceSpec = new InstanceSpec(null, -1, -1, -1, true, -1, -1, 1000);
+            try {
+                zookeeperTestServer = new TestingServer(zkInstanceSpec, true);
+            } catch (Exception e) {
+                throw new RuntimeException(e.getMessage(), e);
+            }
+        }
         return zookeeperTestServer;
     }
 
@@ -96,6 +57,6 @@ public class SharedZookeeperTestResource extends ExternalResource {
      * @return Connection string to connect to the Zookeeper instance.
      */
     public String getZookeeperConnectString() {
-        return zookeeperTestServer.getConnectString();
+        return getZookeeperTestServer().getConnectString();
     }
 }

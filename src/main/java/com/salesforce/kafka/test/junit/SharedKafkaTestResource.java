@@ -25,18 +25,9 @@
 
 package com.salesforce.kafka.test.junit;
 
-import com.salesforce.kafka.test.KafkaTestUtils;
 import com.salesforce.kafka.test.KafkaTestServer;
+import com.salesforce.kafka.test.KafkaTestUtils;
 import org.apache.curator.test.TestingServer;
-import org.junit.jupiter.api.extension.AfterAllCallback;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.extension.ParameterContext;
-import org.junit.jupiter.api.extension.ParameterResolutionException;
-import org.junit.jupiter.api.extension.ParameterResolver;
-import org.junit.rules.ExternalResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Shared Kafka Test Resource instance.  Contains references to internal Kafka and Zookeeper server instances.
