@@ -5,15 +5,15 @@
 This library wraps Kafka Test Server and allows you to easily create and run tests against
 a "real" kafka server running within your tests, no more needing to stand up an external kafka cluster!
 
-Version **1.0.x** is built on-top of **JUnit 4** as a **@ClassRule** SharedResource.
+Version **1.0.x** is built on-top of **JUnit 4** as a SharedResource using the **@ClassRule** annotation.
 
-Version **2.0.x** is built on-top of **JUnit 5** as an **@ExtendsWith** extension. 
+Version **2.0.x** is built on-top of **JUnit 5** as an Extension using the **@ExtendWith** annotation. 
 
-## Kafka-JUnit for JUnit 5.
+## Using Kafka-JUnit with JUnit 5.
 
 ### Usage & Examples
 
-Include this in your project with scope test.
+Include this in your project's POM with scope test.
 
 ```
 <dependency>
@@ -116,7 +116,7 @@ public class MyTestClass {
     public String getZookeeperConnectString();
 ```
 
-## Kafka-JUnit for JUnit 4.
+## Using Kafka-JUnit with JUnit 4.
 
 ### Usage & Examples
 
