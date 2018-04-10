@@ -5,9 +5,9 @@
 This library wraps Kafka Test Server and allows you to easily create and run tests against
 a "real" kafka server running within your tests, no more needing to stand up an external kafka cluster!
 
-Version **1.0.x** is built on-top of **JUnit 4**.
+Version **1.0.x** is built on-top of **JUnit 4** as a **@ClassRule** SharedResource.
 
-Version **2.0.x** is built on-top of **JUnit 5**. 
+Version **2.0.x** is built on-top of **JUnit 5** as an **@ExtendsWith** extension. 
 
 ## Kafka-JUnit for JUnit 5.
 
