@@ -23,10 +23,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.kafka.test;
+package com.salesforce.kafka.test.junit5;
 
-import com.salesforce.kafka.test.junit.SharedZookeeperTestResource;
-import com.salesforce.kafka.test.junit.ZookeeperResourceExtension;
 import org.apache.curator.test.TestingServer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -30,11 +30,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.salesforce.kafka.test</groupId>
+    <groupId>com.salesforce.kafka.com.salesforce.kafka.test.junit5.test</groupId>
     <artifactId>kafka-junit</artifactId>
     <version>2.0.0-SNAPSHOT</version>
+    <modules>
+        <module>kafka-junit4</module>
+        <module>kafka-junit5</module>
+    </modules>
 
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
     <name>kafka-junit</name>
     <description>This library wraps Kafka's embedded test cluster, allowing you to more easily create and run integration tests using JUnit against a "real" kafka server running within the context of your tests.</description>
     <inceptionYear>2017</inceptionYear>
@@ -83,9 +87,6 @@
         <!-- Define which Curator Test version -->
         <curatorTestVersion>2.12.0</curatorTestVersion>
 
-        <!-- Define which JUnit version -->
-        <junit.version>5.1.1</junit.version>
-
         <!-- For logging in tests -->
         <slf4j.version>1.7.25</slf4j.version>
 
@@ -128,13 +129,6 @@
             <version>${curatorTestVersion}</version>
         </dependency>
 
-        <!-- JUnit is Required -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>${junit.version}</version>
-        </dependency>
-
         <!-- Logging in tests -->
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -145,14 +139,6 @@
     </dependencies>
 
     <build>
-        <sourceDirectory>src/main/java</sourceDirectory>
-        <testSourceDirectory>src/test/java</testSourceDirectory>
-        <testResources>
-            <testResource>
-                <directory>src/test/resources/</directory>
-            </testResource>
-        </testResources>
-
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -176,53 +162,6 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
-            <!-- Build Jar with Dependencies -->
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <archive>
-                        <manifest>
-                            <mainClass/>
-                        </manifest>
-                    </archive>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Surefire plugin for running tests -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.19.1</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.junit.platform</groupId>
-                        <artifactId>junit-platform-surefire-provider</artifactId>
-                        <version>1.1.1</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.junit.jupiter</groupId>
-                        <artifactId>junit-jupiter-engine</artifactId>
-                        <version>${junit.version}</version>
-                    </dependency>
-                </dependencies>
-                <configuration>
-                    <argLine>-Xmx512M</argLine>
-                    <skipTests>${skipTests}</skipTests>
-                    <reportFormat>plain</reportFormat>
-                </configuration>
-            </plugin>
 
             <!-- License Auditing -->
             <plugin>
@@ -238,8 +177,6 @@
                         <exclude>**.yaml</exclude>
                         <exclude>**.xml</exclude>
                         <exclude>script/**</exclude>
-                        <exclude>src/test/resources/**</exclude>
-                        <exclude>src/main/resources/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>

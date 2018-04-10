@@ -23,7 +23,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.kafka.test.junit;
+package com.salesforce.kafka.test.junit5;
 
 import org.apache.curator.test.InstanceSpec;
 import org.apache.curator.test.TestingServer;

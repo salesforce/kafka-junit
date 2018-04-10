@@ -23,9 +23,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.kafka.test.junit;
+package com.salesforce.kafka.test.junit5;
 
-import org.apache.curator.test.TestingServer;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -35,67 +34,60 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 /**
- * JUnit 5 extension to provide an internal test zookeeper server to be shared across test cases within the same test class.
+ * JUnit 5 extension to provide an internal test kafka server to be shared across test cases within the same test class.
  *
  * Annotate your test class with:
- *   &#064;ExtendWith(ZookeeperResourceExtension.class)
+ *   &#064;ExtendWith(KafkaResourceExtension.class)
  *
  * Add a constructor parameter to your test class:
  *
- *   public YourTestClass(SharedZookeeperTestResource sharedZookeeperTestResource) {
+ *   public YourTestClass(SharedKafkaTestResource sharedKafkaTestResource) {
  *     // Save reference to test resource.
- *     this.sharedZookeeperTestResource = sharedZookeeperTestResource;
+ *     this.sharedKafkaTestResource = sharedKafkaTestResource;
  *   }
  *
  * Within your test case methods:
- *   this.sharedZookeeperTestResource.getZookeeperTestServer()...
- *   this.sharedZookeeperTestResource.getZookeeperConnectString()...
+ *   this.sharedKafkaTestResource.getKafkaTestServer()...
  */
-public class ZookeeperResourceExtension implements BeforeAllCallback, AfterAllCallback, ParameterResolver {
-    private static final Logger logger = LoggerFactory.getLogger(ZookeeperResourceExtension.class);
-
-    private SharedZookeeperTestResource zookeeperTestResource = null;
+public class KafkaResourceExtension implements BeforeAllCallback, AfterAllCallback, ParameterResolver {
+    private static final Logger logger = LoggerFactory.getLogger(KafkaResourceExtension.class);
 
     /**
-     * Here we shut down the internal test zookeeper service.
+     * Shared Kafka Test Server Resource.
      */
-    @Override
-    public void afterAll(ExtensionContext context) throws Exception {
-        logger.info("Shutting down zookeeper test server");
-
-        // If we don't have an instance
-        if (zookeeperTestResource == null) {
-            // Nothing to close.
-            return;
-        }
-
-        try {
-            final TestingServer testingServer = zookeeperTestResource.getZookeeperTestServer();
-            testingServer.stop();
-            testingServer.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        // null out reference
-        zookeeperTestResource = null;
-    }
+    private SharedKafkaTestResource kafkaTestResource = new SharedKafkaTestResource();
 
     /**
-     * Here we stand up an internal test zookeeper service.
+     * Here we stand up an internal test kafka and zookeeper service.
      * Once for all tests that use this shared resource.
      */
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
-        logger.info("Starting Zookeeper test server");
-        if (zookeeperTestResource != null) {
-            throw new IllegalStateException("Unknown State! Zookeeper test server already exists!");
+        logger.info("Starting kafka test server");
+
+        // Start kafka test server
+        kafkaTestResource
+            .getKafkaTestServer()
+            .start();
+    }
+
+    /**
+     * Here we shut down the internal test kafka and zookeeper services.
+     */
+    @Override
+    public void afterAll(ExtensionContext context) throws Exception {
+        logger.info("Shutting down kafka test server");
+
+        // Close out kafka test server if needed
+        try {
+            kafkaTestResource
+                .getKafkaTestServer()
+                .shutdown();
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
         }
-        // Setup zookeeper test server
-        zookeeperTestResource = new SharedZookeeperTestResource();
+        kafkaTestResource = null;
     }
 
     @Override
@@ -105,7 +97,7 @@ public class ZookeeperResourceExtension implements BeforeAllCallback, AfterAllCa
         return parameterContext
             .getParameter()
             .getType()
-            .equals(SharedZookeeperTestResource.class);
+            .equals(SharedKafkaTestResource.class);
     }
 
     @Override
@@ -116,8 +108,8 @@ public class ZookeeperResourceExtension implements BeforeAllCallback, AfterAllCa
             .getParameter()
             .getType();
 
-        if (parameterType.equals(SharedZookeeperTestResource.class)) {
-            return zookeeperTestResource;
+        if (parameterType.equals(SharedKafkaTestResource.class)) {
+            return kafkaTestResource;
         }
         return null;
     }
