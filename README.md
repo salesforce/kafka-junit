@@ -133,7 +133,7 @@ Include this in your project with scope test.
 
 #### KafkaTestServer
 
-A great example of how to use this can be found within our tests!  Check out [KafkaTestServerTest.java](src/test/java/com/salesforce/kafka/test/KafkaTestServerTest.java)
+A great example of how to use this can be found within our tests!  Check out [KafkaTestServerTest.java](tree/RELEASE-1.0.x/src/test/java/com/salesforce/kafka/test/KafkaTestServerTest.java)
 
 Add the following to your JUnit test file and it will handle automatically starting and stopping the embedded Kafka 
 instance for you.
@@ -166,9 +166,9 @@ SharedKafkaTestResource has two accessors that you can make use of in your tests
 #### KafkaTestUtils
 
 Often times you'll end up rebuilding the same patterns around producing and consuming data from this internal
-kafka server.  We've tried to collect some of these within [KafkaTestUtils](src/main/java/com/salesforce/kafka/test/KafkaTestUtils.java)!
+kafka server.  We've tried to collect some of these within [KafkaTestUtils](tree/RELEASE-1.0.x/src/main/java/com/salesforce/kafka/test/KafkaTestUtils.java)!
 
-For usage and examples, check out it's test at [KafkaTestUtilsTest](src/test/java/com/salesforce/kafka/test/KafkaTestUtilsTest.java).
+For usage and examples, check out it's test at [KafkaTestUtilsTest](tree/RELEASE-1.0.x/src/test/java/com/salesforce/kafka/test/KafkaTestUtilsTest.java).
 
 #### Zookeeper Test Server
 
