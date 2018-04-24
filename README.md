@@ -5,6 +5,8 @@
 This library wraps Kafka Test Server and allows you to easily create and run tests against
 a "real" kafka server running within your tests, no more needing to stand up an external kafka cluster!
 
+Supports Kafka versions 1.1.x, 1.0.x, and 0.11.0.x.
+
 ## Using Kafka-JUnit with JUnit 4.
 
 Please review [Kafka-JUnit4 Readme](kafka-junit4/) for instructions.
