@@ -43,6 +43,7 @@ import org.apache.kafka.common.serialization.Serializer;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
@@ -161,6 +162,8 @@ public class KafkaTestServer implements AutoCloseable {
         kafkaProperties.setProperty("offsets.topic.replication.factor", "1");
         kafkaProperties.setProperty("offset.storage.replication.factor", "1");
         kafkaProperties.setProperty("transaction.state.log.replication.factor", "1");
+        kafkaProperties.setProperty("transaction.state.log.min.isr", "1");
+        kafkaProperties.setProperty("transaction.state.log.num.partitions", "4");
         kafkaProperties.setProperty("config.storage.replication.factor", "1");
         kafkaProperties.setProperty("status.storage.replication.factor", "1");
         kafkaProperties.setProperty("default.replication.factor", "1");
@@ -228,15 +231,39 @@ public class KafkaTestServer implements AutoCloseable {
         final Class<? extends Serializer<K>> keySerializer,
         final Class<? extends Serializer<V>> valueSerializer) {
 
+        return getKafkaProducer(keySerializer, valueSerializer, new Properties());
+    }
+
+    /**
+     * Creates a kafka producer that is connected to our test server.
+     * @param <K> Type of message key
+     * @param <V> Type of message value
+     * @param keySerializer Class of serializer to be used for keys.
+     * @param valueSerializer Class of serializer to be used for values.
+     * @param config Additional producer configuration options to be set.
+     * @return KafkaProducer configured to produce into Test server.
+     */
+    public <K, V> KafkaProducer<K, V> getKafkaProducer(
+        final Class<? extends Serializer<K>> keySerializer,
+        final Class<? extends Serializer<V>> valueSerializer,
+        final Properties config) {
+
         // Build config
-        final Map<String, Object> kafkaProducerConfig = Maps.newHashMap();
+        final Map<String, Object> kafkaProducerConfig = new HashMap<>();
         kafkaProducerConfig.put("bootstrap.servers", getKafkaConnectString());
-        kafkaProducerConfig.put("key.serializer", keySerializer);
-        kafkaProducerConfig.put("value.serializer", valueSerializer);
         kafkaProducerConfig.put("max.in.flight.requests.per.connection", 1);
         kafkaProducerConfig.put("retries", 5);
         kafkaProducerConfig.put("client.id", getClass().getSimpleName() + " Producer");
         kafkaProducerConfig.put("batch.size", 0);
+        kafkaProducerConfig.put("key.serializer", keySerializer);
+        kafkaProducerConfig.put("value.serializer", valueSerializer);
+
+        // Override config
+        if (config != null) {
+            for (Map.Entry<Object, Object> entry: config.entrySet()) {
+                kafkaProducerConfig.put(entry.getKey().toString(), entry.getValue());
+            }
+        }
 
         // Create and return Producer.
         return new KafkaProducer<>(kafkaProducerConfig);
@@ -253,12 +280,35 @@ public class KafkaTestServer implements AutoCloseable {
     public <K, V> KafkaConsumer<K, V> getKafkaConsumer(
         final Class<? extends Deserializer<K>> keyDeserializer,
         final Class<? extends Deserializer<V>> valueDeserializer) {
+        return getKafkaConsumer(keyDeserializer, valueDeserializer, new Properties());
+    }
+
+    /**
+     * Return Kafka Consumer configured to consume from internal Kafka Server.
+     * @param <K> Type of message key
+     * @param <V> Type of message value
+     * @param keyDeserializer Class of deserializer to be used for keys.
+     * @param valueDeserializer Class of deserializer to be used for values.
+     * @param config Additional consumer configuration options to be set.
+     * @return KafkaProducer configured to produce into Test server.
+     */
+    public <K, V> KafkaConsumer<K, V> getKafkaConsumer(
+        final Class<? extends Deserializer<K>> keyDeserializer,
+        final Class<? extends Deserializer<V>> valueDeserializer,
+        final Properties config) {
 
         // Build config
         Map<String, Object> kafkaConsumerConfig = buildDefaultClientConfig();
         kafkaConsumerConfig.put("key.deserializer", keyDeserializer);
         kafkaConsumerConfig.put("value.deserializer", valueDeserializer);
         kafkaConsumerConfig.put("partition.assignment.strategy", "org.apache.kafka.clients.consumer.RoundRobinAssignor");
+
+        // Override config
+        if (config != null) {
+            for (Map.Entry<Object, Object> entry: config.entrySet()) {
+                kafkaConsumerConfig.put(entry.getKey().toString(), entry.getValue());
+            }
+        }
 
         // Create and return Consumer.
         return new KafkaConsumer<>(kafkaConsumerConfig);
