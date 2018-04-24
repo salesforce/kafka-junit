@@ -45,7 +45,6 @@ import java.util.Properties;
 public class KafkaTestServerTest {
     /**
      * Integration test validates that we can use transactional consumers and producers against the Test kafka instance.
-     * Note - This test only runs on kafka versions >= 1.1.0.  This test will be skipped on earlier kafka versions.
      */
     @Test
     void testExactlyOnceTransaction() throws Exception {
