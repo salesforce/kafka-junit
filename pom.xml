@@ -85,7 +85,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Define which kafka version -->
-        <kafkaVersion>1.1.0</kafkaVersion>
+        <kafkaVersion>0.11.0.1</kafkaVersion>
 
         <!-- Define which Curator Test version -->
         <curatorTestVersion>2.12.0</curatorTestVersion>
