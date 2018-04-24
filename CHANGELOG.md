@@ -2,7 +2,7 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.1.0 (4/24/2018)
+## 2.2.0 (4/24/2018)
 - [Issue-5](https://github.com/salesforce/kafka-junit/issues/5) Updated to support Kafka versions 1.0.x and 1.1.x.  Thanks [kasuri](https://github.com/kasuri)! 
 
 ### Breaking Change
@@ -15,7 +15,7 @@ See below for an example...for more details refer to README.
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit4</artifactId>
-    <version>1.0.1</version>
+    <version>2.2.0</version>
     <scope>test</scope>
 </dependency>
 
@@ -33,6 +33,9 @@ See below for an example...for more details refer to README.
     <scope>test</scope>
 </dependency>
 ```
+
+## 2.1.0 (4/24/2018)
+ - Bungled release. Please use version 2.2.0.
 
 ## 2.0.0 (4/10/2018)
 - Created new modules to support both JUnit4 and JUnit 5.

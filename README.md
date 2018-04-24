@@ -54,6 +54,16 @@ We love contributions, but it's important that your pull request adhere to some 
 
 We use checkstyle aggressively on source and tests, our config is located under the 'script' folder and can be imported into your IDE of choice.
 
+## Releasing
+
+Steps for proper release:
+- Update release version: `mvn versions:set -DnewVersion=X.Y.Z`
+- Validate and then commit version: `mvn versions:commit`
+- Update CHANGELOG and README files.
+- Merge to master.
+- Deploy to Maven Central: `mvn clean deploy -P release-kafka-junit`
+- Create release on Github project.
+
 ## License
 
 [View License](LICENSE.txt)
