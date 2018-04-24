@@ -65,6 +65,11 @@ public class KafkaTestServer implements AutoCloseable {
     private KafkaServerStartable kafka;
 
     /**
+     * Random Generated Kafka Port.
+     */
+    private String kafkaPort;
+
+    /**
      * Defines what address the service advertises itself on.
      * Sane default is 127.0.0.1.
      */
@@ -103,7 +108,7 @@ public class KafkaTestServer implements AutoCloseable {
      * @return The proper connect string to use for Kafka.
      */
     public String getKafkaConnectString() {
-        return localHostname + ":" + getKafkaServer().serverConfig().advertisedPort();
+        return localHostname + ":" + kafkaPort;
     }
 
     /**
@@ -128,7 +133,7 @@ public class KafkaTestServer implements AutoCloseable {
         logDir.deleteOnExit();
 
         // Determine what port to run kafka on
-        final String kafkaPort = String.valueOf(InstanceSpec.getRandomPort());
+        kafkaPort = String.valueOf(InstanceSpec.getRandomPort());
 
         // Build properties
         Properties kafkaProperties = new Properties();
