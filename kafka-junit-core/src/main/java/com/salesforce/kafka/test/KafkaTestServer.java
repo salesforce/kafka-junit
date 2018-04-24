@@ -161,6 +161,8 @@ public class KafkaTestServer implements AutoCloseable {
         kafkaProperties.setProperty("offsets.topic.replication.factor", "1");
         kafkaProperties.setProperty("offset.storage.replication.factor", "1");
         kafkaProperties.setProperty("transaction.state.log.replication.factor", "1");
+        kafkaProperties.setProperty("transaction.state.log.min.isr", "1");
+        kafkaProperties.setProperty("transaction.state.log.num.partitions", "4");
         kafkaProperties.setProperty("config.storage.replication.factor", "1");
         kafkaProperties.setProperty("status.storage.replication.factor", "1");
         kafkaProperties.setProperty("default.replication.factor", "1");
