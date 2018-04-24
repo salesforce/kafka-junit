@@ -9,8 +9,6 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Properties;
@@ -19,8 +17,6 @@ import java.util.Properties;
  * Validation tests against KafkaTestServer class.
  */
 public class KafkaTestServerTest {
-    private static final Logger logger = LoggerFactory.getLogger(KafkaTestServerTest.class);
-
     /**
      * Integration test validates that we can use transactional consumers and producers against the Test kafka instance.
      * Note - This test only runs on kafka versions >= 1.1.0.  This test will be skipped on earlier kafka versions.
