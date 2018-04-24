@@ -32,7 +32,7 @@
 
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit</artifactId>
-    <version>2.0.0</version>
+    <version>2.1.0</version>
 
     <!-- Submodules -->
     <modules>
@@ -91,11 +91,12 @@
         <curatorTestVersion>2.12.0</curatorTestVersion>
 
         <!-- For logging in tests -->
-        <slf4j.version>1.7.25</slf4j.version>
+        <slf4jVersion>1.7.25</slf4jVersion>
 
         <!-- test toggling -->
         <skipTests>false</skipTests>
         <skipCheckStyle>false</skipCheckStyle>
+        <checkstyle.ruleset>script/checkstyle-ruleset.xml</checkstyle.ruleset>
     </properties>
 
     <!-- Module Scoped Dependencies -->
@@ -116,6 +117,7 @@
                     <artifactId>mail</artifactId>
                 </exclusion>
             </exclusions>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Kafka Client -->
@@ -123,6 +125,7 @@
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
             <version>${kafkaVersion}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Apache Curator Test -->
@@ -136,7 +139,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>${slf4j.version}</version>
+            <version>${slf4jVersion}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -202,7 +205,7 @@
                         <id>checkstyle-validate</id>
                         <phase>validate</phase><!-- when we need to run checkstyle::check -->
                         <configuration>
-                            <configLocation>script/checkstyle-ruleset.xml</configLocation>
+                            <configLocation>${checkstyle.ruleset}</configLocation>
                             <includeTestSourceDirectory>true</includeTestSourceDirectory>
                             <encoding>utf-8</encoding>
                             <consoleOutput>true</consoleOutput>
@@ -275,7 +278,7 @@
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>2.17</version>
                 <configuration>
-                    <configLocation>script/checkstyle-ruleset.xml</configLocation>
+                    <configLocation>${checkstyle.ruleset}</configLocation>
                 </configuration>
             </plugin>
         </plugins>

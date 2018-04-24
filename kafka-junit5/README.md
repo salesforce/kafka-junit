@@ -5,19 +5,100 @@ a "real" kafka server running within your tests, no more needing to stand up an 
 
 Kafka-JUnit5 is built on-top of **JUnit 5** as an Extension using the **@ExtendWith** annotation.
 
+Kafka-JUnit5 works with Kafka versions **0.11.0.x**, **1.0.x**, and **1.1.x** and must be explicitly declared in your project's POM.
+
 For usage with JUnit4 or more project information please review top level [README](../README.md). 
 
 ## Using Kafka-JUnit with JUnit 5.
 
 ### Usage & Examples
 
-Include this in your project's POM with scope test.
+Include this library in your project's POM with test scope.  **You'll also need to include the appropriate Kafka libraries you want to test against.**
 
-```
+```xml
+<!-- Declare kafka-junit5 dependency -->
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit5</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
+    <scope>test</scope>
+</dependency>
+```
+
+#### POM for Kafka 1.1.x
+
+```xml
+<!-- Declare kafka-junit5 dependency -->
+<dependency>
+    <groupId>com.salesforce.kafka.test</groupId>
+    <artifactId>kafka-junit5</artifactId>
+    <version>1.1.0</version>
+    <scope>test</scope>
+</dependency>
+
+<!-- Include Kafka 1.1.x -->
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka_2.11</artifactId>
+    <version>1.1.0</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka-clients</artifactId>
+    <version>1.1.0</version>
+    <scope>test</scope>
+</dependency>
+```
+
+#### POM for Kafka 1.0.x
+
+```xml
+<!-- Declare kafka-junit5 dependency -->
+<dependency>
+    <groupId>com.salesforce.kafka.test</groupId>
+    <artifactId>kafka-junit5</artifactId>
+    <version>1.1.0</version>
+    <scope>test</scope>
+</dependency>
+
+<!-- Include Kafka 1.0.x -->
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka_2.11</artifactId>
+    <version>1.0.1</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka-clients</artifactId>
+    <version>1.0.1</version>
+    <scope>test</scope>
+</dependency>
+```
+
+#### POM for Kafka 0.11.0.x
+
+```xml
+<!-- Declare kafka-junit5 dependency -->
+<dependency>
+    <groupId>com.salesforce.kafka.test</groupId>
+    <artifactId>kafka-junit5</artifactId>
+    <version>1.1.0</version>
+    <scope>test</scope>
+</dependency>
+
+<!-- Include Kafka 0.11.x -->
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka_2.11</artifactId>
+    <version>0.11.0.2</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka-clients</artifactId>
+    <version>0.11.0.2</version>
     <scope>test</scope>
 </dependency>
 ```
