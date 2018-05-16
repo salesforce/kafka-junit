@@ -182,6 +182,7 @@
                         <exclude>**.yml</exclude>
                         <exclude>**.yaml</exclude>
                         <exclude>**.xml</exclude>
+                        <exclude>**.versionsBackup</exclude>
                         <exclude>script/**</exclude>
                     </excludes>
                 </configuration>
@@ -212,6 +213,7 @@
                             <violationSeverity>warning</violationSeverity>
                             <failsOnError>true</failsOnError>
                             <enableRSS>false</enableRSS>
+                            <linkXRef>false</linkXRef>
 
                             <!-- By default we enable checkstyle validation -->
                             <skip>${skipCheckStyle}</skip>
