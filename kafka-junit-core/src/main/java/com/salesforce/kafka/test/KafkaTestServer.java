@@ -155,7 +155,8 @@ public class KafkaTestServer implements AutoCloseable {
         final String zkConnectionString = getZookeeperServer().getConnectString();
 
         // Build properties using a baseline from overrideBrokerProperties.
-        final Properties brokerProperties = new Properties(overrideBrokerProperties);
+        final Properties brokerProperties = new Properties();
+        brokerProperties.putAll(overrideBrokerProperties);
 
         // Put required zookeeper connection properties.
         setPropertyIfNotSet(brokerProperties, "zookeeper.connect", zkConnectionString);
