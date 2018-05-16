@@ -25,14 +25,17 @@
 
 package com.salesforce.kafka.test.junit4;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.salesforce.kafka.test.KafkaTestServer;
+import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.Node;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -44,28 +47,35 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test of KafkaTestServer.
+ * Test of SharedKafkaTestResource.
  *
  * This also serves as an example of how to use this library!
  */
-public class KafkaTestServerTest {
-    private static final Logger logger = LoggerFactory.getLogger(KafkaTestServerTest.class);
+public class SharedKafkaTestResourceTest {
+    private static final Logger logger = LoggerFactory.getLogger(SharedKafkaTestResourceTest.class);
 
     /**
      * We have a single embedded kafka server that gets started when this test class is initialized.
      *
      * It's automatically started before any methods are run via the @ClassRule annotation.
      * It's automatically stopped after all of the tests are completed via the @ClassRule annotation.
+     *
+     * This example we override the Kafka broker id to '12', but this serves as an example of how you
+     * how you could override any Kafka broker property.
      */
     @ClassRule
-    public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource();
+    public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
+        .withBrokerProperty("broker.id", "12");
 
     /**
      * Before every test, we generate a random topic name and create it within the embedded kafka server.
@@ -154,6 +164,25 @@ public class KafkaTestServerTest {
             getKafkaTestServer().createTopic(myTopic);
         }
         assertTrue("Made it here!", true);
+    }
+
+    /**
+     * Validate that broker Id was overridden correctly.
+     */
+    @Test
+    public void testBrokerIdOverride() throws ExecutionException, InterruptedException {
+        try (final AdminClient adminClient = getKafkaTestServer().getAdminClient()) {
+            final Collection<Node> nodes = adminClient.describeCluster().nodes().get();
+
+            assertNotNull("Sanity test, should not be null", nodes);
+            assertEquals("Should have 1 entry", 1, nodes.size());
+
+            // Get details about our test broker/node
+            final Node node = Iterables.get(nodes, 0);
+
+            // Validate
+            assertEquals("Has expected overridden broker Id", 12, node.id());
+        }
     }
 
     /**

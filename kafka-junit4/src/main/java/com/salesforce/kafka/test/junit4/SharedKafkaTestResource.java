@@ -32,6 +32,8 @@ import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Properties;
+
 /**
  * Creates and stands up an internal test kafka server to be shared across test cases within the same test class.
  *
@@ -57,6 +59,55 @@ public class SharedKafkaTestResource extends ExternalResource {
     private KafkaTestUtils kafkaTestUtils = null;
 
     /**
+     * Additional broker properties.
+     */
+    private final Properties brokerProperties = new Properties();
+
+    /**
+     * Default constructor.
+     */
+    public SharedKafkaTestResource() {
+        this(new Properties());
+    }
+
+    /**
+     * Constructor allowing passing additional broker properties.
+     * @param brokerProperties properties for Kafka broker.
+     */
+    public SharedKafkaTestResource(final Properties brokerProperties) {
+        this.brokerProperties.putAll(brokerProperties);
+    }
+
+    /**
+     * Helper to allow overriding Kafka broker properties.  Can only be called prior to the service
+     * being started.
+     * @param name Kafka broker configuration property name.
+     * @param value Value to set for the configuration property.
+     * @return SharedKafkaTestResource instance for method chaining.
+     * @throws IllegalArgumentException if name argument is null.
+     * @throws IllegalStateException if method called after service has started.
+     */
+    public SharedKafkaTestResource withBrokerProperty(final String name, final String value) {
+        // Validate input.
+        if (name == null) {
+            throw new IllegalArgumentException("Cannot pass null name argument");
+        }
+
+        // Validate state.
+        if (kafkaTestServer != null) {
+            throw new IllegalStateException("Cannot add properties after service has started");
+        }
+
+        // Add or set property.
+        if (value == null) {
+            brokerProperties.remove(name);
+        } else {
+            brokerProperties.put(name, value);
+        }
+        return this;
+    }
+
+    /**
      * Here we stand up an internal test kafka and zookeeper service.
      * Once for all tests that use this shared resource.
      */
@@ -66,7 +117,7 @@ public class SharedKafkaTestResource extends ExternalResource {
             throw new IllegalStateException("Unknown State!  Kafka Test Server already exists!");
         }
         // Setup kafka test server
-        kafkaTestServer = new KafkaTestServer();
+        kafkaTestServer = new KafkaTestServer(brokerProperties);
         kafkaTestServer.start();
     }
 
