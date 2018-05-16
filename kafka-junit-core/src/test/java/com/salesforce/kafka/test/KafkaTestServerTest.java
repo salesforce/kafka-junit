@@ -120,6 +120,10 @@ class KafkaTestServerTest {
 
         // Create our test server instance passing override properties.
         try (final KafkaTestServer kafkaTestServer = new KafkaTestServer(overrideProperties)) {
+            // Lets try to be sneaky and change our local property after calling the constructor.
+            // This shouldn't have any effect on the properties already passed into the constructor.
+            overrideProperties.put("broker.id", "1000");
+
             // Start service
             kafkaTestServer.start();
 
