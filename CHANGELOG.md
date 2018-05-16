@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Deprecated Kafka-JUnit5 @ExtendWith annotation implementations.  This has been replaced in favor of @RegisterExtension annotation.  Review [README.md](kafka-junit5/README.md) for more information on updated usage instructions.
 - Deprecated KafkaTestServer constructor: `public KafkaTestServer(final String localHostname)`
   
-  This constructor was replaced with the constructor `KafkaTestServer(final Properties overrideBrokerProperties)` where overrideBrokerProperties contains the property `host.name` set to the hostname or IP address Kafka should use. 
+  This constructor was replaced with the constructor `KafkaTestServer(final Properties overrideBrokerProperties)` where overrideBrokerProperties should contain the property `host.name` set to the hostname or IP address Kafka should use. 
 
 ## 2.2.0 (4/24/2018)
 - [Issue-5](https://github.com/salesforce/kafka-junit/issues/5) Updated to support Kafka versions 1.0.x and 1.1.x.  Thanks [kasuri](https://github.com/kasuri)!
