@@ -57,6 +57,11 @@ import java.util.concurrent.ExecutionException;
  */
 public class KafkaTestServer implements AutoCloseable {
     /**
+     * This defines the hostname the kafka instance will listen on by default.
+     */
+    private static final String DEFAULT_HOSTNAME = "127.0.0.1";
+
+    /**
      * Internal Test Zookeeper service.
      */
     private TestingServer zkServer;
@@ -72,46 +77,40 @@ public class KafkaTestServer implements AutoCloseable {
     private String kafkaPort;
 
     /**
-     * Defines what address the service advertises itself on.
-     * Sane default is 127.0.0.1.
-     */
-    private final String localHostname;
-
-    /**
      * Defines overridden broker properties.
      */
     private final Properties overrideBrokerProperties = new Properties();
 
     /**
-     * Default constructor using "127.0.0.1" as the advertised host.
+     * Default constructor.
      */
     public KafkaTestServer() {
-        this("127.0.0.1", new Properties());
+        this(new Properties());
     }
 
     /**
      * Alternative constructor allowing override of advertised host.
      * @param localHostname What IP or hostname to advertise services on.
+     * @deprecated Replaced with constructor: KafkaTestServer(final Properties overrideBrokerProperties)
+     *             Set "host.name" property to the hostname you want kafka to listen on.
      */
+    @Deprecated
     public KafkaTestServer(final String localHostname) {
-        this(localHostname, new Properties());
+        this(new Properties());
+
+        // Configure passed in hostname in broker properties.
+        overrideBrokerProperties.put("host.name", localHostname);
     }
 
     /**
-     * Alternative constructor allowing override of advertised host and brokerProperties.
+     * Alternative constructor allowing override of brokerProperties.
      * @param overrideBrokerProperties Define Kafka broker properties.
      */
     public KafkaTestServer(final Properties overrideBrokerProperties) {
-        this("127.0.0.1", overrideBrokerProperties);
-    }
-
-    /**
-     * Alternative constructor allowing override of advertised host and brokerProperties.
-     * @param localHostname What IP or hostname to advertise services on.
-     * @param overrideBrokerProperties Define Kafka broker properties.
-     */
-    public KafkaTestServer(final String localHostname, final Properties overrideBrokerProperties) {
-        this.localHostname = localHostname;
+        // Validate argument.
+        if (overrideBrokerProperties == null) {
+            throw new IllegalArgumentException("Cannot pass null overrideBrokerProperties argument");
+        }
 
         // Add passed in properties.
         this.overrideBrokerProperties.putAll(overrideBrokerProperties);
@@ -135,14 +134,14 @@ public class KafkaTestServer implements AutoCloseable {
      * @return The proper connect string to use for Kafka.
      */
     public String getKafkaConnectString() {
-        return localHostname + ":" + kafkaPort;
+        return getConfiguredHostname() + ":" + kafkaPort;
     }
 
     /**
      * @return The proper connect string to use for Zookeeper.
      */
     public String getZookeeperConnectString() {
-        return localHostname + ":" + getZookeeperServer().getPort();
+        return getConfiguredHostname() + ":" + getZookeeperServer().getPort();
     }
 
     /**
@@ -175,11 +174,11 @@ public class KafkaTestServer implements AutoCloseable {
         }
 
         // Ensure that we're advertising appropriately
-        setPropertyIfNotSet(brokerProperties, "host.name", localHostname);
-        setPropertyIfNotSet(brokerProperties, "advertised.host.name", localHostname);
+        setPropertyIfNotSet(brokerProperties, "host.name", getConfiguredHostname());
+        setPropertyIfNotSet(brokerProperties, "advertised.host.name", getConfiguredHostname());
         setPropertyIfNotSet(brokerProperties, "advertised.port", kafkaPort);
-        setPropertyIfNotSet(brokerProperties, "advertised.listeners", "PLAINTEXT://" + localHostname + ":" + kafkaPort);
-        setPropertyIfNotSet(brokerProperties, "listeners", "PLAINTEXT://" + localHostname + ":" + kafkaPort);
+        setPropertyIfNotSet(brokerProperties, "advertised.listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + kafkaPort);
+        setPropertyIfNotSet(brokerProperties, "listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + kafkaPort);
 
         // Set other defaults if not defined.
         setPropertyIfNotSet(brokerProperties, "auto.create.topics.enable", "true");
@@ -387,6 +386,17 @@ public class KafkaTestServer implements AutoCloseable {
 
         // Return the value that is being used.
         return properties.get(key);
+    }
+
+    /**
+     * Returns which hostname/IP address Kafka will bind/listen/advertise with.  To change this value
+     * use the constructor: KafkaTestServer(final Properties overrideBrokerProperties) and set the property
+     * 'host.name' to the appropriate value.
+     *
+     * @return Which hostname/IP Kafka should bind/listen/advertise using.
+     */
+    private String getConfiguredHostname() {
+        return overrideBrokerProperties.getProperty("host.name", DEFAULT_HOSTNAME);
     }
 
     /**
