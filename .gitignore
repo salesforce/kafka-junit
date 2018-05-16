@@ -6,4 +6,4 @@
 .settings/
 target/
 README.md.bak
-
+*.versionsBackup
