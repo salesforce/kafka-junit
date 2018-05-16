@@ -127,7 +127,7 @@ SharedKafkaTestResource exposes the ability to override properties set on the te
     /**
      * This is an example of how to override configuration values for the test kafka broker instance.
      * 
-     * Here we define the broker.id to be set to 100, and disable topic auto-creation.
+     * Here we define the broker.id to be set to 1000, and disable topic auto-creation.
      */
     @ClassRule
     public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
@@ -135,7 +135,7 @@ SharedKafkaTestResource exposes the ability to override properties set on the te
         .withBrokerProperty("auto.create.topics.enable", "false");
 ```
 
-SharedKafkaTestResource has two accessors that you can make use of in your tests to interact with the service.
+[SharedKafkaTestResource](src/main/java/com/salesforce/kafka/test/junit4/SharedKafkaTestResource.java) instance has two accessors that you can make use of in your tests to interact with the service.
 
 ```java
     /**
@@ -154,7 +154,7 @@ SharedKafkaTestResource has two accessors that you can make use of in your tests
 Often times you'll end up rebuilding the same patterns around producing and consuming data from this internal
 kafka server.  We've tried to collect some of these within [KafkaTestUtils](../kafka-junit-core/src/main/java/com/salesforce/kafka/test/KafkaTestUtils.java)!
 
-For usage and examples, check out it's test at [KafkaTestUtilsTest](src/test/java/com/salesforce/kafka/test/KafkaTestUtilsTest.java).
+For usage and examples, check out it's test at [KafkaTestUtilsTest](src/test/java/com/salesforce/kafka/test/junit4/KafkaTestUtilsTest.java).
 
 #### Zookeeper Test Server
 
@@ -175,7 +175,7 @@ If you need to run tests against an **only** embedded Zookeeper server and not a
     public static final SharedZookeeperTestResource sharedZookeeperTestResource = new SharedZookeeperTestResource();
 ```
 
-SharedZookeeperTestResource has the following accessors that you can make use of in your tests to interact with the Zookeeper instance.
+[SharedZookeeperTestResource](src/main/java/com/salesforce/kafka/test/junit4/SharedZookeeperTestResource.java) has the following accessors that you can make use of in your tests to interact with the Zookeeper instance.
 
 ```java
     /**
