@@ -33,12 +33,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Test of Zookeeper Test instance.
+ * @deprecated Please use SharedZookeeperTestResourceTest as a reference for using this library.
+ *
+ * Test of ZookeeperResourceExtension.
  *
  * This also serves as an example of how to use this library!
  */
+@Deprecated
 @ExtendWith(ZookeeperResourceExtension.class)
-public class ZookeeperTestServerTest {
+public class ZookeeperResourseExtensionTest {
     /**
      * We have a single embedded zookeeper server that gets started when this test class is initialized.
      *
@@ -52,7 +55,7 @@ public class ZookeeperTestServerTest {
      * Constructor where KafkaResourceExtension provides the sharedKafkaTestResource object.
      * @param sharedZookeeperTestResource Provided by ZookeeperResourceExtension.
      */
-    public ZookeeperTestServerTest(final SharedZookeeperTestResource sharedZookeeperTestResource) {
+    public ZookeeperResourseExtensionTest(final SharedZookeeperTestResource sharedZookeeperTestResource) {
         this.sharedZookeeperTestResource = sharedZookeeperTestResource;
     }
 

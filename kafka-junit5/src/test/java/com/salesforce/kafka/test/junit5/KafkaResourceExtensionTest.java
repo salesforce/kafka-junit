@@ -23,59 +23,59 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.kafka.test.junit4;
+package com.salesforce.kafka.test.junit5;
 
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.salesforce.kafka.test.KafkaTestServer;
-import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.apache.kafka.common.Node;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
-import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Test of SharedKafkaTestResource.
+ * @deprecated Please use SharedKafkaTestResourceTest as a reference for using this library.
  *
- * This also serves as an example of how to use this library!
+ * This serves as an example of how to use this library using @ExtendWith annotation.
  */
-public class SharedKafkaTestResourceTest {
-    private static final Logger logger = LoggerFactory.getLogger(SharedKafkaTestResourceTest.class);
+@Deprecated
+@ExtendWith(KafkaResourceExtension.class)
+class KafkaResourceExtensionTest {
+    private static final Logger logger = LoggerFactory.getLogger(KafkaResourceExtensionTest.class);
 
     /**
      * We have a single embedded kafka server that gets started when this test class is initialized.
      *
-     * It's automatically started before any methods are run via the @ClassRule annotation.
-     * It's automatically stopped after all of the tests are completed via the @ClassRule annotation.
-     *
-     * This example we override the Kafka broker id to '1000', but this serves as an example of how you
-     * how you could override any Kafka broker property.
+     * It's automatically started before any methods are run via the @ExtendWith annotation.
+     * It's automatically stopped after all of the tests are completed via the @ExtendWith annotation.
+     * This instance is passed to this class's constructor via the @ExtendWith annotation.
      */
-    @ClassRule
-    public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
-        .withBrokerProperty("broker.id", "1000");
+    private final SharedKafkaTestResource sharedKafkaTestResource;
+
+    /**
+     * Constructor where KafkaResourceExtension provides the sharedKafkaTestResource object.
+     * @param sharedKafkaTestResource Provided by KafkaResourceExtension.
+     */
+    public KafkaResourceExtensionTest(final SharedKafkaTestResource sharedKafkaTestResource) {
+        this.sharedKafkaTestResource = sharedKafkaTestResource;
+    }
 
     /**
      * Before every test, we generate a random topic name and create it within the embedded kafka server.
@@ -87,8 +87,8 @@ public class SharedKafkaTestResourceTest {
      * This happens once before every test method.
      * Create a new empty namespace with randomly generated name.
      */
-    @Before
-    public void beforeTest() {
+    @BeforeEach
+    void beforeTest() {
         // Generate topic name
         topicName = getClass().getSimpleName() + Clock.systemUTC().millis();
 
@@ -103,7 +103,7 @@ public class SharedKafkaTestResourceTest {
      * This also serves as a decent example of how to use the producer and consumer.
      */
     @Test
-    public void testProducerAndConsumer() throws Exception {
+    void testProducerAndConsumer() throws Exception {
         final int partitionId = 0;
 
         // Define our message
@@ -144,8 +144,8 @@ public class SharedKafkaTestResourceTest {
             logger.info("Found {} records in kafka", records.count());
             for (ConsumerRecord<String, String> record: records) {
                 // Validate
-                assertEquals("Key matches expected", expectedKey, record.key());
-                assertEquals("value matches expected", expectedValue, record.value());
+                assertEquals(expectedKey, record.key(), "Key matches expected");
+                assertEquals(expectedValue, record.value(), "value matches expected");
             }
         }
         while (!records.isEmpty());
@@ -158,31 +158,12 @@ public class SharedKafkaTestResourceTest {
      * Test if we create a topic more than once, no errors occur.
      */
     @Test
-    public void testCreatingTopicMultipleTimes() {
+    void testCreatingTopicMultipleTimes() {
         final String myTopic = "myTopic";
         for (int creationCounter = 0; creationCounter < 5; creationCounter++) {
             getKafkaTestServer().createTopic(myTopic);
         }
-        assertTrue("Made it here!", true);
-    }
-
-    /**
-     * Validate that broker Id was overridden correctly.
-     */
-    @Test
-    public void testBrokerIdOverride() throws ExecutionException, InterruptedException {
-        try (final AdminClient adminClient = getKafkaTestServer().getAdminClient()) {
-            final Collection<Node> nodes = adminClient.describeCluster().nodes().get();
-
-            assertNotNull("Sanity test, should not be null", nodes);
-            assertEquals("Should have 1 entry", 1, nodes.size());
-
-            // Get details about our test broker/node
-            final Node node = Iterables.get(nodes, 0);
-
-            // Validate
-            assertEquals("Has expected overridden broker Id", 1000, node.id());
-        }
+        assertTrue(true, "Made it here!");
     }
 
     /**

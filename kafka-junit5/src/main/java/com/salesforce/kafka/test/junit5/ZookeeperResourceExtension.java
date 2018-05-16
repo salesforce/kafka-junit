@@ -25,19 +25,16 @@
 
 package com.salesforce.kafka.test.junit5;
 
-import org.apache.curator.test.TestingServer;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
+ * @deprecated This class is superseded by SharedZookeeperTestResource.
+ *
  * JUnit 5 extension to provide an internal test zookeeper server to be shared across test cases within the same test class.
  *
  * Annotate your test class with:
@@ -54,34 +51,16 @@ import java.io.IOException;
  *   this.sharedZookeeperTestResource.getZookeeperTestServer()...
  *   this.sharedZookeeperTestResource.getZookeeperConnectString()...
  */
+@Deprecated
 public class ZookeeperResourceExtension implements BeforeAllCallback, AfterAllCallback, ParameterResolver {
-    private static final Logger logger = LoggerFactory.getLogger(ZookeeperResourceExtension.class);
-
-    private SharedZookeeperTestResource zookeeperTestResource = null;
+    private final SharedZookeeperTestResource zookeeperTestResource = new SharedZookeeperTestResource();
 
     /**
      * Here we shut down the internal test zookeeper service.
      */
     @Override
     public void afterAll(ExtensionContext context) throws Exception {
-        logger.info("Shutting down zookeeper test server");
-
-        // If we don't have an instance
-        if (zookeeperTestResource == null) {
-            // Nothing to close.
-            return;
-        }
-
-        try {
-            final TestingServer testingServer = zookeeperTestResource.getZookeeperTestServer();
-            testingServer.stop();
-            testingServer.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        // null out reference
-        zookeeperTestResource = null;
+        zookeeperTestResource.afterAll(context);
     }
 
     /**
@@ -90,12 +69,8 @@ public class ZookeeperResourceExtension implements BeforeAllCallback, AfterAllCa
      */
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
-        logger.info("Starting Zookeeper test server");
-        if (zookeeperTestResource != null) {
-            throw new IllegalStateException("Unknown State! Zookeeper test server already exists!");
-        }
         // Setup zookeeper test server
-        zookeeperTestResource = new SharedZookeeperTestResource();
+        zookeeperTestResource.beforeAll(context);
     }
 
     @Override

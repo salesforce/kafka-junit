@@ -35,6 +35,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * @deprecated This class is superseded by SharedKafkaTestResource.
+ *
  * JUnit 5 extension to provide an internal test kafka server to be shared across test cases within the same test class.
  *
  * Annotate your test class with:
@@ -50,6 +52,7 @@ import org.slf4j.LoggerFactory;
  * Within your test case methods:
  *   this.sharedKafkaTestResource.getKafkaTestServer()...
  */
+@Deprecated
 public class KafkaResourceExtension implements BeforeAllCallback, AfterAllCallback, ParameterResolver {
     private static final Logger logger = LoggerFactory.getLogger(KafkaResourceExtension.class);
 
@@ -64,12 +67,8 @@ public class KafkaResourceExtension implements BeforeAllCallback, AfterAllCallba
      */
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
-        logger.info("Starting kafka test server");
-
         // Start kafka test server
-        kafkaTestResource
-            .getKafkaTestServer()
-            .start();
+        kafkaTestResource.beforeAll(context);
     }
 
     /**
@@ -77,16 +76,7 @@ public class KafkaResourceExtension implements BeforeAllCallback, AfterAllCallba
      */
     @Override
     public void afterAll(ExtensionContext context) throws Exception {
-        logger.info("Shutting down kafka test server");
-
-        // Close out kafka test server if needed
-        try {
-            kafkaTestResource
-                .getKafkaTestServer()
-                .shutdown();
-        } catch (final Exception e) {
-            throw new RuntimeException(e);
-        }
+        kafkaTestResource.afterAll(context);
         kafkaTestResource = null;
     }
 

@@ -1,80 +1,56 @@
-/**
- * Copyright (c) 2017-2018, Salesforce.com, Inc.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
- * following conditions are met:
- *
- * * Redistributions of source code must retain the above copyright notice, this list of conditions and the following
- *   disclaimer.
- *
- * * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
- *   disclaimer in the documentation and/or other materials provided with the distribution.
- *
- * * Neither the name of Salesforce.com nor the names of its contributors may be used to endorse or promote products
- *   derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
- * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
 package com.salesforce.kafka.test.junit5;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.salesforce.kafka.test.KafkaTestServer;
+import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.Node;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Test of KafkaTestServer.
+ * Test of SharedKafkaTestResource.
  *
  * This also serves as an example of how to use this library!
  */
-@ExtendWith(KafkaResourceExtension.class)
-public class KafkaTestServerTest {
-    private static final Logger logger = LoggerFactory.getLogger(KafkaTestServerTest.class);
+class SharedKafkaTestResourceTest {
+    private static final Logger logger = LoggerFactory.getLogger(SharedKafkaTestResourceTest.class);
 
     /**
      * We have a single embedded kafka server that gets started when this test class is initialized.
      *
-     * It's automatically started before any methods are run via the @ExtendWith annotation.
-     * It's automatically stopped after all of the tests are completed via the @ExtendWith annotation.
-     * This instance is passed to this class's constructor via the @ExtendWith annotation.
+     * It's automatically started before any methods are run.
+     * It's automatically stopped after all of the tests are completed.
+     *
+     * This example we override the Kafka broker id to '12', but this serves as an example of how you
+     * how you could override any Kafka broker property.
      */
-    private final SharedKafkaTestResource sharedKafkaTestResource;
-
-    /**
-     * Constructor where KafkaResourceExtension provides the sharedKafkaTestResource object.
-     * @param sharedKafkaTestResource Provided by KafkaResourceExtension.
-     */
-    public KafkaTestServerTest(final SharedKafkaTestResource sharedKafkaTestResource) {
-        this.sharedKafkaTestResource = sharedKafkaTestResource;
-    }
+    @RegisterExtension
+    public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
+        .withBrokerProperty("broker.id", "1000");
 
     /**
      * Before every test, we generate a random topic name and create it within the embedded kafka server.
@@ -163,6 +139,25 @@ public class KafkaTestServerTest {
             getKafkaTestServer().createTopic(myTopic);
         }
         assertTrue(true, "Made it here!");
+    }
+
+    /**
+     * Validate that broker Id was overridden correctly.
+     */
+    @Test
+    void testBrokerIdOverride() throws ExecutionException, InterruptedException {
+        try (final AdminClient adminClient = getKafkaTestServer().getAdminClient()) {
+            final Collection<Node> nodes = adminClient.describeCluster().nodes().get();
+
+            assertNotNull(nodes, "Sanity test, should not be null");
+            assertEquals(1, nodes.size(), "Should have 1 entry");
+
+            // Get details about our test broker/node
+            final Node node = Iterables.get(nodes, 0);
+
+            // Validate
+            assertEquals(1000, node.id(), "Has expected overridden broker Id");
+        }
     }
 
     /**
