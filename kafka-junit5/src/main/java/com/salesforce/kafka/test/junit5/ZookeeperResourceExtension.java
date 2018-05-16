@@ -33,7 +33,7 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
 /**
- * @deprecated This class is superseded by SharedZookeeperTestResource.
+ * This class is superseded by SharedZookeeperTestResource.  Please reference it instead of this class.
  *
  * JUnit 5 extension to provide an internal test zookeeper server to be shared across test cases within the same test class.
  *
@@ -50,6 +50,8 @@ import org.junit.jupiter.api.extension.ParameterResolver;
  * Within your test case methods:
  *   this.sharedZookeeperTestResource.getZookeeperTestServer()...
  *   this.sharedZookeeperTestResource.getZookeeperConnectString()...
+ *
+ * @deprecated This class is superseded by SharedZookeeperTestResource.
  */
 @Deprecated
 public class ZookeeperResourceExtension implements BeforeAllCallback, AfterAllCallback, ParameterResolver {

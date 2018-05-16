@@ -86,7 +86,7 @@ class KafkaTestUtilsTest {
         final int partitionId = 2;
 
         // Create our utility class
-        final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(getKafkaTestServer());
+        final KafkaTestUtils kafkaTestUtils = sharedKafkaTestResource.getKafkaTestUtils();
 
         // Produce some random records
         final List<ProducedKafkaRecord<byte[], byte[]>> producedRecordsList =

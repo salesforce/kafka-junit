@@ -33,11 +33,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
+ * This serves as an example of how to use this library using @ExtendWith annotation.
+ *
  * @deprecated Please use SharedZookeeperTestResourceTest as a reference for using this library.
- *
- * Test of ZookeeperResourceExtension.
- *
- * This also serves as an example of how to use this library!
  */
 @Deprecated
 @ExtendWith(ZookeeperResourceExtension.class)

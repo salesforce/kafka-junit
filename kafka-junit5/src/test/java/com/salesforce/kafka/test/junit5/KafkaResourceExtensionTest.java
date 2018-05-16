@@ -51,9 +51,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * @deprecated Please use SharedKafkaTestResourceTest as a reference for using this library.
- *
  * This serves as an example of how to use this library using @ExtendWith annotation.
+ *
+ * @deprecated Please use SharedKafkaTestResourceTest as a reference for using this library.
  */
 @Deprecated
 @ExtendWith(KafkaResourceExtension.class)

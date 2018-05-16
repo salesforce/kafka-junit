@@ -35,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @deprecated This class is superseded by SharedKafkaTestResource.
+ * This class is superseded by SharedKafkaTestResource.  Please reference it instead of this class.
  *
  * JUnit 5 extension to provide an internal test kafka server to be shared across test cases within the same test class.
  *
@@ -51,6 +51,8 @@ import org.slf4j.LoggerFactory;
  *
  * Within your test case methods:
  *   this.sharedKafkaTestResource.getKafkaTestServer()...
+ *
+ * @deprecated This class is superseded by SharedKafkaTestResource.
  */
 @Deprecated
 public class KafkaResourceExtension implements BeforeAllCallback, AfterAllCallback, ParameterResolver {

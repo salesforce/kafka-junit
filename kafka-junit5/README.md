@@ -3,7 +3,7 @@
 This library wraps Kafka Test Server and allows you to easily create and run tests against
 a "real" kafka server running within your tests, no more needing to stand up an external kafka cluster!
 
-Kafka-JUnit5 is built on-top of **JUnit 5** as an Extension using the **@ExtendWith** annotation.
+Kafka-JUnit5 is built on-top of **JUnit 5** as an Extension using the **@RegisterExtension** annotation.
 
 Kafka-JUnit5 works with Kafka versions **0.11.0.x**, **1.0.x**, and **1.1.x** and must be explicitly declared in your project's POM.
 
@@ -20,7 +20,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit5</artifactId>
-    <version>2.2.0</version>
+    <version>2.2.1</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -32,7 +32,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit5</artifactId>
-    <version>2.2.0</version>
+    <version>2.2.1</version>
     <scope>test</scope>
 </dependency>
 
@@ -58,7 +58,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit5</artifactId>
-    <version>2.2.0</version>
+    <version>2.2.1</version>
     <scope>test</scope>
 </dependency>
 
@@ -84,7 +84,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit5</artifactId>
-    <version>2.2.0</version>
+    <version>2.2.1</version>
     <scope>test</scope>
 </dependency>
 
