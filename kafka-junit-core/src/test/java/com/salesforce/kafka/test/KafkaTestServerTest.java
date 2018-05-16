@@ -26,8 +26,11 @@
 package com.salesforce.kafka.test;
 
 import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.DescribeClusterResult;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -40,9 +43,11 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Validation tests against KafkaTestServer class.
@@ -143,6 +148,46 @@ class KafkaTestServerTest {
                 // Validate
                 Assertions.assertEquals(expectedBrokerId, node.idString(), "Has expected overridden broker Id");
             }
+        }
+    }
+
+    /**
+     * This test shows how you can run multiple brokers.
+     */
+    @Test
+    void testMultipleBrokersClass() throws InterruptedException, ExecutionException {
+        final String topicName = "MultiBrokerTest2-" + System.currentTimeMillis();
+
+        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(2)) {
+            // Start the cluster
+            kafkaTestCluster.start();
+
+            // TODO remove sleep
+            // TODO Find out a good way to know when the cluster is 'up'
+            try {
+                Thread.sleep(10_000L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            // Define a new topic with 2 partitions, with replication factor of 2.
+            final NewTopic newTopic = new NewTopic(topicName, 2, (short) 2);
+
+            // Attempt to create a topic
+            final AdminClient adminClientBroker1 = kafkaTestCluster.getKafkaBrokerById(1).getAdminClient();
+            adminClientBroker1
+                .createTopics(Collections.singletonList(newTopic))
+                .all()
+                .get();
+
+            // Lets describe the topic.
+            final TopicDescription topicDescription = adminClientBroker1
+                .describeTopics(Collections.singleton(topicName))
+                .values()
+                .get(topicName)
+                .get();
+
+            topicDescription.name();
         }
     }
 }
