@@ -80,13 +80,13 @@ public class KafkaTestServer implements AutoCloseable {
     /**
      * Defines overridden broker properties.
      */
-    private final Properties overrideBrokerProperties;
+    private final Properties overrideBrokerProperties = new Properties();
 
     /**
      * Default constructor using "127.0.0.1" as the advertised host.
      */
     public KafkaTestServer() {
-        this("127.0.0.1");
+        this("127.0.0.1", new Properties());
     }
 
     /**
@@ -94,8 +94,7 @@ public class KafkaTestServer implements AutoCloseable {
      * @param localHostname What IP or hostname to advertise services on.
      */
     public KafkaTestServer(final String localHostname) {
-        this.localHostname = localHostname;
-        this.overrideBrokerProperties = new Properties();
+        this(localHostname, new Properties());
     }
 
     /**
@@ -103,8 +102,7 @@ public class KafkaTestServer implements AutoCloseable {
      * @param overrideBrokerProperties Define Kafka broker properties.
      */
     public KafkaTestServer(final Properties overrideBrokerProperties) {
-        this.localHostname = "127.0.0.1";
-        this.overrideBrokerProperties = overrideBrokerProperties;
+        this("127.0.0.1", overrideBrokerProperties);
     }
 
     /**
@@ -114,7 +112,9 @@ public class KafkaTestServer implements AutoCloseable {
      */
     public KafkaTestServer(final String localHostname, final Properties overrideBrokerProperties) {
         this.localHostname = localHostname;
-        this.overrideBrokerProperties = overrideBrokerProperties;
+
+        // Add passed in properties.
+        this.overrideBrokerProperties.putAll(overrideBrokerProperties);
     }
 
     /**
