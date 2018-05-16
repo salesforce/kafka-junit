@@ -105,7 +105,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 
 #### KafkaTestServer
 
-A great example of how to use this can be found within our tests!  Check out [KafkaTestServerTest.java](src/test/java/com/salesforce/kafka/test/KafkaTestServerTest.java)
+A great example of how to use this can be found within our tests!  Check out [SharedKafkaTestResourceTest.java](src/test/java/com/salesforce/kafka/test/junit4/SharedKafkaTestResourceTest.java).
 
 Add the following to your JUnit test file and it will handle automatically starting and stopping the embedded Kafka 
 instance for you.
@@ -119,6 +119,20 @@ instance for you.
      */
     @ClassRule
     public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource();
+```
+
+SharedKafkaTestResource exposes the ability to override properties set on the test kafka broker instance.
+
+```java
+    /**
+     * This is an example of how to override configuration values for the test kafka broker instance.
+     * 
+     * Here we define the broker.id to be set to 100, and disable topic auto-creation.
+     */
+    @ClassRule
+    public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
+        .withBrokerProperty("broker.id", "1000")
+        .withBrokerProperty("auto.create.topics.enable", "false");
 ```
 
 SharedKafkaTestResource has two accessors that you can make use of in your tests to interact with the service.
@@ -138,9 +152,9 @@ SharedKafkaTestResource has two accessors that you can make use of in your tests
 #### KafkaTestUtils
 
 Often times you'll end up rebuilding the same patterns around producing and consuming data from this internal
-kafka server.  We've tried to collect some of these within [KafkaTestUtils](src/main/java/com/salesforce/kafka/test/KafkaTestUtils.java)!
+kafka server.  We've tried to collect some of these within [KafkaTestUtils](../kafka-junit-core/src/main/java/com/salesforce/kafka/test/KafkaTestUtils.java)!
 
-For usage and examples, check out it's test at [KafkaTestUtilsTest](src/test/java/com/salesforce/kafka/test/KafkaTestUtilsTest.java).
+For usage and examples, check out it's test at [KafkaTestUtilsTest](../kafka-junit-core/src/test/java/com/salesforce/kafka/test/KafkaTestUtilsTest.java).
 
 #### Zookeeper Test Server
 
