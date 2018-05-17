@@ -192,23 +192,33 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider {
     }
 
     @Override
-    public <K, V> KafkaProducer<K, V> getKafkaProducer(final Class<? extends Serializer<K>> keySerializer, final Class<? extends Serializer<V>> valueSerializer) {
+    public <K, V> KafkaProducer<K, V> getKafkaProducer(
+        final Class<? extends Serializer<K>> keySerializer,
+        final Class<? extends Serializer<V>> valueSerializer) {
         return getKafkaProducer(keySerializer, valueSerializer, new Properties());
     }
 
     @Override
-    public <K, V> KafkaProducer<K, V> getKafkaProducer(final Class<? extends Serializer<K>> keySerializer, final Class<? extends Serializer<V>> valueSerializer, final Properties config) {
+    public <K, V> KafkaProducer<K, V> getKafkaProducer(
+        final Class<? extends Serializer<K>> keySerializer,
+        final Class<? extends Serializer<V>> valueSerializer,
+        final Properties config) {
         return new KafkaTestUtils(this)
             .getKafkaProducer(keySerializer, valueSerializer, config);
     }
 
     @Override
-    public <K, V> KafkaConsumer<K, V> getKafkaConsumer(final Class<? extends Deserializer<K>> keyDeserializer, final Class<? extends Deserializer<V>> valueDeserializer) {
+    public <K, V> KafkaConsumer<K, V> getKafkaConsumer(
+        final Class<? extends Deserializer<K>> keyDeserializer,
+        final Class<? extends Deserializer<V>> valueDeserializer) {
         return getKafkaConsumer(keyDeserializer, valueDeserializer, new Properties());
     }
 
     @Override
-    public <K, V> KafkaConsumer<K, V> getKafkaConsumer(final Class<? extends Deserializer<K>> keyDeserializer, final Class<? extends Deserializer<V>> valueDeserializer, final Properties config) {
+    public <K, V> KafkaConsumer<K, V> getKafkaConsumer(
+        final Class<? extends Deserializer<K>> keyDeserializer,
+        final Class<? extends Deserializer<V>> valueDeserializer,
+        final Properties config) {
         return new KafkaTestUtils(this)
             .getKafkaConsumer(keyDeserializer, valueDeserializer, config);
     }

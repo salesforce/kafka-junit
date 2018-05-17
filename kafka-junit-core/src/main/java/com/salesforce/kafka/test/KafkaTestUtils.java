@@ -103,7 +103,9 @@ public class KafkaTestUtils {
         )) {
             for (final Map.Entry<byte[], byte[]> entry: keysAndValues.entrySet()) {
                 // Construct filter
-                final ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topicName, partitionId, entry.getKey(), entry.getValue());
+                final ProducerRecord<byte[], byte[]> record
+                    = new ProducerRecord<>(topicName, partitionId, entry.getKey(), entry.getValue());
+
                 producedRecords.add(record);
 
                 // Send it.
@@ -223,6 +225,12 @@ public class KafkaTestUtils {
         return allRecords;
     }
 
+    /**
+     * Creates a topic in Kafka. If the topic already exists this does nothing.
+     * @param topicName the namespace name to create.
+     * @param partitions the number of partitions to create.
+     * @param replicationFactor the number of replicas for the topic.
+     */
     public void createTopic(final String topicName, final int partitions, final short replicationFactor) {
         // Create admin client
         try (final AdminClient adminClient = getAdminClient()) {
