@@ -114,7 +114,8 @@ public class SharedKafkaTestResourceTest {
         final ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topicName, partitionId, expectedKey, expectedValue);
 
         // Create a new producer
-        final KafkaProducer<String, String> producer = getKafkaTestServer().getKafkaProducer(StringSerializer.class, StringSerializer.class);
+        final KafkaProducer<String, String> producer =
+            getKafkaTestServer().getKafkaProducer(StringSerializer.class, StringSerializer.class);
 
         // Produce it & wait for it to complete.
         final Future<RecordMetadata> future = producer.send(producerRecord);
