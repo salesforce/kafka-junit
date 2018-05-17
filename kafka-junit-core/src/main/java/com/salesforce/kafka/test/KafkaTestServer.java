@@ -25,8 +25,6 @@
 
 package com.salesforce.kafka.test;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
@@ -43,7 +41,6 @@ import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serializer;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -147,30 +144,17 @@ public class KafkaTestServer implements AutoCloseable {
 
     /**
      * Creates and starts ZooKeeper and Kafka server instances.
-     * @throws RuntimeException on startup errors.
+     * @throws Exception on startup errors.
      */
-    public void start() {
+    public void start() throws Exception {
+        // Start zookeeper
+        final InstanceSpec zkInstanceSpec = new InstanceSpec(null, -1, -1, -1, true, -1, -1, 1000);
+        zkServer = new TestingServer(zkInstanceSpec, true);
+        final String zkConnectionString = getZookeeperServer().getConnectString();
+
         // Build properties using a baseline from overrideBrokerProperties.
         final Properties brokerProperties = new Properties();
         brokerProperties.putAll(overrideBrokerProperties);
-
-        // TODO, we should allow passing in the Zookeeper TestingServer instance into KafkaTestServer
-        // Conditionally start zookeeper?
-        final String zkConnectionString;
-        if (brokerProperties.getProperty("zookeeper.connect") == null) {
-            // Start zookeeper
-            final InstanceSpec zkInstanceSpec = new InstanceSpec(null, -1, -1, -1, true, -1, -1, 1000);
-            try {
-                zkServer = new TestingServer(zkInstanceSpec, true);
-            } catch (Exception e) {
-                // Convert to runtime.
-                throw new RuntimeException(e.getMessage(), e);
-            }
-            zkConnectionString = getZookeeperServer().getConnectString();
-        } else {
-            // Assume zookeeper already running elsewhere
-            zkConnectionString = brokerProperties.getProperty("zookeeper.connect");
-        }
 
         // Put required zookeeper connection properties.
         setPropertyIfNotSet(brokerProperties, "zookeeper.connect", zkConnectionString);
@@ -375,7 +359,7 @@ public class KafkaTestServer implements AutoCloseable {
      * Internal helper method to build a default configuration.
      */
     private Map<String, Object> buildDefaultClientConfig() {
-        Map<String, Object> defaultClientConfig = Maps.newHashMap();
+        final Map<String, Object> defaultClientConfig = new HashMap<>();
         defaultClientConfig.put("bootstrap.servers", getKafkaConnectString());
         defaultClientConfig.put("client.id", "test-consumer-id");
         return defaultClientConfig;
@@ -390,8 +374,12 @@ public class KafkaTestServer implements AutoCloseable {
      */
     private Object setPropertyIfNotSet(final Properties properties, final String key, final String defaultValue) {
         // Validate inputs
-        Preconditions.checkNotNull(properties);
-        Preconditions.checkNotNull(key);
+        if (properties == null) {
+            throw new NullPointerException("properties argument cannot be null.");
+        }
+        if (key == null) {
+            throw new NullPointerException("key argument cannot be null.");
+        }
 
         // Conditionally set the property if its not already set.
         properties.setProperty(
@@ -417,21 +405,15 @@ public class KafkaTestServer implements AutoCloseable {
     /**
      * Closes the internal servers. Failing to call this at the end of your tests will likely
      * result in leaking instances.
-     * @throws RuntimeException on shutdown errors.
      */
     @Override
-    public void close() {
+    public void close() throws Exception {
         if (getKafkaServer() != null) {
             getKafkaServer().shutdown();
             kafka = null;
         }
         if (getZookeeperServer() != null) {
-            try {
-                getZookeeperServer().close();
-            } catch (final IOException exception) {
-                // Convert to runtime.
-                throw new RuntimeException(exception.getMessage(), exception);
-            }
+            getZookeeperServer().close();
             zkServer = null;
         }
     }

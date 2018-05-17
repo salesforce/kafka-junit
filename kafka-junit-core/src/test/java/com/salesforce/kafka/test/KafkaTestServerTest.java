@@ -26,7 +26,6 @@
 package com.salesforce.kafka.test;
 
 import com.google.common.collect.Iterables;
-import com.google.common.io.Files;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.DescribeClusterResult;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -43,7 +42,6 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
