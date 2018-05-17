@@ -31,21 +31,13 @@ import kafka.server.KafkaServerStartable;
 import org.apache.curator.test.InstanceSpec;
 import org.apache.curator.test.TestingServer;
 import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.CreateTopicsResult;
-import org.apache.kafka.clients.admin.KafkaAdminClient;
-import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serializer;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
 
 /**
  * This will spin up a ZooKeeper and Kafka server for use in integration tests. Simply
@@ -53,7 +45,7 @@ import java.util.concurrent.ExecutionException;
  * topics in an integration test. Be sure to call shutdown() when the test is complete
  * or use the AutoCloseable interface.
  */
-public class KafkaTestServer implements AutoCloseable {
+public class KafkaTestServer implements KafkaCluster, KafkaProvider {
     /**
      * This defines the hostname the kafka instance will listen on by default.
      */
@@ -237,7 +229,7 @@ public class KafkaTestServer implements AutoCloseable {
     /**
      * Creates a namespace in Kafka. If the namespace already exists this does nothing.
      * Will create a namespace with exactly 1 partition.
-     * @param topicName - the namespace name to create.
+     * @param topicName the namespace name to create.
      */
     public void createTopic(final String topicName) {
         createTopic(topicName, 1);
@@ -245,37 +237,26 @@ public class KafkaTestServer implements AutoCloseable {
 
     /**
      * Creates a topic in Kafka. If the topic already exists this does nothing.
-     * @param topicName - the namespace name to create.
-     * @param partitions - the number of partitions to create.
+     * @param topicName the namespace name to create.
+     * @param partitions the number of partitions to create.
      */
     public void createTopic(final String topicName, final int partitions) {
-        final short replicationFactor = 1;
+        createTopic(topicName, partitions, (short) 1);
+    }
 
-        // Create admin client
-        try (final AdminClient adminClient = getAdminClient()) {
-            try {
-                // Define topic
-                final NewTopic newTopic = new NewTopic(topicName, partitions, replicationFactor);
-
-                // Create topic, which is async call.
-                final CreateTopicsResult createTopicsResult = adminClient.createTopics(Collections.singleton(newTopic));
-
-                // Since the call is Async, Lets wait for it to complete.
-                createTopicsResult.values().get(topicName).get();
-            } catch (InterruptedException | ExecutionException e) {
-                if (!(e.getCause() instanceof TopicExistsException)) {
-                    throw new RuntimeException(e.getMessage(), e);
-                }
-                // TopicExistsException - Swallow this exception, just means the topic already exists.
-            }
-        }
+    @Override
+    public void createTopic(final String topicName, final int partitions, final short replicationFactor) {
+        new KafkaTestUtils(this)
+            .createTopic(topicName, partitions, replicationFactor);
     }
 
     /**
      * Shuts down the ZooKeeper and Kafka server instances. This *must* be called before the integration
      * test completes in order to clean up any running processes and data that was created.
      * @throws Exception on shutdown errors.
+     * @deprecated see close().
      */
+    @Deprecated
     public void shutdown() throws Exception {
         close();
     }
@@ -285,7 +266,8 @@ public class KafkaTestServer implements AutoCloseable {
      * @return Kafka AdminClient instance.
      */
     public AdminClient getAdminClient() {
-        return KafkaAdminClient.create(buildDefaultClientConfig());
+        return new KafkaTestUtils(this)
+            .getAdminClient();
     }
 
     /**
@@ -317,25 +299,8 @@ public class KafkaTestServer implements AutoCloseable {
         final Class<? extends Serializer<V>> valueSerializer,
         final Properties config) {
 
-        // Build config
-        final Map<String, Object> kafkaProducerConfig = new HashMap<>();
-        kafkaProducerConfig.put("bootstrap.servers", getKafkaConnectString());
-        kafkaProducerConfig.put("max.in.flight.requests.per.connection", 1);
-        kafkaProducerConfig.put("retries", 5);
-        kafkaProducerConfig.put("client.id", getClass().getSimpleName() + " Producer");
-        kafkaProducerConfig.put("batch.size", 0);
-        kafkaProducerConfig.put("key.serializer", keySerializer);
-        kafkaProducerConfig.put("value.serializer", valueSerializer);
-
-        // Override config
-        if (config != null) {
-            for (final Map.Entry<Object, Object> entry: config.entrySet()) {
-                kafkaProducerConfig.put(entry.getKey().toString(), entry.getValue());
-            }
-        }
-
-        // Create and return Producer.
-        return new KafkaProducer<>(kafkaProducerConfig);
+        return new KafkaTestUtils(this)
+            .getKafkaProducer(keySerializer, valueSerializer, config);
     }
 
     /**
@@ -366,31 +331,8 @@ public class KafkaTestServer implements AutoCloseable {
         final Class<? extends Deserializer<V>> valueDeserializer,
         final Properties config) {
 
-        // Build config
-        Map<String, Object> kafkaConsumerConfig = buildDefaultClientConfig();
-        kafkaConsumerConfig.put("key.deserializer", keyDeserializer);
-        kafkaConsumerConfig.put("value.deserializer", valueDeserializer);
-        kafkaConsumerConfig.put("partition.assignment.strategy", "org.apache.kafka.clients.consumer.RoundRobinAssignor");
-
-        // Override config
-        if (config != null) {
-            for (Map.Entry<Object, Object> entry: config.entrySet()) {
-                kafkaConsumerConfig.put(entry.getKey().toString(), entry.getValue());
-            }
-        }
-
-        // Create and return Consumer.
-        return new KafkaConsumer<>(kafkaConsumerConfig);
-    }
-
-    /**
-     * Internal helper method to build a default configuration.
-     */
-    private Map<String, Object> buildDefaultClientConfig() {
-        final Map<String, Object> defaultClientConfig = new HashMap<>();
-        defaultClientConfig.put("bootstrap.servers", getKafkaConnectString());
-        defaultClientConfig.put("client.id", "test-consumer-id");
-        return defaultClientConfig;
+        return new KafkaTestUtils(this)
+            .getKafkaConsumer(keyDeserializer, valueDeserializer, config);
     }
 
     /**

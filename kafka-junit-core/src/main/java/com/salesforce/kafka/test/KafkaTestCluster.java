@@ -26,7 +26,11 @@
 package com.salesforce.kafka.test;
 
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.common.Node;
+import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +48,7 @@ import java.util.stream.Collectors;
 /**
  * Utility for setting up a Cluster of KafkaTestServers.
  */
-public class KafkaTestCluster implements AutoCloseable {
+public class KafkaTestCluster implements KafkaCluster, KafkaProvider {
     private static final Logger logger = LoggerFactory.getLogger(KafkaTestCluster.class);
 
     /**
@@ -173,6 +177,40 @@ public class KafkaTestCluster implements AutoCloseable {
      */
     public String getZookeeperConnectString() {
         return zkTestServer.getZookeeperConnectString();
+    }
+
+    @Override
+    public void createTopic(final String topicName, final int partitions, final short replicationFactor) {
+        new KafkaTestUtils(this)
+            .createTopic(topicName, partitions, replicationFactor);
+    }
+
+    @Override
+    public AdminClient getAdminClient() {
+        return new KafkaTestUtils(this)
+            .getAdminClient();
+    }
+
+    @Override
+    public <K, V> KafkaProducer<K, V> getKafkaProducer(final Class<? extends Serializer<K>> keySerializer, final Class<? extends Serializer<V>> valueSerializer) {
+        return getKafkaProducer(keySerializer, valueSerializer, new Properties());
+    }
+
+    @Override
+    public <K, V> KafkaProducer<K, V> getKafkaProducer(final Class<? extends Serializer<K>> keySerializer, final Class<? extends Serializer<V>> valueSerializer, final Properties config) {
+        return new KafkaTestUtils(this)
+            .getKafkaProducer(keySerializer, valueSerializer, config);
+    }
+
+    @Override
+    public <K, V> KafkaConsumer<K, V> getKafkaConsumer(final Class<? extends Deserializer<K>> keyDeserializer, final Class<? extends Deserializer<V>> valueDeserializer) {
+        return getKafkaConsumer(keyDeserializer, valueDeserializer, new Properties());
+    }
+
+    @Override
+    public <K, V> KafkaConsumer<K, V> getKafkaConsumer(final Class<? extends Deserializer<K>> keyDeserializer, final Class<? extends Deserializer<V>> valueDeserializer, final Properties config) {
+        return new KafkaTestUtils(this)
+            .getKafkaConsumer(keyDeserializer, valueDeserializer, config);
     }
 
     /**
