@@ -2,7 +2,7 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 2.2.1 (5/16/2018)
+## 2.3.0 (5/17/2018)
 - [Issue-12](https://github.com/salesforce/kafka-junit/issues/12) Added ability to pass broker properties to be used by test kafka service instance.
 - Added helper method getAdminClient() on KafkaTestServer to get a configured AdminClient instance.
 - Deprecated Kafka-JUnit5 @ExtendWith annotation implementations.  This has been replaced in favor of @RegisterExtension annotation.  Review [README.md](kafka-junit5/README.md) for more information on updated usage instructions.
