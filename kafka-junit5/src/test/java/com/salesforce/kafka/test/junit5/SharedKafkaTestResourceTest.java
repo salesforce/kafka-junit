@@ -115,7 +115,7 @@ class SharedKafkaTestResourceTest {
 
         // Create a new producer
         try (final KafkaProducer<String, String> producer =
-             getKafkaTestServer().getKafkaProducer(StringSerializer.class, StringSerializer.class)) {
+            getKafkaTestServer().getKafkaProducer(StringSerializer.class, StringSerializer.class)) {
 
             // Produce it & wait for it to complete.
             Future<RecordMetadata> future = producer.send(producerRecord);
@@ -128,7 +128,7 @@ class SharedKafkaTestResourceTest {
 
         // Create consumer
         try (final KafkaConsumer<String, String> kafkaConsumer =
-             getKafkaTestServer().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class)) {
+            getKafkaTestServer().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class)) {
 
             final List<TopicPartition> topicPartitionList = new ArrayList<>();
             for (final PartitionInfo partitionInfo : kafkaConsumer.partitionsFor(topicName)) {

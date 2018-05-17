@@ -114,23 +114,21 @@ public class SharedKafkaTestResourceTest {
         final ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topicName, partitionId, expectedKey, expectedValue);
 
         // Create a new producer
-        final KafkaProducer<String, String> producer =
-            getKafkaTestServer().getKafkaProducer(StringSerializer.class, StringSerializer.class);
+        try (final KafkaProducer<String, String> producer =
+            getKafkaTestServer().getKafkaProducer(StringSerializer.class, StringSerializer.class)) {
 
-        // Produce it & wait for it to complete.
-        final Future<RecordMetadata> future = producer.send(producerRecord);
-        producer.flush();
-        while (!future.isDone()) {
-            Thread.sleep(500L);
+            // Produce it & wait for it to complete.
+            final Future<RecordMetadata> future = producer.send(producerRecord);
+            producer.flush();
+            while (!future.isDone()) {
+                Thread.sleep(500L);
+            }
+            logger.info("Produce completed");
         }
-        logger.info("Produce completed");
-
-        // Close producer!
-        producer.close();
 
         // Create consumer
         try (final KafkaConsumer<String, String> kafkaConsumer =
-             getKafkaTestServer().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class)) {
+            getKafkaTestServer().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class)) {
 
             final List<TopicPartition> topicPartitionList = new ArrayList<>();
             for (final PartitionInfo partitionInfo: kafkaConsumer.partitionsFor(topicName)) {
