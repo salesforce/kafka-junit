@@ -25,13 +25,9 @@
 
 package com.salesforce.kafka.test.junit4;
 
-import org.apache.curator.test.InstanceSpec;
+import com.salesforce.kafka.test.ZookeeperTestServer;
 import org.apache.curator.test.TestingServer;
 import org.junit.rules.ExternalResource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * Creates and stands up an internal test Zookeeper server to be shared across test cases within the same test class.
@@ -45,57 +41,41 @@ import java.io.IOException;
  *   sharedZookeeperTestResource.getZookeeperTestServer()...
  */
 public class SharedZookeeperTestResource extends ExternalResource {
-    private static final Logger logger = LoggerFactory.getLogger(SharedZookeeperTestResource.class);
-
     /**
      * Our internal Zookeeper test server instance.
      */
-    private TestingServer zookeeperTestServer = null;
-
-    /**
-     * Here we stand up an internal test zookeeper service.
-     * Once for all tests that use this shared resource.
-     */
-    protected void before() throws Exception {
-        logger.info("Starting Zookeeper test server");
-        if (zookeeperTestServer != null) {
-            throw new IllegalStateException("Unknown State! Zookeeper test server already exists!");
-        }
-        // Setup zookeeper test server
-        final InstanceSpec zkInstanceSpec = new InstanceSpec(null, -1, -1, -1, true, -1, -1, 1000);
-        zookeeperTestServer = new TestingServer(zkInstanceSpec, true);
-    }
-
-    /**
-     * Here we shut down the internal test zookeeper service.
-     */
-    protected void after() {
-        logger.info("Shutting down zookeeper test server");
-
-        // Close out zookeeper test server if needed
-        if (zookeeperTestServer == null) {
-            return;
-        }
-        try {
-            zookeeperTestServer.stop();
-            zookeeperTestServer.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        zookeeperTestServer = null;
-    }
+    private final ZookeeperTestServer zookeeperTestServer = new ZookeeperTestServer();
 
     /**
      * @return Shared Zookeeper test server instance.
+     * @throws IllegalStateException if before() has not been called yet.
      */
-    public TestingServer getZookeeperTestServer() {
-        return zookeeperTestServer;
+    public TestingServer getZookeeperTestServer() throws IllegalStateException {
+        return zookeeperTestServer.getZookeeperTestServer();
     }
 
     /**
      * @return Connection string to connect to the Zookeeper instance.
+     * @throws IllegalStateException if before() has not been called yet.
      */
-    public String getZookeeperConnectString() {
-        return zookeeperTestServer.getConnectString();
+    public String getZookeeperConnectString() throws IllegalStateException {
+        return zookeeperTestServer.getZookeeperConnectString();
+    }
+
+    /**
+     * Here we stand up an internal test zookeeper service.
+     * once for all tests that use this shared resource.
+     * @throws RuntimeException on startup errors.
+     */
+    protected void before() throws RuntimeException {
+        zookeeperTestServer.start();
+    }
+
+    /**
+     * Here we shut down the internal test zookeeper service.
+     * @throws RuntimeException on shutdown errors.
+     */
+    protected void after() throws RuntimeException {
+        zookeeperTestServer.stop();
     }
 }
