@@ -148,44 +148,4 @@ class KafkaTestServerTest {
             }
         }
     }
-
-    /**
-     * This test shows how you can run multiple brokers.
-     */
-    @Test
-    void testMultipleBrokersClass() throws InterruptedException, ExecutionException {
-        final String topicName = "MultiBrokerTest2-" + System.currentTimeMillis();
-
-        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(2)) {
-            // Start the cluster
-            kafkaTestCluster.start();
-
-            // TODO remove sleep
-            // TODO Find out a good way to know when the cluster is 'up'
-            try {
-                Thread.sleep(10_000L);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            // Define a new topic with 2 partitions, with replication factor of 2.
-            final NewTopic newTopic = new NewTopic(topicName, 2, (short) 2);
-
-            // Attempt to create a topic
-            final AdminClient adminClientBroker1 = kafkaTestCluster.getKafkaBrokerById(1).getAdminClient();
-            adminClientBroker1
-                .createTopics(Collections.singletonList(newTopic))
-                .all()
-                .get();
-
-            // Lets describe the topic.
-            final TopicDescription topicDescription = adminClientBroker1
-                .describeTopics(Collections.singleton(topicName))
-                .values()
-                .get(topicName)
-                .get();
-
-            topicDescription.name();
-        }
-    }
 }

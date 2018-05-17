@@ -1,9 +1,30 @@
+/**
+ * Copyright (c) 2017-2018, Salesforce.com, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+ * following conditions are met:
+ *
+ * * Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+ *   disclaimer.
+ *
+ * * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+ *   disclaimer in the documentation and/or other materials provided with the distribution.
+ *
+ * * Neither the name of Salesforce.com nor the names of its contributors may be used to endorse or promote products
+ *   derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 package com.salesforce.kafka.test;
 
-import org.apache.curator.test.InstanceSpec;
-import org.apache.curator.test.TestingServer;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -14,13 +35,23 @@ import java.util.Properties;
  */
 public class KafkaTestCluster implements AutoCloseable {
 
-    private final int numberOfBrokers;
-    private final List<KafkaTestServer> brokers = new ArrayList<>();
+    /**
+     * Internal Test Zookeeper service shared by all Kafka brokers.
+     */
+    private final ZookeeperTestServer zkTestServer = new ZookeeperTestServer();
 
     /**
-     * Internal Test Zookeeper service.
+     * Defines how many brokers will be created and started within the cluster.
      */
-    private TestingServer zkServer;
+    private final int numberOfBrokers;
+
+    /**
+     * List containing all of the brokers in the cluster.  Since each broker is quickly accessible via it's 'brokerId' property
+     * by simply removing 1 from it's id and using it as the index into the list.
+     *
+     * Example: to get brokerId = 4, retrieve index 3 in this list.
+     */
+    private final List<KafkaTestServer> brokers = new ArrayList<>();
 
     /**
      * Constructor.
@@ -33,27 +64,28 @@ public class KafkaTestCluster implements AutoCloseable {
         this.numberOfBrokers = numberOfBrokers;
     }
 
-    public void start() {
-        // Start Zookeeper instance.
-        final InstanceSpec zkInstanceSpec = new InstanceSpec(null, -1, -1, -1, true, -1, -1, 1000);
-        try {
-            zkServer = new TestingServer(zkInstanceSpec, true);
-            zkServer.start();
-        } catch (Exception e) {
-            // Convert to runtime.
-            throw new RuntimeException(e.getMessage(), e);
+    /**
+     * Starts the cluster.
+     * @throws Exception on startup errors.
+     */
+    public void start() throws Exception {
+        // If our brokers list is not empty
+        if (!brokers.isEmpty()) {
+            // That means we've already started the cluster.
+            throw new IllegalStateException("Cluster has already been started.");
         }
-        final String zkConnectionString = zkServer.getConnectString();
+
+        // Start Zookeeper instance.
+        zkTestServer.start();
 
         // Loop over brokers
         for (int brokerId = 1; brokerId <= numberOfBrokers; brokerId++) {
             // Create properties for brokers
             final Properties brokerProperties = new Properties();
             brokerProperties.put("broker.id", String.valueOf(brokerId));
-            brokerProperties.put("zookeeper.connect", zkConnectionString);
 
             // Create new KafkaTestServer
-            final KafkaTestServer kafkaBroker = new KafkaTestServer(brokerProperties);
+            final KafkaTestServer kafkaBroker = new KafkaTestServer(brokerProperties, zkTestServer.getZookeeperTestServer());
 
             // Start it
             kafkaBroker.start();
@@ -63,30 +95,38 @@ public class KafkaTestCluster implements AutoCloseable {
         }
     }
 
+    /**
+     * @return immutable list of brokers within the cluster.
+     */
     public List<KafkaTestServer> getKafkaBrokers() {
         return Collections.unmodifiableList(brokers);
     }
 
+    /**
+     * Retrieve a broker by its brokerId.
+     * @param brokerId the Id of the broker to retrieve.
+     * @return KafkaTestServer instance for the given broker Id.
+     */
     public KafkaTestServer getKafkaBrokerById(final int brokerId) {
         // Brokers are zero indexed in the array.
         return brokers.get(brokerId - 1);
     }
 
+    /**
+     * Shuts the cluster down.
+     * @throws Exception on shutdown errors.
+     */
     @Override
-    public void close() {
+    public void close() throws Exception {
         // Loop over brokers
         for (final KafkaTestServer kafkaBroker : brokers) {
             kafkaBroker.close();
         }
 
+        // Empty our list of brokers.
+        brokers.clear();
+
         // Stop zkServer
-        if (zkServer == null) {
-            return;
-        }
-        try {
-            zkServer.stop();
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
+        zkTestServer.stop();
     }
 }

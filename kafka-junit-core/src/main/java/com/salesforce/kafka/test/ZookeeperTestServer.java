@@ -62,6 +62,10 @@ public class ZookeeperTestServer {
         }
     }
 
+    public boolean hasStarted() {
+        return zookeeperTestServer != null;
+    }
+
     /**
      * Stops the internal Test zookeeper server instance.
      */

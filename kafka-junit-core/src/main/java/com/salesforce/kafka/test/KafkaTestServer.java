@@ -115,6 +115,16 @@ public class KafkaTestServer implements AutoCloseable {
     }
 
     /**
+     * Constructor allowing override of brokerProperties and ZookeeperTestServer instance.
+     * @param overrideBrokerProperties Define Kafka broker properties.
+     * @param zookeeperTestServer Zookeeper server instance to use.
+     */
+    public KafkaTestServer(final Properties overrideBrokerProperties, final TestingServer zookeeperTestServer) {
+        this(overrideBrokerProperties);
+        this.zkServer = zookeeperTestServer;
+    }
+
+    /**
      * @return Internal Zookeeper Server.
      */
     public TestingServer getZookeeperServer() {
@@ -148,8 +158,11 @@ public class KafkaTestServer implements AutoCloseable {
      */
     public void start() throws Exception {
         // Start zookeeper
-        final InstanceSpec zkInstanceSpec = new InstanceSpec(null, -1, -1, -1, true, -1, -1, 1000);
-        zkServer = new TestingServer(zkInstanceSpec, true);
+        if (zkServer == null) {
+            final InstanceSpec zkInstanceSpec = new InstanceSpec(null, -1, -1, -1, true, -1, -1, 1000);
+            zkServer = new TestingServer(zkInstanceSpec, false);
+        }
+        zkServer.start();
         final String zkConnectionString = getZookeeperServer().getConnectString();
 
         // Build properties using a baseline from overrideBrokerProperties.
@@ -412,9 +425,10 @@ public class KafkaTestServer implements AutoCloseable {
             getKafkaServer().shutdown();
             kafka = null;
         }
+
+        // TODO conditionally close?
         if (getZookeeperServer() != null) {
             getZookeeperServer().close();
-            zkServer = null;
         }
     }
 }
