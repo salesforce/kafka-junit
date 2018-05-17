@@ -28,6 +28,7 @@ package com.salesforce.kafka.test;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicDescription;
+import org.apache.kafka.common.TopicPartitionInfo;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -39,22 +40,15 @@ class KafkaTestClusterTest {
      */
     @Test
     void testMultipleBrokersClass() throws Exception {
+        final int numberOfBrokers = 2;
         final String topicName = "MultiBrokerTest2-" + System.currentTimeMillis();
 
-        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(2)) {
+        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
             // Start the cluster
             kafkaTestCluster.start();
 
-            // TODO remove sleep
-            // TODO Find out a good way to know when the cluster is 'up'
-            try {
-                Thread.sleep(10_000L);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
             // Define a new topic with 2 partitions, with replication factor of 2.
-            final NewTopic newTopic = new NewTopic(topicName, 2, (short) 2);
+            final NewTopic newTopic = new NewTopic(topicName, numberOfBrokers, (short) numberOfBrokers);
 
             // Attempt to create a topic
             final AdminClient adminClientBroker1 = kafkaTestCluster.getKafkaBrokerById(1).getAdminClient();
@@ -70,8 +64,14 @@ class KafkaTestClusterTest {
                 .get(topicName)
                 .get();
 
-            // TODO better test case.
-            Assertions.assertEquals(2, topicDescription.partitions().size(), "Should have 2 partitions.");
+            // Validate has 2 partitions
+            Assertions.assertEquals(numberOfBrokers, topicDescription.partitions().size(), "Correct number of partitions.");
+
+            // Validate the partitions have 2 replicas
+            for (final TopicPartitionInfo topicPartitionInfo : topicDescription.partitions()) {
+                Assertions.assertEquals(numberOfBrokers, topicPartitionInfo.replicas().size(), "Should have 2 replicas");
+                Assertions.assertEquals(numberOfBrokers, topicPartitionInfo.isr().size(), "Should have 2 In-Sync-Replicas");
+            }
         }
     }
 }

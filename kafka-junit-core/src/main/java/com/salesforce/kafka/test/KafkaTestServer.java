@@ -65,6 +65,11 @@ public class KafkaTestServer implements AutoCloseable {
     private TestingServer zkServer;
 
     /**
+     * Flag to know if we are managing the zookeeper server.
+     */
+    private boolean isManagingZookeeper = true;
+
+    /**
      * Internal Test Kafka service.
      */
     private KafkaServerStartable kafka;
@@ -121,6 +126,10 @@ public class KafkaTestServer implements AutoCloseable {
      */
     public KafkaTestServer(final Properties overrideBrokerProperties, final TestingServer zookeeperTestServer) {
         this(overrideBrokerProperties);
+
+        if (zookeeperTestServer != null) {
+            isManagingZookeeper = false;
+        }
         this.zkServer = zookeeperTestServer;
     }
 
@@ -426,8 +435,8 @@ public class KafkaTestServer implements AutoCloseable {
             kafka = null;
         }
 
-        // TODO conditionally close?
-        if (getZookeeperServer() != null) {
+        // Conditionally close zookeeper
+        if (getZookeeperServer() != null && isManagingZookeeper) {
             getZookeeperServer().close();
         }
     }

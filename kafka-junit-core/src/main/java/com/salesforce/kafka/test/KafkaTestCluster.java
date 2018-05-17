@@ -25,15 +25,31 @@
 
 package com.salesforce.kafka.test;
 
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.common.Node;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Utility for setting up a Cluster of KafkaTestServers.
  */
 public class KafkaTestCluster implements AutoCloseable {
+    private static final Logger logger = LoggerFactory.getLogger(KafkaTestCluster.class);
+
+    /**
+     * Clock instance.
+     */
+    private final Clock clock = Clock.systemUTC();
 
     /**
      * Internal Test Zookeeper service shared by all Kafka brokers.
@@ -67,8 +83,9 @@ public class KafkaTestCluster implements AutoCloseable {
     /**
      * Starts the cluster.
      * @throws Exception on startup errors.
+     * @throws TimeoutException When the cluster fails to start up within a timely manner.
      */
-    public void start() throws Exception {
+    public void start() throws Exception, TimeoutException {
         // If our brokers list is not empty
         if (!brokers.isEmpty()) {
             // That means we've already started the cluster.
@@ -93,6 +110,45 @@ public class KafkaTestCluster implements AutoCloseable {
             // Add to our broker list
             brokers.add(kafkaBroker);
         }
+
+        // Block until the cluster is 'up' or the timeout is exceeded.
+        waitUntilClusterReady(10_000L);
+    }
+
+    private void waitUntilClusterReady(final long timeoutMs) throws TimeoutException {
+        final long startTime = clock.millis();
+
+        // Get 1st broker
+        final KafkaTestServer broker = getKafkaBrokers().get(0);
+
+        // Get AdminClient for first broker.
+        do {
+            try (final AdminClient adminClient = broker.getAdminClient()) {
+                // Ask for the nodes in the cluster.
+                final Collection<Node> nodes = adminClient.describeCluster().nodes().get(timeoutMs, TimeUnit.MILLISECONDS);
+
+                // We should know how many nodes there are
+                if (nodes.size() >= numberOfBrokers) {
+                    // Looks like the cluster is ready to go.
+                    logger.info("Found {} brokers, looks like cluster is ready", nodes.size());
+                    return;
+                }
+                logger.info("Found {} brokers, looks like cluster is still starting up.", nodes.size());
+
+                // Small wait to throttle cycling.
+                Thread.sleep(100);
+            } catch (final InterruptedException exception) {
+                // Caught interrupt, break out of loop.
+                break;
+            } catch (final ExecutionException exception) {
+                // Skip to next iteration of loop
+                continue;
+            }
+        }
+        while (clock.millis() <= startTime + timeoutMs);
+
+        // If we got here, throw timeout exception
+        throw new TimeoutException("Cluster failed to come online within " + timeoutMs + " milliseconds.");
     }
 
     /**
