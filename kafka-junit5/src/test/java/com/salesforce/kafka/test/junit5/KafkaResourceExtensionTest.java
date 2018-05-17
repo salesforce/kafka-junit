@@ -23,9 +23,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.kafka.test.junit4;
+package com.salesforce.kafka.test.junit5;
 
-import com.google.common.collect.Lists;
 import com.salesforce.kafka.test.KafkaTestServer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -37,35 +36,46 @@ import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Test of KafkaTestServer.
+ * This serves as an example of how to use this library using @ExtendWith annotation.
  *
- * This also serves as an example of how to use this library!
+ * @deprecated Please use SharedKafkaTestResourceTest as a reference for using this library.
  */
-public class KafkaTestServerTest {
-    private static final Logger logger = LoggerFactory.getLogger(KafkaTestServerTest.class);
+@Deprecated
+@ExtendWith(KafkaResourceExtension.class)
+class KafkaResourceExtensionTest {
+    private static final Logger logger = LoggerFactory.getLogger(KafkaResourceExtensionTest.class);
 
     /**
      * We have a single embedded kafka server that gets started when this test class is initialized.
      *
-     * It's automatically started before any methods are run via the @ClassRule annotation.
-     * It's automatically stopped after all of the tests are completed via the @ClassRule annotation.
+     * It's automatically started before any methods are run via the @ExtendWith annotation.
+     * It's automatically stopped after all of the tests are completed via the @ExtendWith annotation.
+     * This instance is passed to this class's constructor via the @ExtendWith annotation.
      */
-    @ClassRule
-    public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource();
+    private final SharedKafkaTestResource sharedKafkaTestResource;
+
+    /**
+     * Constructor where KafkaResourceExtension provides the sharedKafkaTestResource object.
+     * @param sharedKafkaTestResource Provided by KafkaResourceExtension.
+     */
+    public KafkaResourceExtensionTest(final SharedKafkaTestResource sharedKafkaTestResource) {
+        this.sharedKafkaTestResource = sharedKafkaTestResource;
+    }
 
     /**
      * Before every test, we generate a random topic name and create it within the embedded kafka server.
@@ -77,8 +87,8 @@ public class KafkaTestServerTest {
      * This happens once before every test method.
      * Create a new empty namespace with randomly generated name.
      */
-    @Before
-    public void beforeTest() {
+    @BeforeEach
+    void beforeTest() {
         // Generate topic name
         topicName = getClass().getSimpleName() + Clock.systemUTC().millis();
 
@@ -93,7 +103,7 @@ public class KafkaTestServerTest {
      * This also serves as a decent example of how to use the producer and consumer.
      */
     @Test
-    public void testProducerAndConsumer() throws Exception {
+    void testProducerAndConsumer() throws Exception {
         final int partitionId = 0;
 
         // Define our message
@@ -117,43 +127,41 @@ public class KafkaTestServerTest {
         // Close producer!
         producer.close();
 
-        KafkaConsumer<String, String> kafkaConsumer =
-            getKafkaTestServer().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class);
-
-        final List<TopicPartition> topicPartitionList = Lists.newArrayList();
-        for (final PartitionInfo partitionInfo: kafkaConsumer.partitionsFor(topicName)) {
-            topicPartitionList.add(new TopicPartition(partitionInfo.topic(), partitionInfo.partition()));
-        }
-        kafkaConsumer.assign(topicPartitionList);
-        kafkaConsumer.seekToBeginning(topicPartitionList);
-
-        // Pull records from kafka, keep polling until we get nothing back
-        ConsumerRecords<String, String> records;
-        do {
-            records = kafkaConsumer.poll(2000L);
-            logger.info("Found {} records in kafka", records.count());
-            for (ConsumerRecord<String, String> record: records) {
-                // Validate
-                assertEquals("Key matches expected", expectedKey, record.key());
-                assertEquals("value matches expected", expectedValue, record.value());
+        // Create consumer
+        try (final KafkaConsumer<String, String> kafkaConsumer =
+            getKafkaTestServer().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class)) {
+            final List<TopicPartition> topicPartitionList = new ArrayList<>();
+            for (final PartitionInfo partitionInfo: kafkaConsumer.partitionsFor(topicName)) {
+                topicPartitionList.add(new TopicPartition(partitionInfo.topic(), partitionInfo.partition()));
             }
-        }
-        while (!records.isEmpty());
+            kafkaConsumer.assign(topicPartitionList);
+            kafkaConsumer.seekToBeginning(topicPartitionList);
 
-        // close consumer
-        kafkaConsumer.close();
+            // Pull records from kafka, keep polling until we get nothing back
+            ConsumerRecords<String, String> records;
+            do {
+                records = kafkaConsumer.poll(2000L);
+                logger.info("Found {} records in kafka", records.count());
+                for (ConsumerRecord<String, String> record: records) {
+                    // Validate
+                    assertEquals(expectedKey, record.key(), "Key matches expected");
+                    assertEquals(expectedValue, record.value(), "value matches expected");
+                }
+            }
+            while (!records.isEmpty());
+        }
     }
 
     /**
      * Test if we create a topic more than once, no errors occur.
      */
     @Test
-    public void testCreatingTopicMultipleTimes() {
+    void testCreatingTopicMultipleTimes() {
         final String myTopic = "myTopic";
         for (int creationCounter = 0; creationCounter < 5; creationCounter++) {
             getKafkaTestServer().createTopic(myTopic);
         }
-        assertTrue("Made it here!", true);
+        assertTrue(true, "Made it here!");
     }
 
     /**

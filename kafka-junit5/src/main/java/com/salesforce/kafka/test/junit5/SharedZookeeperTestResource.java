@@ -25,38 +25,53 @@
 
 package com.salesforce.kafka.test.junit5;
 
-import org.apache.curator.test.InstanceSpec;
+import com.salesforce.kafka.test.ZookeeperTestServer;
 import org.apache.curator.test.TestingServer;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 /**
  * Shared Zookeeper Test Resource instance.  Contains references to internal Zookeeper server instances.
  */
-public class SharedZookeeperTestResource {
+public class SharedZookeeperTestResource implements BeforeAllCallback, AfterAllCallback {
     /**
      * Our internal Zookeeper test server instance.
      */
-    private TestingServer zookeeperTestServer = null;
+    private final ZookeeperTestServer zookeeperTestServer = new ZookeeperTestServer();
 
     /**
      * @return Shared Zookeeper test server instance.
+     * @throws IllegalStateException if before() has not been called yet.
      */
-    public TestingServer getZookeeperTestServer() {
-        if (zookeeperTestServer == null) {
-            // Setup zookeeper test server
-            final InstanceSpec zkInstanceSpec = new InstanceSpec(null, -1, -1, -1, true, -1, -1, 1000);
-            try {
-                zookeeperTestServer = new TestingServer(zkInstanceSpec, true);
-            } catch (Exception e) {
-                throw new RuntimeException(e.getMessage(), e);
-            }
-        }
-        return zookeeperTestServer;
+    public TestingServer getZookeeperTestServer() throws IllegalStateException {
+        return zookeeperTestServer.getZookeeperTestServer();
     }
 
     /**
      * @return Connection string to connect to the Zookeeper instance.
+     * @throws IllegalStateException if before() has not been called yet.
      */
-    public String getZookeeperConnectString() {
-        return getZookeeperTestServer().getConnectString();
+    public String getZookeeperConnectString() throws IllegalStateException {
+        return zookeeperTestServer.getZookeeperConnectString();
+    }
+
+    /**
+     * Here we stand up an internal test zookeeper service.
+     * once for all tests that use this shared resource.
+     * @throws RuntimeException on startup errors.
+     */
+    @Override
+    public void beforeAll(ExtensionContext context) throws RuntimeException {
+        zookeeperTestServer.start();
+    }
+
+    /**
+     * Here we shut down the internal test zookeeper service.
+     * @throws RuntimeException on shutdown errors.
+     */
+    @Override
+    public void afterAll(ExtensionContext context) {
+        zookeeperTestServer.stop();
     }
 }

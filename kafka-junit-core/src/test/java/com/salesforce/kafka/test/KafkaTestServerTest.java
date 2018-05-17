@@ -25,24 +25,29 @@
 
 package com.salesforce.kafka.test;
 
+import com.google.common.collect.Iterables;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.DescribeClusterResult;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.Node;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
 
 /**
  * Validation tests against KafkaTestServer class.
  */
-public class KafkaTestServerTest {
+class KafkaTestServerTest {
     /**
      * Integration test validates that we can use transactional consumers and producers against the Test kafka instance.
      */
@@ -97,6 +102,46 @@ public class KafkaTestServerTest {
                         consumer.commitSync();
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Integration test validates that we can override broker properties.
+     */
+    @Test
+    void testOverrideBrokerProperties() throws Exception {
+        final String expectedBrokerId = "22";
+
+        // Define our override property
+        final Properties overrideProperties = new Properties();
+        overrideProperties.put("broker.id", expectedBrokerId);
+        
+        // Create our test server instance passing override properties.
+        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer(overrideProperties)) {
+            // Lets try to be sneaky and change our local property after calling the constructor.
+            // This shouldn't have any effect on the properties already passed into the constructor.
+            overrideProperties.put("broker.id", "1000");
+
+            // Start service
+            kafkaTestServer.start();
+
+            // Create an AdminClient
+            try (final AdminClient adminClient = kafkaTestServer.getAdminClient()) {
+                // Describe details about the cluster
+                final DescribeClusterResult result = adminClient.describeCluster();
+
+                // Get details about the nodes
+                final Collection<Node> nodes = result.nodes().get();
+
+                // Sanity test
+                Assertions.assertEquals(1, nodes.size(), "Should only have a single node");
+
+                // Get details about our test broker/node
+                final Node node = Iterables.get(nodes, 0);
+
+                // Validate
+                Assertions.assertEquals(expectedBrokerId, node.idString(), "Has expected overridden broker Id");
             }
         }
     }

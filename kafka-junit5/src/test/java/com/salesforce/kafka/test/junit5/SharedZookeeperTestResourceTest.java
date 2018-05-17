@@ -27,18 +27,17 @@ package com.salesforce.kafka.test.junit5;
 
 import org.apache.curator.test.TestingServer;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Test of Zookeeper Test instance.
+ * Test of SharedZookeeperTestResource.
  *
  * This also serves as an example of how to use this library!
  */
-@ExtendWith(ZookeeperResourceExtension.class)
-public class ZookeeperTestServerTest {
+class SharedZookeeperTestResourceTest {
     /**
      * We have a single embedded zookeeper server that gets started when this test class is initialized.
      *
@@ -46,15 +45,8 @@ public class ZookeeperTestServerTest {
      * It's automatically stopped after all of the tests are completed via the @ExtendWith annotation.
      * This instance is passed to this class's constructor via the @ExtendWith annotation.
      */
-    private final SharedZookeeperTestResource sharedZookeeperTestResource;
-
-    /**
-     * Constructor where KafkaResourceExtension provides the sharedKafkaTestResource object.
-     * @param sharedZookeeperTestResource Provided by ZookeeperResourceExtension.
-     */
-    public ZookeeperTestServerTest(final SharedZookeeperTestResource sharedZookeeperTestResource) {
-        this.sharedZookeeperTestResource = sharedZookeeperTestResource;
-    }
+    @RegisterExtension
+    public static final SharedZookeeperTestResource sharedZookeeperTestResource = new SharedZookeeperTestResource();
 
     /**
      * Validates that we receive a sane looking ZK connection string.

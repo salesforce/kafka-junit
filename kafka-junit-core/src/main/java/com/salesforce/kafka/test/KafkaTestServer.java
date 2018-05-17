@@ -25,7 +25,6 @@
 
 package com.salesforce.kafka.test;
 
-import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
@@ -56,6 +55,11 @@ import java.util.concurrent.ExecutionException;
  */
 public class KafkaTestServer implements AutoCloseable {
     /**
+     * This defines the hostname the kafka instance will listen on by default.
+     */
+    private static final String DEFAULT_HOSTNAME = "127.0.0.1";
+
+    /**
      * Internal Test Zookeeper service.
      */
     private TestingServer zkServer;
@@ -71,24 +75,43 @@ public class KafkaTestServer implements AutoCloseable {
     private String kafkaPort;
 
     /**
-     * Defines what address the service advertises itself on.
-     * Sane default is 127.0.0.1.
+     * Defines overridden broker properties.
      */
-    private final String localHostname;
+    private final Properties overrideBrokerProperties = new Properties();
 
     /**
-     * Default constructor using "127.0.0.1" as the advertised host.
+     * Default constructor.
      */
     public KafkaTestServer() {
-        this("127.0.0.1");
+        this(new Properties());
     }
 
     /**
      * Alternative constructor allowing override of advertised host.
      * @param localHostname What IP or hostname to advertise services on.
+     * @deprecated Replaced with constructor: KafkaTestServer(final Properties overrideBrokerProperties)
+     *             Set "host.name" property to the hostname you want kafka to listen on.
      */
+    @Deprecated
     public KafkaTestServer(final String localHostname) {
-        this.localHostname = localHostname;
+        this(new Properties());
+
+        // Configure passed in hostname in broker properties.
+        overrideBrokerProperties.put("host.name", localHostname);
+    }
+
+    /**
+     * Alternative constructor allowing override of brokerProperties.
+     * @param overrideBrokerProperties Define Kafka broker properties.
+     */
+    public KafkaTestServer(final Properties overrideBrokerProperties) {
+        // Validate argument.
+        if (overrideBrokerProperties == null) {
+            throw new IllegalArgumentException("Cannot pass null overrideBrokerProperties argument");
+        }
+
+        // Add passed in properties.
+        this.overrideBrokerProperties.putAll(overrideBrokerProperties);
     }
 
     /**
@@ -109,14 +132,14 @@ public class KafkaTestServer implements AutoCloseable {
      * @return The proper connect string to use for Kafka.
      */
     public String getKafkaConnectString() {
-        return localHostname + ":" + kafkaPort;
+        return getConfiguredHostname() + ":" + kafkaPort;
     }
 
     /**
      * @return The proper connect string to use for Zookeeper.
      */
     public String getZookeeperConnectString() {
-        return localHostname + ":" + getZookeeperServer().getPort();
+        return getConfiguredHostname() + ":" + getZookeeperServer().getPort();
     }
 
     /**
@@ -129,46 +152,56 @@ public class KafkaTestServer implements AutoCloseable {
         zkServer = new TestingServer(zkInstanceSpec, true);
         final String zkConnectionString = getZookeeperServer().getConnectString();
 
-        // Create temp path to store logs
-        final File logDir = Files.createTempDir();
-        logDir.deleteOnExit();
+        // Build properties using a baseline from overrideBrokerProperties.
+        final Properties brokerProperties = new Properties();
+        brokerProperties.putAll(overrideBrokerProperties);
 
-        // Determine what port to run kafka on
-        kafkaPort = String.valueOf(InstanceSpec.getRandomPort());
+        // Put required zookeeper connection properties.
+        setPropertyIfNotSet(brokerProperties, "zookeeper.connect", zkConnectionString);
 
-        // Build properties
-        Properties kafkaProperties = new Properties();
-        kafkaProperties.setProperty("zookeeper.connect", zkConnectionString);
-        kafkaProperties.setProperty("port", kafkaPort);
-        kafkaProperties.setProperty("log.dir", logDir.getAbsolutePath());
-        kafkaProperties.setProperty("auto.create.topics.enable", "true");
-        kafkaProperties.setProperty("zookeeper.session.timeout.ms", "30000");
-        kafkaProperties.setProperty("broker.id", "1");
-        kafkaProperties.setProperty("auto.offset.reset", "latest");
+        // Conditionally generate a port for kafka to use if not already defined.
+        kafkaPort = (String) setPropertyIfNotSet(brokerProperties, "port", String.valueOf(InstanceSpec.getRandomPort()));
+
+        // If log.dir is not set.
+        if (brokerProperties.getProperty("log.dir") == null) {
+            // Create temp path to store logs
+            final File logDir = Files.createTempDir();
+            logDir.deleteOnExit();
+
+            // Set property.
+            brokerProperties.setProperty("log.dir", logDir.getAbsolutePath());
+        }
 
         // Ensure that we're advertising appropriately
-        kafkaProperties.setProperty("host.name", localHostname);
-        kafkaProperties.setProperty("advertised.host.name", localHostname);
-        kafkaProperties.setProperty("advertised.port", kafkaPort);
-        kafkaProperties.setProperty("advertised.listeners", "PLAINTEXT://" + localHostname + ":" + kafkaPort);
-        kafkaProperties.setProperty("listeners", "PLAINTEXT://" + localHostname + ":" + kafkaPort);
+        setPropertyIfNotSet(brokerProperties, "host.name", getConfiguredHostname());
+        setPropertyIfNotSet(brokerProperties, "advertised.host.name", getConfiguredHostname());
+        setPropertyIfNotSet(brokerProperties, "advertised.port", kafkaPort);
+        setPropertyIfNotSet(brokerProperties, "advertised.listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + kafkaPort);
+        setPropertyIfNotSet(brokerProperties, "listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + kafkaPort);
+
+        // Set other defaults if not defined.
+        setPropertyIfNotSet(brokerProperties, "auto.create.topics.enable", "true");
+        setPropertyIfNotSet(brokerProperties, "zookeeper.session.timeout.ms", "30000");
+        setPropertyIfNotSet(brokerProperties, "broker.id", "1");
+        setPropertyIfNotSet(brokerProperties, "auto.offset.reset", "latest");
 
         // Lower active threads.
-        kafkaProperties.setProperty("num.io.threads", "2");
-        kafkaProperties.setProperty("num.network.threads", "2");
-        kafkaProperties.setProperty("log.flush.interval.messages", "1");
+        setPropertyIfNotSet(brokerProperties, "num.io.threads", "2");
+        setPropertyIfNotSet(brokerProperties, "num.network.threads", "2");
+        setPropertyIfNotSet(brokerProperties, "log.flush.interval.messages", "1");
 
         // Define replication factor for internal topics to 1
-        kafkaProperties.setProperty("offsets.topic.replication.factor", "1");
-        kafkaProperties.setProperty("offset.storage.replication.factor", "1");
-        kafkaProperties.setProperty("transaction.state.log.replication.factor", "1");
-        kafkaProperties.setProperty("transaction.state.log.min.isr", "1");
-        kafkaProperties.setProperty("transaction.state.log.num.partitions", "4");
-        kafkaProperties.setProperty("config.storage.replication.factor", "1");
-        kafkaProperties.setProperty("status.storage.replication.factor", "1");
-        kafkaProperties.setProperty("default.replication.factor", "1");
+        setPropertyIfNotSet(brokerProperties, "offsets.topic.replication.factor", "1");
+        setPropertyIfNotSet(brokerProperties, "offset.storage.replication.factor", "1");
+        setPropertyIfNotSet(brokerProperties, "transaction.state.log.replication.factor", "1");
+        setPropertyIfNotSet(brokerProperties, "transaction.state.log.min.isr", "1");
+        setPropertyIfNotSet(brokerProperties, "transaction.state.log.num.partitions", "4");
+        setPropertyIfNotSet(brokerProperties, "config.storage.replication.factor", "1");
+        setPropertyIfNotSet(brokerProperties, "status.storage.replication.factor", "1");
+        setPropertyIfNotSet(brokerProperties, "default.replication.factor", "1");
 
-        final KafkaConfig config = new KafkaConfig(kafkaProperties);
+        // Create and start kafka service.
+        final KafkaConfig config = new KafkaConfig(brokerProperties);
         kafka = new KafkaServerStartable(config);
         getKafkaServer().startup();
     }
@@ -191,7 +224,7 @@ public class KafkaTestServer implements AutoCloseable {
         final short replicationFactor = 1;
 
         // Create admin client
-        try (final AdminClient adminClient = KafkaAdminClient.create(buildDefaultClientConfig())) {
+        try (final AdminClient adminClient = getAdminClient()) {
             try {
                 // Define topic
                 final NewTopic newTopic = new NewTopic(topicName, partitions, replicationFactor);
@@ -217,6 +250,14 @@ public class KafkaTestServer implements AutoCloseable {
      */
     public void shutdown() throws Exception {
         close();
+    }
+
+    /**
+     * Creates a Kafka AdminClient connected to our test server.
+     * @return Kafka AdminClient instance.
+     */
+    public AdminClient getAdminClient() {
+        return KafkaAdminClient.create(buildDefaultClientConfig());
     }
 
     /**
@@ -318,10 +359,47 @@ public class KafkaTestServer implements AutoCloseable {
      * Internal helper method to build a default configuration.
      */
     private Map<String, Object> buildDefaultClientConfig() {
-        Map<String, Object> defaultClientConfig = Maps.newHashMap();
+        final Map<String, Object> defaultClientConfig = new HashMap<>();
         defaultClientConfig.put("bootstrap.servers", getKafkaConnectString());
         defaultClientConfig.put("client.id", "test-consumer-id");
         return defaultClientConfig;
+    }
+
+    /**
+     * Helper method to conditionally set a property if no value is already set.
+     * @param properties The properties instance to update.
+     * @param key The key to set if not already set.
+     * @param defaultValue The value to set if no value is already set for key.
+     * @return The value set.
+     */
+    private Object setPropertyIfNotSet(final Properties properties, final String key, final String defaultValue) {
+        // Validate inputs
+        if (properties == null) {
+            throw new NullPointerException("properties argument cannot be null.");
+        }
+        if (key == null) {
+            throw new NullPointerException("key argument cannot be null.");
+        }
+
+        // Conditionally set the property if its not already set.
+        properties.setProperty(
+            key,
+            properties.getProperty(key, defaultValue)
+        );
+
+        // Return the value that is being used.
+        return properties.get(key);
+    }
+
+    /**
+     * Returns which hostname/IP address Kafka will bind/listen/advertise with.  To change this value
+     * use the constructor: KafkaTestServer(final Properties overrideBrokerProperties) and set the property
+     * 'host.name' to the appropriate value.
+     *
+     * @return Which hostname/IP Kafka should bind/listen/advertise using.
+     */
+    private String getConfiguredHostname() {
+        return overrideBrokerProperties.getProperty("host.name", DEFAULT_HOSTNAME);
     }
 
     /**

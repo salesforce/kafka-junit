@@ -25,56 +25,57 @@
 
 package com.salesforce.kafka.test.junit5;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Iterables;
 import com.salesforce.kafka.test.KafkaTestServer;
+import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.Node;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Test of KafkaTestServer.
+ * Test of SharedKafkaTestResource.
  *
  * This also serves as an example of how to use this library!
  */
-@ExtendWith(KafkaResourceExtension.class)
-public class KafkaTestServerTest {
-    private static final Logger logger = LoggerFactory.getLogger(KafkaTestServerTest.class);
+class SharedKafkaTestResourceTest {
+    private static final Logger logger = LoggerFactory.getLogger(SharedKafkaTestResourceTest.class);
 
     /**
      * We have a single embedded kafka server that gets started when this test class is initialized.
      *
-     * It's automatically started before any methods are run via the @ExtendWith annotation.
-     * It's automatically stopped after all of the tests are completed via the @ExtendWith annotation.
-     * This instance is passed to this class's constructor via the @ExtendWith annotation.
+     * It's automatically started before any methods are run.
+     * It's automatically stopped after all of the tests are completed.
+     *
+     * This example we override the Kafka broker id to '12', but this serves as an example of how you
+     * how you could override any Kafka broker property.
      */
-    private final SharedKafkaTestResource sharedKafkaTestResource;
-
-    /**
-     * Constructor where KafkaResourceExtension provides the sharedKafkaTestResource object.
-     * @param sharedKafkaTestResource Provided by KafkaResourceExtension.
-     */
-    public KafkaTestServerTest(final SharedKafkaTestResource sharedKafkaTestResource) {
-        this.sharedKafkaTestResource = sharedKafkaTestResource;
-    }
+    @RegisterExtension
+    public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
+        .withBrokerProperty("broker.id", "1000");
 
     /**
      * Before every test, we generate a random topic name and create it within the embedded kafka server.
@@ -126,31 +127,30 @@ public class KafkaTestServerTest {
         // Close producer!
         producer.close();
 
-        KafkaConsumer<String, String> kafkaConsumer =
-            getKafkaTestServer().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class);
+        // Create consumer
+        try (final KafkaConsumer<String, String> kafkaConsumer =
+            getKafkaTestServer().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class)) {
 
-        final List<TopicPartition> topicPartitionList = Lists.newArrayList();
-        for (final PartitionInfo partitionInfo: kafkaConsumer.partitionsFor(topicName)) {
-            topicPartitionList.add(new TopicPartition(partitionInfo.topic(), partitionInfo.partition()));
-        }
-        kafkaConsumer.assign(topicPartitionList);
-        kafkaConsumer.seekToBeginning(topicPartitionList);
-
-        // Pull records from kafka, keep polling until we get nothing back
-        ConsumerRecords<String, String> records;
-        do {
-            records = kafkaConsumer.poll(2000L);
-            logger.info("Found {} records in kafka", records.count());
-            for (ConsumerRecord<String, String> record: records) {
-                // Validate
-                assertEquals(expectedKey, record.key(), "Key matches expected");
-                assertEquals(expectedValue, record.value(), "value matches expected");
+            final List<TopicPartition> topicPartitionList = new ArrayList<>();
+            for (final PartitionInfo partitionInfo : kafkaConsumer.partitionsFor(topicName)) {
+                topicPartitionList.add(new TopicPartition(partitionInfo.topic(), partitionInfo.partition()));
             }
-        }
-        while (!records.isEmpty());
+            kafkaConsumer.assign(topicPartitionList);
+            kafkaConsumer.seekToBeginning(topicPartitionList);
 
-        // close consumer
-        kafkaConsumer.close();
+            // Pull records from kafka, keep polling until we get nothing back
+            ConsumerRecords<String, String> records;
+            do {
+                records = kafkaConsumer.poll(2000L);
+                logger.info("Found {} records in kafka", records.count());
+                for (ConsumerRecord<String, String> record : records) {
+                    // Validate
+                    assertEquals(expectedKey, record.key(), "Key matches expected");
+                    assertEquals(expectedValue, record.value(), "value matches expected");
+                }
+            }
+            while (!records.isEmpty());
+        }
     }
 
     /**
@@ -163,6 +163,25 @@ public class KafkaTestServerTest {
             getKafkaTestServer().createTopic(myTopic);
         }
         assertTrue(true, "Made it here!");
+    }
+
+    /**
+     * Validate that broker Id was overridden correctly.
+     */
+    @Test
+    void testBrokerIdOverride() throws ExecutionException, InterruptedException {
+        try (final AdminClient adminClient = getKafkaTestServer().getAdminClient()) {
+            final Collection<Node> nodes = adminClient.describeCluster().nodes().get();
+
+            assertNotNull(nodes, "Sanity test, should not be null");
+            assertEquals(1, nodes.size(), "Should have 1 entry");
+
+            // Get details about our test broker/node
+            final Node node = Iterables.get(nodes, 0);
+
+            // Validate
+            assertEquals(1000, node.id(), "Has expected overridden broker Id");
+        }
     }
 
     /**

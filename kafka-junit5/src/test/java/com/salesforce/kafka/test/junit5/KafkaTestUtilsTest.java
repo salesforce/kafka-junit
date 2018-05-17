@@ -32,7 +32,7 @@ import com.salesforce.kafka.test.ProducedKafkaRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,8 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Serves both as a test for the Utilities, but also as a good example of how to use them.
  */
-@ExtendWith(KafkaResourceExtension.class)
-public class KafkaTestUtilsTest {
+class KafkaTestUtilsTest {
     private static final Logger logger = LoggerFactory.getLogger(KafkaTestUtilsTest.class);
 
     /**
@@ -55,21 +54,14 @@ public class KafkaTestUtilsTest {
      * It's automatically started before any methods are run via the @ClassRule annotation.
      * It's automatically stopped after all of the tests are completed via the @ClassRule annotation.
      */
-    private final SharedKafkaTestResource sharedKafkaTestResource;
+    @RegisterExtension
+    public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource();
 
     /**
      * Before every test, we generate a random topic name and create it within the embedded kafka server.
      * Each test can then be segmented run any tests against its own topic.
      */
     private String topicName;
-
-    /**
-     * Constructor where KafkaResourceExtension provides the sharedKafkaTestResource object.
-     * @param sharedKafkaTestResource Provided by KafkaResourceExtension.
-     */
-    public KafkaTestUtilsTest(SharedKafkaTestResource sharedKafkaTestResource) {
-        this.sharedKafkaTestResource = sharedKafkaTestResource;
-    }
 
     /**
      * This happens once before every test method.
@@ -94,7 +86,7 @@ public class KafkaTestUtilsTest {
         final int partitionId = 2;
 
         // Create our utility class
-        final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(getKafkaTestServer());
+        final KafkaTestUtils kafkaTestUtils = sharedKafkaTestResource.getKafkaTestUtils();
 
         // Produce some random records
         final List<ProducedKafkaRecord<byte[], byte[]>> producedRecordsList =
