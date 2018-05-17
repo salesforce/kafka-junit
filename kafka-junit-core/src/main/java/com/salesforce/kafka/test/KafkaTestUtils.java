@@ -26,7 +26,6 @@
 package com.salesforce.kafka.test;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -76,18 +75,18 @@ public class KafkaTestUtils {
         final int partitionId
     ) {
         // This holds the records we produced
-        List<ProducerRecord<byte[], byte[]>> producedRecords = Lists.newArrayList();
+        final List<ProducerRecord<byte[], byte[]>> producedRecords = new ArrayList<>();
 
         // This holds futures returned
-        List<Future<RecordMetadata>> producerFutures = Lists.newArrayList();
+        final List<Future<RecordMetadata>> producerFutures = new ArrayList<>();
 
-        KafkaProducer<byte[], byte[]> producer = kafkaTestServer.getKafkaProducer(
+        final KafkaProducer<byte[], byte[]> producer = kafkaTestServer.getKafkaProducer(
             ByteArraySerializer.class,
             ByteArraySerializer.class
         );
-        for (Map.Entry<byte[], byte[]> entry: keysAndValues.entrySet()) {
+        for (final Map.Entry<byte[], byte[]> entry: keysAndValues.entrySet()) {
             // Construct filter
-            ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topicName, partitionId, entry.getKey(), entry.getValue());
+            final ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topicName, partitionId, entry.getKey(), entry.getValue());
             producedRecords.add(record);
 
             // Send it.
@@ -100,7 +99,7 @@ public class KafkaTestUtils {
         producer.close();
 
         // Loop thru the futures, and build KafkaRecord objects
-        List<ProducedKafkaRecord<byte[], byte[]>> kafkaRecords = Lists.newArrayList();
+        final List<ProducedKafkaRecord<byte[], byte[]>> kafkaRecords = new ArrayList<>();
         try {
             for (int x = 0; x < keysAndValues.size(); x++) {
                 final RecordMetadata metadata = producerFutures.get(x).get();
@@ -108,9 +107,8 @@ public class KafkaTestUtils {
 
                 kafkaRecords.add(ProducedKafkaRecord.newInstance(metadata, producerRecord));
             }
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
+        } catch (final InterruptedException | ExecutionException exception) {
+            throw new RuntimeException(exception);
         }
 
         return kafkaRecords;

@@ -26,7 +26,6 @@
 package com.salesforce.kafka.test.junit5;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.salesforce.kafka.test.KafkaTestServer;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -47,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -127,31 +127,30 @@ class SharedKafkaTestResourceTest {
         // Close producer!
         producer.close();
 
-        KafkaConsumer<String, String> kafkaConsumer =
-            getKafkaTestServer().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class);
+        // Create consumer
+        try (final KafkaConsumer<String, String> kafkaConsumer =
+            getKafkaTestServer().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class)) {
 
-        final List<TopicPartition> topicPartitionList = Lists.newArrayList();
-        for (final PartitionInfo partitionInfo: kafkaConsumer.partitionsFor(topicName)) {
-            topicPartitionList.add(new TopicPartition(partitionInfo.topic(), partitionInfo.partition()));
-        }
-        kafkaConsumer.assign(topicPartitionList);
-        kafkaConsumer.seekToBeginning(topicPartitionList);
-
-        // Pull records from kafka, keep polling until we get nothing back
-        ConsumerRecords<String, String> records;
-        do {
-            records = kafkaConsumer.poll(2000L);
-            logger.info("Found {} records in kafka", records.count());
-            for (ConsumerRecord<String, String> record: records) {
-                // Validate
-                assertEquals(expectedKey, record.key(), "Key matches expected");
-                assertEquals(expectedValue, record.value(), "value matches expected");
+            final List<TopicPartition> topicPartitionList = new ArrayList<>();
+            for (final PartitionInfo partitionInfo : kafkaConsumer.partitionsFor(topicName)) {
+                topicPartitionList.add(new TopicPartition(partitionInfo.topic(), partitionInfo.partition()));
             }
-        }
-        while (!records.isEmpty());
+            kafkaConsumer.assign(topicPartitionList);
+            kafkaConsumer.seekToBeginning(topicPartitionList);
 
-        // close consumer
-        kafkaConsumer.close();
+            // Pull records from kafka, keep polling until we get nothing back
+            ConsumerRecords<String, String> records;
+            do {
+                records = kafkaConsumer.poll(2000L);
+                logger.info("Found {} records in kafka", records.count());
+                for (ConsumerRecord<String, String> record : records) {
+                    // Validate
+                    assertEquals(expectedKey, record.key(), "Key matches expected");
+                    assertEquals(expectedValue, record.value(), "value matches expected");
+                }
+            }
+            while (!records.isEmpty());
+        }
     }
 
     /**

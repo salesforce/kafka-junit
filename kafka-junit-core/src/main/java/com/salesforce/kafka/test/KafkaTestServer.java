@@ -25,8 +25,6 @@
 
 package com.salesforce.kafka.test;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
@@ -361,7 +359,7 @@ public class KafkaTestServer implements AutoCloseable {
      * Internal helper method to build a default configuration.
      */
     private Map<String, Object> buildDefaultClientConfig() {
-        Map<String, Object> defaultClientConfig = Maps.newHashMap();
+        final Map<String, Object> defaultClientConfig = new HashMap<>();
         defaultClientConfig.put("bootstrap.servers", getKafkaConnectString());
         defaultClientConfig.put("client.id", "test-consumer-id");
         return defaultClientConfig;
@@ -376,8 +374,12 @@ public class KafkaTestServer implements AutoCloseable {
      */
     private Object setPropertyIfNotSet(final Properties properties, final String key, final String defaultValue) {
         // Validate inputs
-        Preconditions.checkNotNull(properties);
-        Preconditions.checkNotNull(key);
+        if (properties == null) {
+            throw new NullPointerException("properties argument cannot be null.");
+        }
+        if (key == null) {
+            throw new NullPointerException("key argument cannot be null.");
+        }
 
         // Conditionally set the property if its not already set.
         properties.setProperty(

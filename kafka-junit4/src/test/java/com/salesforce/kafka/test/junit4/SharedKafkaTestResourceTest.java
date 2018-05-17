@@ -26,7 +26,6 @@
 package com.salesforce.kafka.test.junit4;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.salesforce.kafka.test.KafkaTestServer;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -47,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -111,13 +111,13 @@ public class SharedKafkaTestResourceTest {
         final String expectedValue = "my test message";
 
         // Define the record we want to produce
-        ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topicName, partitionId, expectedKey, expectedValue);
+        final ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topicName, partitionId, expectedKey, expectedValue);
 
         // Create a new producer
-        KafkaProducer<String, String> producer = getKafkaTestServer().getKafkaProducer(StringSerializer.class, StringSerializer.class);
+        final KafkaProducer<String, String> producer = getKafkaTestServer().getKafkaProducer(StringSerializer.class, StringSerializer.class);
 
         // Produce it & wait for it to complete.
-        Future<RecordMetadata> future = producer.send(producerRecord);
+        final Future<RecordMetadata> future = producer.send(producerRecord);
         producer.flush();
         while (!future.isDone()) {
             Thread.sleep(500L);
@@ -127,31 +127,30 @@ public class SharedKafkaTestResourceTest {
         // Close producer!
         producer.close();
 
-        KafkaConsumer<String, String> kafkaConsumer =
-            getKafkaTestServer().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class);
+        // Create consumer
+        try (final KafkaConsumer<String, String> kafkaConsumer =
+            getKafkaTestServer().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class)) {
 
-        final List<TopicPartition> topicPartitionList = Lists.newArrayList();
-        for (final PartitionInfo partitionInfo: kafkaConsumer.partitionsFor(topicName)) {
-            topicPartitionList.add(new TopicPartition(partitionInfo.topic(), partitionInfo.partition()));
-        }
-        kafkaConsumer.assign(topicPartitionList);
-        kafkaConsumer.seekToBeginning(topicPartitionList);
-
-        // Pull records from kafka, keep polling until we get nothing back
-        ConsumerRecords<String, String> records;
-        do {
-            records = kafkaConsumer.poll(2000L);
-            logger.info("Found {} records in kafka", records.count());
-            for (ConsumerRecord<String, String> record: records) {
-                // Validate
-                assertEquals("Key matches expected", expectedKey, record.key());
-                assertEquals("value matches expected", expectedValue, record.value());
+            final List<TopicPartition> topicPartitionList = new ArrayList<>();
+            for (final PartitionInfo partitionInfo: kafkaConsumer.partitionsFor(topicName)) {
+                topicPartitionList.add(new TopicPartition(partitionInfo.topic(), partitionInfo.partition()));
             }
-        }
-        while (!records.isEmpty());
+            kafkaConsumer.assign(topicPartitionList);
+            kafkaConsumer.seekToBeginning(topicPartitionList);
 
-        // close consumer
-        kafkaConsumer.close();
+            // Pull records from kafka, keep polling until we get nothing back
+            ConsumerRecords<String, String> records;
+            do {
+                records = kafkaConsumer.poll(2000L);
+                logger.info("Found {} records in kafka", records.count());
+                for (ConsumerRecord<String, String> record: records) {
+                    // Validate
+                    assertEquals("Key matches expected", expectedKey, record.key());
+                    assertEquals("value matches expected", expectedValue, record.value());
+                }
+            }
+            while (!records.isEmpty());
+        }
     }
 
     /**
