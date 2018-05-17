@@ -39,6 +39,7 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 /**
  * Utility for setting up a Cluster of KafkaTestServers.
@@ -62,6 +63,11 @@ public class KafkaTestCluster implements AutoCloseable {
     private final int numberOfBrokers;
 
     /**
+     * Defines overridden broker properties.
+     */
+    private final Properties overrideBrokerProperties = new Properties();
+
+    /**
      * List containing all of the brokers in the cluster.  Since each broker is quickly accessible via it's 'brokerId' property
      * by simply removing 1 from it's id and using it as the index into the list.
      *
@@ -74,10 +80,25 @@ public class KafkaTestCluster implements AutoCloseable {
      * @param numberOfBrokers How many brokers you want in your Kafka cluster.
      */
     public KafkaTestCluster(final int numberOfBrokers) {
+        this(numberOfBrokers, new Properties());
+    }
+
+    /**
+     * Constructor.
+     * @param numberOfBrokers How many brokers you want in your Kafka cluster.
+     * @param overrideBrokerProperties Define Kafka broker properties.
+     */
+    public KafkaTestCluster(final int numberOfBrokers, final Properties overrideBrokerProperties) {
         if (numberOfBrokers <= 0) {
             throw new IllegalArgumentException("numberOfBrokers argument must be 1 or larger.");
         }
+        if (overrideBrokerProperties == null) {
+            throw new IllegalArgumentException("overrideBrokerProperties argument must not be null.");
+        }
+
+        // Save references.
         this.numberOfBrokers = numberOfBrokers;
+        this.overrideBrokerProperties.putAll(overrideBrokerProperties);
     }
 
     /**
@@ -95,10 +116,15 @@ public class KafkaTestCluster implements AutoCloseable {
         // Start Zookeeper instance.
         zkTestServer.start();
 
-        // Loop over brokers
+        // Loop over brokers, starting with brokerId 1.
         for (int brokerId = 1; brokerId <= numberOfBrokers; brokerId++) {
             // Create properties for brokers
             final Properties brokerProperties = new Properties();
+
+            // Add user defined properties.
+            brokerProperties.putAll(overrideBrokerProperties);
+
+            // Set broker.id
             brokerProperties.put("broker.id", String.valueOf(brokerId));
 
             // Create new KafkaTestServer
@@ -115,6 +141,63 @@ public class KafkaTestCluster implements AutoCloseable {
         waitUntilClusterReady(10_000L);
     }
 
+    /**
+     * @return immutable list of brokers within the cluster.
+     */
+    public List<KafkaTestServer> getKafkaBrokers() {
+        return Collections.unmodifiableList(brokers);
+    }
+
+    /**
+     * Retrieve a broker by its brokerId.
+     * @param brokerId the Id of the broker to retrieve.
+     * @return KafkaTestServer instance for the given broker Id.
+     */
+    public KafkaTestServer getKafkaBrokerById(final int brokerId) {
+        // Brokers are zero indexed in the array, so just subtract one from the brokerId to find it's index.
+        return brokers.get(brokerId - 1);
+    }
+
+    /**
+     * @return The proper connect string to use for this Kafka cluster.
+     */
+    public String getKafkaConnectString() {
+        // Loop over each broker and generate a complete connect string.
+        return getKafkaBrokers().stream()
+            .map(KafkaTestServer::getKafkaConnectString)
+            .collect(Collectors.joining(","));
+    }
+
+    /**
+     * @return The proper connect string to use for Zookeeper.
+     */
+    public String getZookeeperConnectString() {
+        return zkTestServer.getZookeeperConnectString();
+    }
+
+    /**
+     * Shuts the cluster down.
+     * @throws Exception on shutdown errors.
+     */
+    @Override
+    public void close() throws Exception {
+        // Loop over brokers
+        for (final KafkaTestServer kafkaBroker : brokers) {
+            kafkaBroker.close();
+        }
+
+        // Empty our list of brokers.
+        brokers.clear();
+
+        // Stop zkServer
+        zkTestServer.stop();
+    }
+
+    /**
+     * This method will block up to timeoutMs milliseconds waiting for the cluster to become available and ready.
+     * @param timeoutMs How long to block for, in milliseconds.
+     * @throws TimeoutException if the timeout period is exceeded.
+     */
     private void waitUntilClusterReady(final long timeoutMs) throws TimeoutException {
         final long startTime = clock.millis();
 
@@ -149,40 +232,5 @@ public class KafkaTestCluster implements AutoCloseable {
 
         // If we got here, throw timeout exception
         throw new TimeoutException("Cluster failed to come online within " + timeoutMs + " milliseconds.");
-    }
-
-    /**
-     * @return immutable list of brokers within the cluster.
-     */
-    public List<KafkaTestServer> getKafkaBrokers() {
-        return Collections.unmodifiableList(brokers);
-    }
-
-    /**
-     * Retrieve a broker by its brokerId.
-     * @param brokerId the Id of the broker to retrieve.
-     * @return KafkaTestServer instance for the given broker Id.
-     */
-    public KafkaTestServer getKafkaBrokerById(final int brokerId) {
-        // Brokers are zero indexed in the array.
-        return brokers.get(brokerId - 1);
-    }
-
-    /**
-     * Shuts the cluster down.
-     * @throws Exception on shutdown errors.
-     */
-    @Override
-    public void close() throws Exception {
-        // Loop over brokers
-        for (final KafkaTestServer kafkaBroker : brokers) {
-            kafkaBroker.close();
-        }
-
-        // Empty our list of brokers.
-        brokers.clear();
-
-        // Stop zkServer
-        zkTestServer.stop();
     }
 }

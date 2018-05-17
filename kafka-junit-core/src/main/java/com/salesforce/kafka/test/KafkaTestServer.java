@@ -120,16 +120,19 @@ public class KafkaTestServer implements AutoCloseable {
     }
 
     /**
-     * Constructor allowing override of brokerProperties and ZookeeperTestServer instance.
+     * Package protected constructor allowing override of ZookeeperTestServer instance.
      * @param overrideBrokerProperties Define Kafka broker properties.
      * @param zookeeperTestServer Zookeeper server instance to use.
      */
-    public KafkaTestServer(final Properties overrideBrokerProperties, final TestingServer zookeeperTestServer) {
+    KafkaTestServer(final Properties overrideBrokerProperties, final TestingServer zookeeperTestServer) {
         this(overrideBrokerProperties);
 
+        // If instance is passed,
         if (zookeeperTestServer != null) {
+            // We are no longer in charge of managing it.
             isManagingZookeeper = false;
         }
+        // Save reference.
         this.zkServer = zookeeperTestServer;
     }
 
@@ -166,11 +169,14 @@ public class KafkaTestServer implements AutoCloseable {
      * @throws Exception on startup errors.
      */
     public void start() throws Exception {
-        // Start zookeeper
+        // If we have no zkServer instance
         if (zkServer == null) {
+            // Create it.
             final InstanceSpec zkInstanceSpec = new InstanceSpec(null, -1, -1, -1, true, -1, -1, 1000);
             zkServer = new TestingServer(zkInstanceSpec, false);
         }
+
+        // Start zookeeper and get its connection string.
         zkServer.start();
         final String zkConnectionString = getZookeeperServer().getConnectString();
 
@@ -323,7 +329,7 @@ public class KafkaTestServer implements AutoCloseable {
 
         // Override config
         if (config != null) {
-            for (Map.Entry<Object, Object> entry: config.entrySet()) {
+            for (final Map.Entry<Object, Object> entry: config.entrySet()) {
                 kafkaProducerConfig.put(entry.getKey().toString(), entry.getValue());
             }
         }
@@ -437,6 +443,7 @@ public class KafkaTestServer implements AutoCloseable {
 
         // Conditionally close zookeeper
         if (getZookeeperServer() != null && isManagingZookeeper) {
+            // Only close the zkServer if we're in charge of managing it.
             getZookeeperServer().close();
         }
     }
