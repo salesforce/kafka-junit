@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 /**
  * Utility for setting up a Cluster of KafkaTestServers.
  */
-public class KafkaTestCluster implements KafkaCluster, KafkaProvider {
+public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(KafkaTestCluster.class);
 
     /**

@@ -45,7 +45,7 @@ import java.util.Properties;
  * topics in an integration test. Be sure to call shutdown() when the test is complete
  * or use the AutoCloseable interface.
  */
-public class KafkaTestServer implements KafkaCluster, KafkaProvider {
+public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseable {
     /**
      * This defines the hostname the kafka instance will listen on by default.
      */

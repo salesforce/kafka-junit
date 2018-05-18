@@ -234,21 +234,19 @@ public class KafkaTestUtils {
     public void createTopic(final String topicName, final int partitions, final short replicationFactor) {
         // Create admin client
         try (final AdminClient adminClient = getAdminClient()) {
-            try {
-                // Define topic
-                final NewTopic newTopic = new NewTopic(topicName, partitions, replicationFactor);
+            // Define topic
+            final NewTopic newTopic = new NewTopic(topicName, partitions, replicationFactor);
 
-                // Create topic, which is async call.
-                final CreateTopicsResult createTopicsResult = adminClient.createTopics(Collections.singleton(newTopic));
+            // Create topic, which is async call.
+            final CreateTopicsResult createTopicsResult = adminClient.createTopics(Collections.singleton(newTopic));
 
-                // Since the call is Async, Lets wait for it to complete.
-                createTopicsResult.values().get(topicName).get();
-            } catch (InterruptedException | ExecutionException e) {
-                if (!(e.getCause() instanceof TopicExistsException)) {
-                    throw new RuntimeException(e.getMessage(), e);
-                }
-                // TopicExistsException - Swallow this exception, just means the topic already exists.
+            // Since the call is Async, Lets wait for it to complete.
+            createTopicsResult.values().get(topicName).get();
+        } catch (InterruptedException | ExecutionException e) {
+            if (!(e.getCause() instanceof TopicExistsException)) {
+                throw new RuntimeException(e.getMessage(), e);
             }
+            // TopicExistsException - Swallow this exception, just means the topic already exists.
         }
     }
 
