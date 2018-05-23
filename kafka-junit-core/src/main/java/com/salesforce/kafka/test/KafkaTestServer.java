@@ -247,6 +247,16 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     /**
      * Closes the internal servers. Failing to call this at the end of your tests will likely
      * result in leaking instances.
+     *
+     * Provided alongside close() to stay consistent with start().
+     */
+    public void stop() throws Exception {
+        close();
+    }
+
+    /**
+     * Closes the internal servers. Failing to call this at the end of your tests will likely
+     * result in leaking instances.
      */
     @Override
     public void close() throws Exception {

@@ -28,14 +28,18 @@ package com.salesforce.kafka.test;
 import com.google.common.base.Charsets;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
+import org.apache.kafka.clients.admin.DescribeClusterResult;
+import org.apache.kafka.clients.admin.DescribeTopicsResult;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.Node;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.TopicExistsException;
@@ -146,14 +150,14 @@ public class KafkaTestUtils {
         final String topicName,
         final int partitionId
     ) {
-        Map<byte[], byte[]> keysAndValues = new HashMap<>();
+        final Map<byte[], byte[]> keysAndValues = new HashMap<>();
 
         // Generate random & unique data
-        for (int x = 0; x < numberOfRecords; x++) {
+        for (int index = 0; index < numberOfRecords; index++) {
             // Construct key and value
-            long timeStamp = Clock.systemUTC().millis();
-            String key = "key" + timeStamp;
-            String value = "value" + timeStamp;
+            final long timeStamp = Clock.systemUTC().millis();
+            final String key = "key" + timeStamp;
+            final String value = "value" + timeStamp;
 
             // Add to map
             keysAndValues.put(key.getBytes(Charsets.UTF_8), value.getBytes(Charsets.UTF_8));
@@ -247,6 +251,37 @@ public class KafkaTestUtils {
                 throw new RuntimeException(e.getMessage(), e);
             }
             // TopicExistsException - Swallow this exception, just means the topic already exists.
+        }
+    }
+
+    /**
+     * Describes a topic in Kafka.
+     * @param topicName the topic to describe.
+     * @return Description of the topic.
+     */
+    public TopicDescription describeTopic(final String topicName) {
+        // Create admin client
+        try (final AdminClient adminClient = getAdminClient()) {
+            // Make async call to describe the topic.
+            final DescribeTopicsResult describeTopicsResult = adminClient.describeTopics(Collections.singleton(topicName));
+
+            return describeTopicsResult.values().get(topicName).get();
+        } catch (final InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Describe nodes within Kafka cluster.
+     * @return Collection of nodes within the Kafka cluster.
+     */
+    public Collection<Node> describeClusterNodes() {
+        // Create admin client
+        try (final AdminClient adminClient = getAdminClient()) {
+            final DescribeClusterResult describeClusterResult = adminClient.describeCluster();
+            return describeClusterResult.nodes().get();
+        } catch (final InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 

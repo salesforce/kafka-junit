@@ -149,7 +149,11 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
 
         // Generate complete list.
         brokers.forEach((broker) -> {
-            broker.getKafkaBrokers().forEach(kafkaBrokers::add);
+            try {
+                broker.getKafkaBrokers().forEach(kafkaBrokers::add);
+            } catch (final IllegalStateException exception) {
+                // Swallow, means the instance has not yet started, or was stopped intentionally.
+            }
         });
 
         // Return it.
@@ -171,8 +175,18 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      */
     public String getKafkaConnectString() {
         // Loop over each broker and generate a complete connect string.
-        return brokers.stream()
-            .map(KafkaTestServer::getKafkaConnectString)
+        final List<String> hosts = new ArrayList<>();
+        for (final KafkaTestServer broker: brokers) {
+            try {
+                hosts.add(broker.getKafkaConnectString());
+            } catch (final IllegalStateException exception) {
+                // Swallow? Means the instance has not yet started, or was stopped intentionally.
+            }
+        }
+
+        // Join the hosts.
+        return hosts
+            .stream()
             .collect(Collectors.joining(","));
     }
 
