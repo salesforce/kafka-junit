@@ -264,6 +264,21 @@ public class KafkaTestUtils {
      * @param <V> Type of message value
      * @param keySerializer Class of serializer to be used for keys.
      * @param valueSerializer Class of serializer to be used for values.
+     * @return KafkaProducer configured to produce into Test server.
+     */
+    public <K, V> KafkaProducer<K, V> getKafkaProducer(
+        final Class<? extends Serializer<K>> keySerializer,
+        final Class<? extends Serializer<V>> valueSerializer) {
+
+        return getKafkaProducer(keySerializer, valueSerializer, new Properties());
+    }
+
+    /**
+     * Creates a kafka producer that is connected to our test server.
+     * @param <K> Type of message key
+     * @param <V> Type of message value
+     * @param keySerializer Class of serializer to be used for keys.
+     * @param valueSerializer Class of serializer to be used for values.
      * @param config Additional producer configuration options to be set.
      * @return KafkaProducer configured to produce into Test server.
      */
@@ -291,6 +306,21 @@ public class KafkaTestUtils {
 
         // Create and return Producer.
         return new KafkaProducer<>(kafkaProducerConfig);
+    }
+
+    /**
+     * Return Kafka Consumer configured to consume from internal Kafka Server.
+     * @param <K> Type of message key
+     * @param <V> Type of message value
+     * @param keyDeserializer Class of deserializer to be used for keys.
+     * @param valueDeserializer Class of deserializer to be used for values.
+     * @return KafkaProducer configured to produce into Test server.
+     */
+    public <K, V> KafkaConsumer<K, V> getKafkaConsumer(
+        final Class<? extends Deserializer<K>> keyDeserializer,
+        final Class<? extends Deserializer<V>> valueDeserializer) {
+
+        return getKafkaConsumer(keyDeserializer, valueDeserializer, new Properties());
     }
 
     /**

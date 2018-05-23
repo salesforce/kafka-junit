@@ -26,6 +26,7 @@
 package com.salesforce.kafka.test;
 
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.common.TopicPartitionInfo;
@@ -47,30 +48,34 @@ class KafkaTestClusterTest {
             // Start the cluster
             kafkaTestCluster.start();
 
+            // Create test utils instance.
+            final KafkaTestUtils testUtils = new KafkaTestUtils(kafkaTestCluster);
+
             // Define a new topic with 2 partitions, with replication factor of 2.
             final NewTopic newTopic = new NewTopic(topicName, numberOfBrokers, (short) numberOfBrokers);
 
             // Attempt to create a topic
-            final AdminClient adminClientBroker1 = kafkaTestCluster.getKafkaBrokerById(1).getAdminClient();
-            adminClientBroker1
-                .createTopics(Collections.singletonList(newTopic))
-                .all()
-                .get();
+            try (final AdminClient adminClientBroker1 = testUtils.getAdminClient()) {
+                adminClientBroker1
+                    .createTopics(Collections.singletonList(newTopic))
+                    .all()
+                    .get();
 
-            // Lets describe the topic.
-            final TopicDescription topicDescription = adminClientBroker1
-                .describeTopics(Collections.singleton(topicName))
-                .values()
-                .get(topicName)
-                .get();
+                // Lets describe the topic.
+                final TopicDescription topicDescription = adminClientBroker1
+                    .describeTopics(Collections.singleton(topicName))
+                    .values()
+                    .get(topicName)
+                    .get();
 
-            // Validate has 2 partitions
-            Assertions.assertEquals(numberOfBrokers, topicDescription.partitions().size(), "Correct number of partitions.");
+                // Validate has 2 partitions
+                Assertions.assertEquals(numberOfBrokers, topicDescription.partitions().size(), "Correct number of partitions.");
 
-            // Validate the partitions have 2 replicas
-            for (final TopicPartitionInfo topicPartitionInfo : topicDescription.partitions()) {
-                Assertions.assertEquals(numberOfBrokers, topicPartitionInfo.replicas().size(), "Should have 2 replicas");
-                Assertions.assertEquals(numberOfBrokers, topicPartitionInfo.isr().size(), "Should have 2 In-Sync-Replicas");
+                // Validate the partitions have 2 replicas
+                for (final TopicPartitionInfo topicPartitionInfo : topicDescription.partitions()) {
+                    Assertions.assertEquals(numberOfBrokers, topicPartitionInfo.replicas().size(), "Should have 2 replicas");
+                    Assertions.assertEquals(numberOfBrokers, topicPartitionInfo.isr().size(), "Should have 2 In-Sync-Replicas");
+                }
             }
         }
     }

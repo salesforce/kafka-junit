@@ -60,7 +60,12 @@ class KafkaTestServerTest {
         try (final KafkaTestServer kafkaTestServer = new KafkaTestServer()) {
             // Start it and create our topic.
             kafkaTestServer.start();
-            kafkaTestServer.createTopic(theTopic, 1);
+
+            // Create test utils instance.
+            final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestServer);
+
+            // Create a topic.
+            kafkaTestUtils.createTopic(theTopic, 1, (short) 1);
 
             // Define override properties.
             Properties config = new Properties();
@@ -70,7 +75,9 @@ class KafkaTestServerTest {
             config.put("auto.offset.reset", "earliest");
 
             try (final KafkaConsumer<String, String> consumer
-                     = kafkaTestServer.getKafkaConsumer(StringDeserializer.class, StringDeserializer.class, config)) {
+                     = kafkaTestUtils.getKafkaConsumer(StringDeserializer.class, StringDeserializer.class, config)) {
+
+                // Subscribe to the topic
                 consumer.subscribe(Collections.singletonList(theTopic));
 
                 // Setup the producer
@@ -78,7 +85,7 @@ class KafkaTestServerTest {
                 config.put("transactional.id", "MyRandomString" + System.currentTimeMillis());
 
                 try (final KafkaProducer<String, String> producer
-                         = kafkaTestServer.getKafkaProducer(StringSerializer.class, StringSerializer.class, config)) {
+                         = kafkaTestUtils.getKafkaProducer(StringSerializer.class, StringSerializer.class, config)) {
                     // Init transaction and begin
                     producer.initTransactions();
                     producer.beginTransaction();
@@ -126,8 +133,11 @@ class KafkaTestServerTest {
             // Start service
             kafkaTestServer.start();
 
+            // Create test utils instance.
+            final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestServer);
+
             // Create an AdminClient
-            try (final AdminClient adminClient = kafkaTestServer.getAdminClient()) {
+            try (final AdminClient adminClient = kafkaTestUtils.getAdminClient()) {
                 // Describe details about the cluster
                 final DescribeClusterResult result = adminClient.describeCluster();
 

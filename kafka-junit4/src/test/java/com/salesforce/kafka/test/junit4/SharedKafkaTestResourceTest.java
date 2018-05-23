@@ -25,8 +25,7 @@
 
 package com.salesforce.kafka.test.junit4;
 
-import com.google.common.collect.Iterables;
-import com.salesforce.kafka.test.KafkaTestServer;
+import com.salesforce.kafka.test.KafkaTestUtils;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -48,7 +47,9 @@ import org.slf4j.LoggerFactory;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -70,12 +71,15 @@ public class SharedKafkaTestResourceTest {
      * It's automatically started before any methods are run via the @ClassRule annotation.
      * It's automatically stopped after all of the tests are completed via the @ClassRule annotation.
      *
-     * This example we override the Kafka broker id to '1000', but this serves as an example of how you
-     * how you could override any Kafka broker property.
+     * This example we start a cluster with 2 brokers (defaults to a single broker) and configure the brokers to
+     * disable topic auto-creation.
      */
     @ClassRule
     public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
-        .withBrokerProperty("broker.id", "1000");
+        // Start a cluster with 2 brokers.
+        .withBrokers(2)
+        // Disable topic auto-creation.
+        .withBrokerProperty("auto.create.topics.enable", "false");
 
     /**
      * Before every test, we generate a random topic name and create it within the embedded kafka server.
@@ -92,9 +96,9 @@ public class SharedKafkaTestResourceTest {
         // Generate topic name
         topicName = getClass().getSimpleName() + Clock.systemUTC().millis();
 
-        // Create topic with a single partition,
+        // Create topic with a single partition, replication factor of 2
         // NOTE: This will create partition id 0, because partitions are indexed at 0 :)
-        getKafkaTestServer().createTopic(topicName, 1);
+        getKafkaTestUtils().createTopic(topicName, 1, (short) 2);
     }
 
     /**
@@ -115,7 +119,7 @@ public class SharedKafkaTestResourceTest {
 
         // Create a new producer
         try (final KafkaProducer<String, String> producer =
-            getKafkaTestServer().getKafkaProducer(StringSerializer.class, StringSerializer.class)) {
+             getKafkaTestUtils().getKafkaProducer(StringSerializer.class, StringSerializer.class)) {
 
             // Produce it & wait for it to complete.
             final Future<RecordMetadata> future = producer.send(producerRecord);
@@ -128,7 +132,7 @@ public class SharedKafkaTestResourceTest {
 
         // Create consumer
         try (final KafkaConsumer<String, String> kafkaConsumer =
-            getKafkaTestServer().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class)) {
+             getKafkaTestUtils().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class)) {
 
             final List<TopicPartition> topicPartitionList = new ArrayList<>();
             for (final PartitionInfo partitionInfo: kafkaConsumer.partitionsFor(topicName)) {
@@ -159,34 +163,39 @@ public class SharedKafkaTestResourceTest {
     public void testCreatingTopicMultipleTimes() {
         final String myTopic = "myTopic";
         for (int creationCounter = 0; creationCounter < 5; creationCounter++) {
-            getKafkaTestServer().createTopic(myTopic);
+            getKafkaTestUtils().createTopic(myTopic, 1, (short) 1);
         }
         assertTrue("Made it here!", true);
     }
 
     /**
-     * Validate that broker Id was overridden correctly.
+     * Validate that we started 2 brokers.
      */
     @Test
-    public void testBrokerIdOverride() throws ExecutionException, InterruptedException {
-        try (final AdminClient adminClient = getKafkaTestServer().getAdminClient()) {
+    public void testTwoBrokersStarted() throws ExecutionException, InterruptedException {
+        final Set<Integer> foundBrokerIds = new HashSet<>();
+
+        try (final AdminClient adminClient = getKafkaTestUtils().getAdminClient()) {
             final Collection<Node> nodes = adminClient.describeCluster().nodes().get();
 
             assertNotNull("Sanity test, should not be null", nodes);
-            assertEquals("Should have 1 entry", 1, nodes.size());
+            assertEquals("Should have two entries", 2, nodes.size());
 
-            // Get details about our test broker/node
-            final Node node = Iterables.get(nodes, 0);
-
-            // Validate
-            assertEquals("Has expected overridden broker Id", 1000, node.id());
+            // Grab id for each node found.
+            nodes.forEach(
+                (node) -> foundBrokerIds.add(node.id())
+            );
         }
+
+        assertEquals("Found 2 brokers.", 2, foundBrokerIds.size());
+        assertTrue("Found brokerId 1", foundBrokerIds.contains(1));
+        assertTrue("Found brokerId 2", foundBrokerIds.contains(2));
     }
 
     /**
      * Simple accessor.
      */
-    private KafkaTestServer getKafkaTestServer() {
-        return sharedKafkaTestResource.getKafkaTestServer();
+    private KafkaTestUtils getKafkaTestUtils() {
+        return sharedKafkaTestResource.getKafkaTestUtils();
     }
 }

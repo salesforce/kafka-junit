@@ -26,7 +26,6 @@
 package com.salesforce.kafka.test.junit4;
 
 import com.google.common.base.Charsets;
-import com.salesforce.kafka.test.KafkaTestServer;
 import com.salesforce.kafka.test.KafkaTestUtils;
 import com.salesforce.kafka.test.ProducedKafkaRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -74,7 +73,7 @@ public class KafkaTestUtilsTest {
 
         // Create topic with 3 partitions,
         // NOTE: This will create partition ids 0 thru 2, because partitions are indexed at 0 :)
-        getKafkaTestServer().createTopic(topicName, 3);
+        getKafkaTestUtils().createTopic(topicName, 3, (short) 1);
     }
 
     /**
@@ -86,7 +85,7 @@ public class KafkaTestUtilsTest {
         final int partitionId = 2;
 
         // Create our utility class
-        final KafkaTestUtils kafkaTestUtils = sharedKafkaTestResource.getKafkaTestUtils();
+        final KafkaTestUtils kafkaTestUtils = getKafkaTestUtils();
 
         // Produce some random records
         final List<ProducedKafkaRecord<byte[], byte[]>> producedRecordsList =
@@ -134,7 +133,7 @@ public class KafkaTestUtilsTest {
     /**
      * Simple accessor.
      */
-    private KafkaTestServer getKafkaTestServer() {
-        return sharedKafkaTestResource.getKafkaTestServer();
+    private KafkaTestUtils getKafkaTestUtils() {
+        return sharedKafkaTestResource.getKafkaTestUtils();
     }
 }

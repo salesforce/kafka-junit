@@ -74,7 +74,7 @@ class KafkaTestUtilsTest {
 
         // Create topic with 3 partitions,
         // NOTE: This will create partition ids 0 thru 2, because partitions are indexed at 0 :)
-        getKafkaTestServer().createTopic(topicName, 3);
+        getKafkaTestUtils().createTopic(topicName, 3, (short) 1);
     }
 
     /**
@@ -86,14 +86,14 @@ class KafkaTestUtilsTest {
         final int partitionId = 2;
 
         // Create our utility class
-        final KafkaTestUtils kafkaTestUtils = sharedKafkaTestResource.getKafkaTestUtils();
+        final KafkaTestUtils kafkaTestUtils = getKafkaTestUtils();
 
         // Produce some random records
         final List<ProducedKafkaRecord<byte[], byte[]>> producedRecordsList =
             kafkaTestUtils.produceRecords(numberOfRecords, topicName, partitionId);
 
         // You can get details about what get produced
-        for (ProducedKafkaRecord<byte[], byte[]> producedKafkaRecord: producedRecordsList) {
+        for (final ProducedKafkaRecord<byte[], byte[]> producedKafkaRecord: producedRecordsList) {
             final String key = new String(producedKafkaRecord.getKey(), Charsets.UTF_8);
             final String value = new String(producedKafkaRecord.getValue(), Charsets.UTF_8);
             final String topic = producedKafkaRecord.getTopic();
@@ -114,8 +114,8 @@ class KafkaTestUtilsTest {
         final Iterator<ProducedKafkaRecord<byte[], byte[]>> producedKafkaRecordIterator = producedRecordsList.iterator();
 
         while (consumerRecordIterator.hasNext()) {
-            ConsumerRecord<byte[], byte[]> consumerRecord = consumerRecordIterator.next();
-            ProducedKafkaRecord<byte[], byte[]> producedKafkaRecord = producedKafkaRecordIterator.next();
+            final ConsumerRecord<byte[], byte[]> consumerRecord = consumerRecordIterator.next();
+            final ProducedKafkaRecord<byte[], byte[]> producedKafkaRecord = producedKafkaRecordIterator.next();
 
             final String expectedKey = new String(producedKafkaRecord.getKey(), Charsets.UTF_8);
             final String expectedValue = new String(producedKafkaRecord.getValue(), Charsets.UTF_8);
@@ -134,7 +134,7 @@ class KafkaTestUtilsTest {
     /**
      * Simple accessor.
      */
-    private KafkaTestServer getKafkaTestServer() {
-        return sharedKafkaTestResource.getKafkaTestServer();
+    private KafkaTestUtils getKafkaTestUtils() {
+        return sharedKafkaTestResource.getKafkaTestUtils();
     }
 }

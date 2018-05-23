@@ -58,15 +58,4 @@ public class ZookeeperTestServerTest {
         assertNotNull("Should have non-null connect string", actualConnectStr);
         assertTrue("Should start with 127.0.0.1", actualConnectStr.startsWith("127.0.0.1:"));
     }
-
-    /**
-     * Validates that we receive a sane looking ZK connection string.
-     */
-    @Test
-    public void testZookeeperServer() {
-        final TestingServer zkTestServer = sharedZookeeperTestResource.getZookeeperTestServer();
-
-        // Validate
-        assertNotNull("Should have non-null instance", zkTestServer);
-    }
 }
