@@ -68,44 +68,6 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
     }
 
     /**
-     * @return Instance of KafkaTestUtils configured and ready to go.
-     */
-    public KafkaTestUtils getKafkaTestUtils() {
-        // Validate internal state.
-        validateState(true, "Cannot access KafkaTestUtils before Kafka service has been started.");
-
-        // Create instance if it doesn't exist yet.
-        if (kafkaTestUtils == null) {
-            kafkaTestUtils = new KafkaTestUtils(kafkaCluster);
-        }
-        return kafkaTestUtils;
-    }
-
-    /**
-     * @return Connection string to connect to the Zookeeper instance.
-     */
-    public String getZookeeperConnectString() {
-        validateState(true, "Cannot access Zookeeper before service has been started.");
-        return kafkaCluster.getZookeeperConnectString();
-    }
-
-    /**
-     * @return The proper connect string to use for Kafka.
-     */
-    public String getKafkaConnectString() {
-        validateState(true, "Cannot access Kafka before service has been started.");
-        return kafkaCluster.getKafkaConnectString();
-    }
-
-    /**
-     * @return Immutable list of brokers, indexed by their brokerIds.
-     */
-    public KafkaBrokerList getKafkaBrokers() {
-        validateState(true, "Cannot access Kafka before service has been started.");
-        return kafkaCluster.getKafkaBrokers();
-    }
-
-    /**
      * Helper to allow overriding Kafka broker properties.  Can only be called prior to the service
      * being started.
      * @param name Kafka broker configuration property name.
@@ -146,6 +108,45 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
         }
         this.numberOfBrokers = brokerCount;
         return (T) this;
+    }
+
+    /**
+     * KafkaTestUtils is a collection of re-usable/common access patterns for interacting with the Kafka cluster.
+     * @return Instance of KafkaTestUtils configured with the Kafka cluster.
+     */
+    public KafkaTestUtils getKafkaTestUtils() {
+        // Validate internal state.
+        validateState(true, "Cannot access KafkaTestUtils before Kafka service has been started.");
+
+        // Create instance if it doesn't exist yet.
+        if (kafkaTestUtils == null) {
+            kafkaTestUtils = new KafkaTestUtils(kafkaCluster);
+        }
+        return kafkaTestUtils;
+    }
+
+    /**
+     * @return Connection string to connect to the Zookeeper instance.
+     */
+    public String getZookeeperConnectString() {
+        validateState(true, "Cannot access Zookeeper before service has been started.");
+        return kafkaCluster.getZookeeperConnectString();
+    }
+
+    /**
+     * @return bootstrap.servers string to configure Kafka consumers or producers to access the Kafka cluster.
+     */
+    public String getKafkaConnectString() {
+        validateState(true, "Cannot access Kafka before service has been started.");
+        return kafkaCluster.getKafkaConnectString();
+    }
+
+    /**
+     * @return Immutable list of brokers within the Kafka cluster, indexed by their brokerIds.
+     */
+    public KafkaBrokerList getKafkaBrokers() {
+        validateState(true, "Cannot access Kafka before service has been started.");
+        return kafkaCluster.getKafkaBrokers();
     }
 
     protected KafkaCluster getKafkaCluster() {

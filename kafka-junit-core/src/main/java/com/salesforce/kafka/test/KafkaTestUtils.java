@@ -78,10 +78,10 @@ public class KafkaTestUtils {
     }
 
     /**
-     * Produce some records into the defined kafka namespace.
+     * Produce some records into the defined kafka topic.
      *
      * @param keysAndValues Records you want to produce.
-     * @param topicName the namespace name to produce into.
+     * @param topicName the topic to produce into.
      * @param partitionId the partition to produce into.
      * @return List of ProducedKafkaRecords.
      */
@@ -112,7 +112,7 @@ public class KafkaTestUtils {
                 producerFutures.add(producer.send(record));
             }
 
-            // Publish to the namespace and close.
+            // Publish to the topic and close.
             producer.flush();
             logger.info("Produce completed");
         }
@@ -134,10 +134,10 @@ public class KafkaTestUtils {
     }
 
     /**
-     * Produce randomly generated records into the defined kafka namespace.
+     * Produce randomly generated records into the defined kafka topic.
      *
      * @param numberOfRecords how many records to produce
-     * @param topicName the namespace name to produce into.
+     * @param topicName the topic to produce into.
      * @param partitionId the partition to produce into.
      * @return List of ProducedKafkaRecords.
      */
@@ -227,7 +227,7 @@ public class KafkaTestUtils {
 
     /**
      * Creates a topic in Kafka. If the topic already exists this does nothing.
-     * @param topicName the namespace name to create.
+     * @param topicName the topic name to create.
      * @param partitions the number of partitions to create.
      * @param replicationFactor the number of replicas for the topic.
      */
