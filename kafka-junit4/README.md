@@ -107,7 +107,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 
 A great example of how to use this can be found within our tests!  Check out [SharedKafkaTestResourceTest.java](src/test/java/com/salesforce/kafka/test/junit4/SharedKafkaTestResourceTest.java).
 
-Add the following to your JUnit test class file and it will handle automatically starting and stopping a single embedded Kafka broker for you.
+Add the following to your JUnit test class and it will handle automatically starting and stopping a single embedded Kafka broker for you.
 
 ```java
     /**
@@ -148,7 +148,6 @@ a cluster with 4 Kafka brokers. The Kafka brokers will have id's that start and 
     public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
         .withBrokers(4);
 ```
-
 
 [SharedKafkaTestResource](src/main/java/com/salesforce/kafka/test/junit4/SharedKafkaTestResource.java) instance has a few accessors that you can make use of in your tests to interact with the Kafka cluster.
 
