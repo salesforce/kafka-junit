@@ -25,35 +25,57 @@
 
 package com.salesforce.kafka.test;
 
-import java.util.List;
-
 /**
- * This interface abstracts away knowing if the underlying 'kafka cluster' is a single server (KafkaTestServer)
- * or a cluster of 1 or more brokers (KafkaTestCluster).
- *
- * TODO: Fix this javadoc.
+ * Defines information about a Broker.
  */
-public interface KafkaCluster extends KafkaProvider, AutoCloseable {
+public class KafkaBroker {
+    /**
+     * The broker's Id.
+     */
+    private final int id;
 
     /**
-     * Creates and starts ZooKeeper and Kafka server instances.
-     * @throws Exception on startup errors.
+     * The broker's advertised hostname.
      */
-    void start() throws Exception;
+    private final String hostname;
 
     /**
-     * Closes the internal servers. Failing to call this at the end of your tests will likely
-     * result in leaking instances.
+     * The broker's advertised port.
      */
-    void close() throws Exception;
+    private final int port;
 
     /**
-     * @return The proper connect string to use for Kafka.
+     * Constructor.
+     * @param id BrokerId.
+     * @param hostname Hostname to talk to the broker.
      */
-    String getKafkaConnectString();
+    public KafkaBroker(final int id, final String hostname, final int port) {
+        this.id = id;
+        this.hostname = hostname;
+        this.port = port;
+    }
 
-    /**
-     * @return The proper connect string to use for Zookeeper.
-     */
-    String getZookeeperConnectString();
+    public int getId() {
+        return id;
+    }
+
+    public String getHostname() {
+        return hostname;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public String getConnectString() {
+        return getHostname() + ":" + getPort();
+    }
+
+    @Override
+    public String toString() {
+        return "KafkaBroker{"
+            + "id=" + id
+            + ", hostname='" + hostname + '\''
+            + '}';
+    }
 }

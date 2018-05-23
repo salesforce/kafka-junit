@@ -25,9 +25,10 @@
 
 package com.salesforce.kafka.test.junit5;
 
-import com.salesforce.kafka.test.KafkaTestServer;
+import com.salesforce.kafka.test.KafkaBrokerList;
+import com.salesforce.kafka.test.KafkaCluster;
+import com.salesforce.kafka.test.KafkaTestCluster;
 import com.salesforce.kafka.test.KafkaTestUtils;
-import org.apache.curator.test.TestingServer;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -53,7 +54,7 @@ public class SharedKafkaTestResource implements BeforeAllCallback, AfterAllCallb
     /**
      * Our internal Kafka Test Server instance.
      */
-    private KafkaTestServer kafkaTestServer = null;
+    private KafkaCluster kafkaCluster = null;
 
     /**
      * Cached instance of KafkaTestUtils.
@@ -64,6 +65,11 @@ public class SharedKafkaTestResource implements BeforeAllCallback, AfterAllCallb
      * Additional broker properties.
      */
     private final Properties brokerProperties = new Properties();
+
+    /**
+     * How many brokers to put into the cluster.
+     */
+    private int numberOfBrokers = 1;
 
     /**
      * Default constructor.
@@ -81,41 +87,34 @@ public class SharedKafkaTestResource implements BeforeAllCallback, AfterAllCallb
     }
 
     /**
-     * @return Shared Kafka Test server instance.
-     */
-    public KafkaTestServer getKafkaTestServer() {
-        return kafkaTestServer;
-    }
-
-    /**
      * @return Instance of KafkaTestUtils configured and ready to go.
      */
     public KafkaTestUtils getKafkaTestUtils() {
         if (kafkaTestUtils == null) {
-            kafkaTestUtils = new KafkaTestUtils(getKafkaTestServer());
+            kafkaTestUtils = new KafkaTestUtils(kafkaCluster);
         }
         return kafkaTestUtils;
-    }
-
-    /**
-     * @return Shared Zookeeper test server instance.
-     */
-    public TestingServer getZookeeperTestServer() {
-        return getKafkaTestServer().getZookeeperServer();
     }
 
     /**
      * @return Connection string to connect to the Zookeeper instance.
      */
     public String getZookeeperConnectString() {
-        return getZookeeperTestServer().getConnectString();
+        return kafkaCluster.getZookeeperConnectString();
     }
 
     /**
      * @return The proper connect string to use for Kafka.
      */
     public String getKafkaConnectString() {
-        return getKafkaTestServer().getKafkaConnectString();
+        return kafkaCluster.getKafkaConnectString();
+    }
+
+    /**
+     * @return Immutable list of brokers, indexed by their brokerIds.
+     */
+    public KafkaBrokerList getKafkaBrokers() {
+        return kafkaCluster.getKafkaBrokers();
     }
 
     /**
@@ -134,7 +133,7 @@ public class SharedKafkaTestResource implements BeforeAllCallback, AfterAllCallb
         }
 
         // Validate state.
-        if (kafkaTestServer != null) {
+        if (kafkaCluster != null) {
             throw new IllegalStateException("Cannot add properties after service has started");
         }
 
@@ -148,36 +147,55 @@ public class SharedKafkaTestResource implements BeforeAllCallback, AfterAllCallb
     }
 
     /**
+     * Set how many brokers to include in the test cluster.
+     * @param brokerCount The number of brokers.
+     * @return SharedKafkaTestResource for method chaining.
+     */
+    public SharedKafkaTestResource withBrokers(final int brokerCount) {
+        // Validate state.
+        if (kafkaCluster != null) {
+            throw new IllegalStateException("Cannot set brokers after service has started");
+        }
+
+        if (brokerCount < 1) {
+            throw new IllegalArgumentException("Cannot have 0 or fewer brokers");
+        }
+        this.numberOfBrokers = brokerCount;
+        return this;
+    }
+
+
+    /**
      * Here we stand up an internal test kafka and zookeeper service.
      * Once for all tests that use this shared resource.
      */
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
         logger.info("Starting kafka test server");
-        if (kafkaTestServer != null) {
+        if (kafkaCluster != null) {
             throw new IllegalStateException("Unknown State!  Kafka Test Server already exists!");
         }
         // Setup kafka test server
-        kafkaTestServer = new KafkaTestServer(brokerProperties);
-        kafkaTestServer.start();
+        kafkaCluster = new KafkaTestCluster(numberOfBrokers, brokerProperties);
+        kafkaCluster.start();
     }
 
     /**
      * Here we shut down the internal test kafka and zookeeper services.
      */
     @Override
-    public void afterAll(ExtensionContext context) throws Exception {
+    public void afterAll(ExtensionContext context) {
         logger.info("Shutting down kafka test server");
 
         // Close out kafka test server if needed
-        if (kafkaTestServer == null) {
+        if (kafkaCluster == null) {
             return;
         }
         try {
-            kafkaTestServer.shutdown();
+            kafkaCluster.close();
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }
-        kafkaTestServer = null;
+        kafkaCluster = null;
     }
 }

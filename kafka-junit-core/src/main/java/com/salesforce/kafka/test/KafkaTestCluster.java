@@ -26,18 +26,13 @@
 package com.salesforce.kafka.test;
 
 import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.common.Node;
-import org.apache.kafka.common.serialization.Deserializer;
-import org.apache.kafka.common.serialization.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
@@ -146,10 +141,19 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
     }
 
     /**
-     * @return immutable list of brokers within the cluster.
+     * @return immutable list of hosts for brokers within the cluster.
      */
-    public List<KafkaTestServer> getKafkaBrokers() {
-        return Collections.unmodifiableList(brokers);
+    @Override
+    public KafkaBrokerList getKafkaBrokers() {
+        final List<KafkaBroker> kafkaBrokers = new ArrayList<>();
+
+        // Generate complete list.
+        brokers.forEach((broker) -> {
+            broker.getKafkaBrokers().forEach(kafkaBrokers::add);
+        });
+
+        // Return it.
+        return new KafkaBrokerList(kafkaBrokers);
     }
 
     /**
@@ -167,7 +171,7 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      */
     public String getKafkaConnectString() {
         // Loop over each broker and generate a complete connect string.
-        return getKafkaBrokers().stream()
+        return brokers.stream()
             .map(KafkaTestServer::getKafkaConnectString)
             .collect(Collectors.joining(","));
     }
@@ -177,50 +181,6 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      */
     public String getZookeeperConnectString() {
         return zkTestServer.getZookeeperConnectString();
-    }
-
-    @Override
-    public void createTopic(final String topicName, final int partitions, final short replicationFactor) {
-        new KafkaTestUtils(this)
-            .createTopic(topicName, partitions, replicationFactor);
-    }
-
-    @Override
-    public AdminClient getAdminClient() {
-        return new KafkaTestUtils(this)
-            .getAdminClient();
-    }
-
-    @Override
-    public <K, V> KafkaProducer<K, V> getKafkaProducer(
-        final Class<? extends Serializer<K>> keySerializer,
-        final Class<? extends Serializer<V>> valueSerializer) {
-        return getKafkaProducer(keySerializer, valueSerializer, new Properties());
-    }
-
-    @Override
-    public <K, V> KafkaProducer<K, V> getKafkaProducer(
-        final Class<? extends Serializer<K>> keySerializer,
-        final Class<? extends Serializer<V>> valueSerializer,
-        final Properties config) {
-        return new KafkaTestUtils(this)
-            .getKafkaProducer(keySerializer, valueSerializer, config);
-    }
-
-    @Override
-    public <K, V> KafkaConsumer<K, V> getKafkaConsumer(
-        final Class<? extends Deserializer<K>> keyDeserializer,
-        final Class<? extends Deserializer<V>> valueDeserializer) {
-        return getKafkaConsumer(keyDeserializer, valueDeserializer, new Properties());
-    }
-
-    @Override
-    public <K, V> KafkaConsumer<K, V> getKafkaConsumer(
-        final Class<? extends Deserializer<K>> keyDeserializer,
-        final Class<? extends Deserializer<V>> valueDeserializer,
-        final Properties config) {
-        return new KafkaTestUtils(this)
-            .getKafkaConsumer(keyDeserializer, valueDeserializer, config);
     }
 
     /**
@@ -247,14 +207,13 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      * @throws TimeoutException if the timeout period is exceeded.
      */
     private void waitUntilClusterReady(final long timeoutMs) throws TimeoutException {
+        // Get AdminClient for cluster.
+        final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(this);
+
+        // Start looping.
         final long startTime = clock.millis();
-
-        // Get 1st broker
-        final KafkaTestServer broker = getKafkaBrokers().get(0);
-
-        // Get AdminClient for first broker.
         do {
-            try (final AdminClient adminClient = broker.getAdminClient()) {
+            try (final AdminClient adminClient = kafkaTestUtils.getAdminClient()) {
                 // Ask for the nodes in the cluster.
                 final Collection<Node> nodes = adminClient.describeCluster().nodes().get(timeoutMs, TimeUnit.MILLISECONDS);
 

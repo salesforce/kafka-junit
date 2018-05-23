@@ -25,10 +25,16 @@
 
 package com.salesforce.kafka.test;
 
+import java.util.List;
+
 /**
  * Provides a slimmed down view onto KafkaCluster to avoid circular references in code.
  */
 public interface KafkaProvider {
+    /**
+     * @return Immutable list of broker hosts.
+     */
+    KafkaBrokerList getKafkaBrokers();
 
     /**
      * @return The proper connect string to use for Kafka.
@@ -39,4 +45,6 @@ public interface KafkaProvider {
      * @return The proper connect string to use for Zookeeper.
      */
     String getZookeeperConnectString();
+
+
 }

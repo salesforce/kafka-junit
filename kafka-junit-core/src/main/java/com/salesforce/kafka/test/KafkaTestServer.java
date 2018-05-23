@@ -30,13 +30,9 @@ import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
 import org.apache.curator.test.InstanceSpec;
 import org.apache.curator.test.TestingServer;
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.common.serialization.Deserializer;
-import org.apache.kafka.common.serialization.Serializer;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.Properties;
 
 /**
@@ -52,6 +48,16 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     private static final String DEFAULT_HOSTNAME = "127.0.0.1";
 
     /**
+     * Internal Test Kafka service.
+     */
+    private KafkaServerStartable kafka;
+
+    /**
+     * Random Generated Kafka Port to listen on.
+     */
+    private int kafkaPort;
+
+    /**
      * Internal Test Zookeeper service.
      */
     private TestingServer zkServer;
@@ -62,22 +68,12 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     private boolean isManagingZookeeper = true;
 
     /**
-     * Internal Test Kafka service.
-     */
-    private KafkaServerStartable kafka;
-
-    /**
-     * Random Generated Kafka Port.
-     */
-    private String kafkaPort;
-
-    /**
      * Defines overridden broker properties.
      */
     private final Properties overrideBrokerProperties = new Properties();
 
     /**
-     * Default constructor.
+     * Default constructor, no overridden broker properties.
      */
     public KafkaTestServer() {
         this(new Properties());
@@ -112,11 +108,11 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     }
 
     /**
-     * Package protected constructor allowing override of ZookeeperTestServer instance.
+     * Constructor allowing override of ZookeeperTestServer instance.
      * @param overrideBrokerProperties Define Kafka broker properties.
      * @param zookeeperTestServer Zookeeper server instance to use.
      */
-    KafkaTestServer(final Properties overrideBrokerProperties, final TestingServer zookeeperTestServer) {
+    public KafkaTestServer(final Properties overrideBrokerProperties, final TestingServer zookeeperTestServer) {
         this(overrideBrokerProperties);
 
         // If instance is passed,
@@ -129,31 +125,33 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     }
 
     /**
-     * @return Internal Zookeeper Server.
-     */
-    public TestingServer getZookeeperServer() {
-        return this.zkServer;
-    }
-
-    /**
-     * @return Internal Kafka Server.
-     */
-    public KafkaServerStartable getKafkaServer() {
-        return this.kafka;
-    }
-
-    /**
      * @return The proper connect string to use for Kafka.
      */
+    @Override
     public String getKafkaConnectString() {
         return getConfiguredHostname() + ":" + kafkaPort;
+    }
+
+    /**
+     * @return immutable list of hosts for brokers within the cluster.
+     */
+    @Override
+    public KafkaBrokerList getKafkaBrokers() {
+        return new KafkaBrokerList(
+            Collections.singletonList(new KafkaBroker(getBrokerId(), getConfiguredHostname(), kafkaPort))
+        );
+    }
+
+    public int getBrokerId() {
+        // TODO Only if started.
+        return kafka.serverConfig().brokerId();
     }
 
     /**
      * @return The proper connect string to use for Zookeeper.
      */
     public String getZookeeperConnectString() {
-        return getConfiguredHostname() + ":" + getZookeeperServer().getPort();
+        return getConfiguredHostname() + ":" + zkServer.getPort();
     }
 
     /**
@@ -170,7 +168,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
 
         // Start zookeeper and get its connection string.
         zkServer.start();
-        final String zkConnectionString = getZookeeperServer().getConnectString();
+        final String zkConnectionString = zkServer.getConnectString();
 
         // Build properties using a baseline from overrideBrokerProperties.
         final Properties brokerProperties = new Properties();
@@ -180,7 +178,9 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
         setPropertyIfNotSet(brokerProperties, "zookeeper.connect", zkConnectionString);
 
         // Conditionally generate a port for kafka to use if not already defined.
-        kafkaPort = (String) setPropertyIfNotSet(brokerProperties, "port", String.valueOf(InstanceSpec.getRandomPort()));
+        kafkaPort = Integer.parseInt(
+            (String) setPropertyIfNotSet(brokerProperties, "port", String.valueOf(InstanceSpec.getRandomPort()))
+        );
 
         // If log.dir is not set.
         if (brokerProperties.getProperty("log.dir") == null) {
@@ -195,7 +195,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
         // Ensure that we're advertising appropriately
         setPropertyIfNotSet(brokerProperties, "host.name", getConfiguredHostname());
         setPropertyIfNotSet(brokerProperties, "advertised.host.name", getConfiguredHostname());
-        setPropertyIfNotSet(brokerProperties, "advertised.port", kafkaPort);
+        setPropertyIfNotSet(brokerProperties, "advertised.port", String.valueOf(kafkaPort));
         setPropertyIfNotSet(brokerProperties, "advertised.listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + kafkaPort);
         setPropertyIfNotSet(brokerProperties, "listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + kafkaPort);
 
@@ -223,116 +223,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
         // Create and start kafka service.
         final KafkaConfig config = new KafkaConfig(brokerProperties);
         kafka = new KafkaServerStartable(config);
-        getKafkaServer().startup();
-    }
-
-    /**
-     * Creates a namespace in Kafka. If the namespace already exists this does nothing.
-     * Will create a namespace with exactly 1 partition.
-     * @param topicName the namespace name to create.
-     */
-    public void createTopic(final String topicName) {
-        createTopic(topicName, 1);
-    }
-
-    /**
-     * Creates a topic in Kafka. If the topic already exists this does nothing.
-     * @param topicName the namespace name to create.
-     * @param partitions the number of partitions to create.
-     */
-    public void createTopic(final String topicName, final int partitions) {
-        createTopic(topicName, partitions, (short) 1);
-    }
-
-    @Override
-    public void createTopic(final String topicName, final int partitions, final short replicationFactor) {
-        new KafkaTestUtils(this)
-            .createTopic(topicName, partitions, replicationFactor);
-    }
-
-    /**
-     * Shuts down the ZooKeeper and Kafka server instances. This *must* be called before the integration
-     * test completes in order to clean up any running processes and data that was created.
-     * @throws Exception on shutdown errors.
-     * @deprecated see close().
-     */
-    @Deprecated
-    public void shutdown() throws Exception {
-        close();
-    }
-
-    /**
-     * Creates a Kafka AdminClient connected to our test server.
-     * @return Kafka AdminClient instance.
-     */
-    public AdminClient getAdminClient() {
-        return new KafkaTestUtils(this)
-            .getAdminClient();
-    }
-
-    /**
-     * Creates a kafka producer that is connected to our test server.
-     * @param <K> Type of message key
-     * @param <V> Type of message value
-     * @param keySerializer Class of serializer to be used for keys.
-     * @param valueSerializer Class of serializer to be used for values.
-     * @return KafkaProducer configured to produce into Test server.
-     */
-    public <K, V> KafkaProducer<K, V> getKafkaProducer(
-        final Class<? extends Serializer<K>> keySerializer,
-        final Class<? extends Serializer<V>> valueSerializer) {
-
-        return getKafkaProducer(keySerializer, valueSerializer, new Properties());
-    }
-
-    /**
-     * Creates a kafka producer that is connected to our test server.
-     * @param <K> Type of message key
-     * @param <V> Type of message value
-     * @param keySerializer Class of serializer to be used for keys.
-     * @param valueSerializer Class of serializer to be used for values.
-     * @param config Additional producer configuration options to be set.
-     * @return KafkaProducer configured to produce into Test server.
-     */
-    public <K, V> KafkaProducer<K, V> getKafkaProducer(
-        final Class<? extends Serializer<K>> keySerializer,
-        final Class<? extends Serializer<V>> valueSerializer,
-        final Properties config) {
-
-        return new KafkaTestUtils(this)
-            .getKafkaProducer(keySerializer, valueSerializer, config);
-    }
-
-    /**
-     * Return Kafka Consumer configured to consume from internal Kafka Server.
-     * @param <K> Type of message key
-     * @param <V> Type of message value
-     * @param keyDeserializer Class of deserializer to be used for keys.
-     * @param valueDeserializer Class of deserializer to be used for values.
-     * @return KafkaProducer configured to produce into Test server.
-     */
-    public <K, V> KafkaConsumer<K, V> getKafkaConsumer(
-        final Class<? extends Deserializer<K>> keyDeserializer,
-        final Class<? extends Deserializer<V>> valueDeserializer) {
-        return getKafkaConsumer(keyDeserializer, valueDeserializer, new Properties());
-    }
-
-    /**
-     * Return Kafka Consumer configured to consume from internal Kafka Server.
-     * @param <K> Type of message key
-     * @param <V> Type of message value
-     * @param keyDeserializer Class of deserializer to be used for keys.
-     * @param valueDeserializer Class of deserializer to be used for values.
-     * @param config Additional consumer configuration options to be set.
-     * @return KafkaProducer configured to produce into Test server.
-     */
-    public <K, V> KafkaConsumer<K, V> getKafkaConsumer(
-        final Class<? extends Deserializer<K>> keyDeserializer,
-        final Class<? extends Deserializer<V>> valueDeserializer,
-        final Properties config) {
-
-        return new KafkaTestUtils(this)
-            .getKafkaConsumer(keyDeserializer, valueDeserializer, config);
+        kafka.startup();
     }
 
     /**
@@ -378,15 +269,15 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      */
     @Override
     public void close() throws Exception {
-        if (getKafkaServer() != null) {
-            getKafkaServer().shutdown();
+        if (kafka != null) {
+            kafka.shutdown();
             kafka = null;
         }
 
         // Conditionally close zookeeper
-        if (getZookeeperServer() != null && isManagingZookeeper) {
+        if (zkServer != null && isManagingZookeeper) {
             // Only close the zkServer if we're in charge of managing it.
-            getZookeeperServer().close();
+            zkServer.close();
         }
     }
 }

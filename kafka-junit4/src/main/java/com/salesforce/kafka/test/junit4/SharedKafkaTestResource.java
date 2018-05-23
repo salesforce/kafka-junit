@@ -25,9 +25,10 @@
 
 package com.salesforce.kafka.test.junit4;
 
-import com.salesforce.kafka.test.KafkaTestServer;
+import com.salesforce.kafka.test.KafkaBrokerList;
+import com.salesforce.kafka.test.KafkaCluster;
+import com.salesforce.kafka.test.KafkaTestCluster;
 import com.salesforce.kafka.test.KafkaTestUtils;
-import org.apache.curator.test.TestingServer;
 import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +52,7 @@ public class SharedKafkaTestResource extends ExternalResource {
     /**
      * Our internal Kafka Test Server instance.
      */
-    private KafkaTestServer kafkaTestServer = null;
+    private KafkaCluster kafkaCluster = null;
 
     /**
      * Cached instance of KafkaTestUtils.
@@ -62,6 +63,11 @@ public class SharedKafkaTestResource extends ExternalResource {
      * Additional broker properties.
      */
     private final Properties brokerProperties = new Properties();
+
+    /**
+     * How many brokers to put into the cluster.
+     */
+    private int numberOfBrokers = 1;
 
     /**
      * Default constructor.
@@ -87,14 +93,17 @@ public class SharedKafkaTestResource extends ExternalResource {
      * @throws IllegalArgumentException if name argument is null.
      * @throws IllegalStateException if method called after service has started.
      */
-    public SharedKafkaTestResource withBrokerProperty(final String name, final String value) {
+    public SharedKafkaTestResource withBrokerProperty(
+        final String name,
+        final String value
+    ) throws IllegalArgumentException, IllegalStateException {
         // Validate input.
         if (name == null) {
             throw new IllegalArgumentException("Cannot pass null name argument");
         }
 
         // Validate state.
-        if (kafkaTestServer != null) {
+        if (kafkaCluster != null) {
             throw new IllegalStateException("Cannot add properties after service has started");
         }
 
@@ -108,17 +117,36 @@ public class SharedKafkaTestResource extends ExternalResource {
     }
 
     /**
+     * Set how many brokers to include in the test cluster.
+     * @param brokerCount The number of brokers.
+     * @return SharedKafkaTestResource for method chaining.
+     * @throws IllegalStateException if called after Kafka service has already started.
+     */
+    public SharedKafkaTestResource withBrokers(final int brokerCount) throws IllegalStateException {
+        // Validate state.
+        if (kafkaCluster != null) {
+            throw new IllegalStateException("Cannot set brokers after service has started");
+        }
+
+        if (brokerCount < 1) {
+            throw new IllegalArgumentException("Cannot have 0 or fewer brokers");
+        }
+        this.numberOfBrokers = brokerCount;
+        return this;
+    }
+
+    /**
      * Here we stand up an internal test kafka and zookeeper service.
      * Once for all tests that use this shared resource.
      */
     protected void before() throws Exception {
         logger.info("Starting kafka test server");
-        if (kafkaTestServer != null) {
+        if (kafkaCluster != null) {
             throw new IllegalStateException("Unknown State!  Kafka Test Server already exists!");
         }
         // Setup kafka test server
-        kafkaTestServer = new KafkaTestServer(brokerProperties);
-        kafkaTestServer.start();
+        kafkaCluster = new KafkaTestCluster(numberOfBrokers, brokerProperties);
+        kafkaCluster.start();
     }
 
     /**
@@ -128,22 +156,15 @@ public class SharedKafkaTestResource extends ExternalResource {
         logger.info("Shutting down kafka test server");
 
         // Close out kafka test server if needed
-        if (kafkaTestServer == null) {
+        if (kafkaCluster == null) {
             return;
         }
         try {
-            kafkaTestServer.shutdown();
+            kafkaCluster.close();
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }
-        kafkaTestServer = null;
-    }
-
-    /**
-     * @return Shared Kafka Test server instance.
-     */
-    public KafkaTestServer getKafkaTestServer() {
-        return kafkaTestServer;
+        kafkaCluster = null;
     }
 
     /**
@@ -151,29 +172,29 @@ public class SharedKafkaTestResource extends ExternalResource {
      */
     public KafkaTestUtils getKafkaTestUtils() {
         if (kafkaTestUtils == null) {
-            kafkaTestUtils = new KafkaTestUtils(getKafkaTestServer());
+            kafkaTestUtils = new KafkaTestUtils(kafkaCluster);
         }
         return kafkaTestUtils;
-    }
-
-    /**
-     * @return Shared Zookeeper test server instance.
-     */
-    public TestingServer getZookeeperTestServer() {
-        return getKafkaTestServer().getZookeeperServer();
     }
 
     /**
      * @return Connection string to connect to the Zookeeper instance.
      */
     public String getZookeeperConnectString() {
-        return getZookeeperTestServer().getConnectString();
+        return kafkaCluster.getZookeeperConnectString();
     }
 
     /**
      * @return The proper connect string to use for Kafka.
      */
     public String getKafkaConnectString() {
-        return getKafkaTestServer().getKafkaConnectString();
+        return kafkaCluster.getKafkaConnectString();
+    }
+
+    /**
+     * @return Immutable list of brokers, indexed by their brokerIds.
+     */
+    public KafkaBrokerList getKafkaBrokers() {
+        return kafkaCluster.getKafkaBrokers();
     }
 }

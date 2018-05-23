@@ -47,14 +47,6 @@ public class SharedZookeeperTestResource extends ExternalResource {
     private final ZookeeperTestServer zookeeperTestServer = new ZookeeperTestServer();
 
     /**
-     * @return Shared Zookeeper test server instance.
-     * @throws IllegalStateException if before() has not been called yet.
-     */
-    public TestingServer getZookeeperTestServer() throws IllegalStateException {
-        return zookeeperTestServer.getZookeeperTestServer();
-    }
-
-    /**
      * @return Connection string to connect to the Zookeeper instance.
      * @throws IllegalStateException if before() has not been called yet.
      */
