@@ -150,7 +150,7 @@ a cluster with 4 Kafka brokers. The Kafka brokers will have id's that start and 
 ```
 
 
-[SharedKafkaTestResource](src/main/java/com/salesforce/kafka/test/junit4/SharedKafkaTestResource.java) instance has two accessors that you can make use of in your tests to interact with the service.
+[SharedKafkaTestResource](src/main/java/com/salesforce/kafka/test/junit4/SharedKafkaTestResource.java) instance has a few accessors that you can make use of in your tests to interact with the Kafka cluster.
 
 ```java
     /**
@@ -170,7 +170,7 @@ a cluster with 4 Kafka brokers. The Kafka brokers will have id's that start and 
 
     /**
      * KafkaTestUtils is a collection of re-usable/common access patterns for interacting with the Kafka cluster.
-     * @return Instance of KafkaTestUtils configured with the Kafka cluster.
+     * @return Instance of KafkaTestUtils configured to operate on the Kafka cluster.
      */
     public KafkaTestUtils getKafkaTestUtils();
 ```

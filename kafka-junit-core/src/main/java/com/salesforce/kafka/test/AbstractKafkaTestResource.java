@@ -112,7 +112,7 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
 
     /**
      * KafkaTestUtils is a collection of re-usable/common access patterns for interacting with the Kafka cluster.
-     * @return Instance of KafkaTestUtils configured with the Kafka cluster.
+     * @return Instance of KafkaTestUtils configured to operate on the Kafka cluster.
      */
     public KafkaTestUtils getKafkaTestUtils() {
         // Validate internal state.
