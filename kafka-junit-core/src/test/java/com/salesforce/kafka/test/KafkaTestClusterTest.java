@@ -39,7 +39,7 @@ import java.util.Set;
 
 class KafkaTestClusterTest {
     /**
-     * This test validates that the cluster contains 2 nodes
+     * This test validates that the cluster contains 2 nodes.
      */
     @Test
     void testMultipleNodesInBroker() throws Exception {
