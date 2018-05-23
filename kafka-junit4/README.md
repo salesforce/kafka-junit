@@ -1,13 +1,13 @@
 # Kafka-JUnit4
 
 This library wraps Apache Kafka's [KafkaServerStartable](https://github.com/apache/kafka/blob/1.1/core/src/main/scala/kafka/server/KafkaServerStartable.scala#L32) class and allows you to easily create and run tests against
-one or more "real" kafka brokers running within your tests. No needing to stand up and coordinate an external kafka cluster for your tests! 
+one or more "real" kafka brokers running within your tests. No longer do you need to setup and coordinate with an external kafka cluster for your tests! 
 
 Kafka-JUnit4 is built on-top of **JUnit 4** as a SharedResource using the **@ClassRule** annotation.
 
-Kafka-JUnit4 works with Kafka versions **0.11.0.x**, **1.0.x**, and **1.1.x** and must be explicitly declared in your project's POM.
+Kafka-JUnit4 works with Kafka versions **0.11.0.x**, **1.0.x**, and **1.1.x** and requires your project to explicitly declare/include Kafka in your project's POM dependency list.
 
-For usage with JUnit5 or more project information please review top level [README](../README.md).
+For usage with JUnit5 or more general project information please review top level [README](../README.md).
 
 ## Using Kafka-JUnit with JUnit 4.
 
@@ -111,7 +111,7 @@ Add the following to your JUnit test class file and it will handle automatically
 
 ```java
     /**
-     * We have a single embedded kafka server that gets started when this test class is initialized.
+     * We have a single embedded Kafka server that gets started when this test class is initialized.
      *
      * It's automatically started before any methods are run via the @ClassRule annotation.
      * It's automatically stopped after all of the tests are completed via the @ClassRule annotation.
@@ -120,11 +120,11 @@ Add the following to your JUnit test class file and it will handle automatically
     public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource();
 ```
 
-SharedKafkaTestResource exposes the ability to override properties set on the kafka broker instances.
+SharedKafkaTestResource exposes the ability to override properties set on the Kafka broker instances.
 
 ```java
     /**
-     * This is an example of how to override configuration values for the test kafka broker instance.
+     * This is an example of how to override configuration values for the test Kafka broker instance.
      * 
      * Here we disable topic auto-creation, and set the message max bytes option to 512KB.
      */
@@ -135,7 +135,7 @@ SharedKafkaTestResource exposes the ability to override properties set on the ka
 ```
 
 By default SharedKafkaTestResource will start only a single broker within the cluster. The following example will start
-a cluster with 4 Kafka brokers.  Broker's will have broker id's that start and increase from 1.
+a cluster with 4 Kafka brokers. The Kafka brokers will have id's that start and increase from 1.
 
 ```java
     /**
@@ -192,7 +192,7 @@ Below is a **sample** of the functionality available to you:
     public void createTopic(final String topicName, final int partitions, final short replicationFactor);
 
     /**
-     * Creates a kafka producer that is connected to our test server.
+     * Creates a Kafka producer configured to produce into internal Kafka cluster.
      * @param <K> Type of message key
      * @param <V> Type of message value
      * @param keySerializer Class of serializer to be used for keys.
@@ -206,7 +206,7 @@ Below is a **sample** of the functionality available to you:
         final Properties config);
 
     /**
-     * Return Kafka Consumer configured to consume from internal Kafka Server.
+     * Return Kafka Consumer configured to consume from internal Kafka cluster.
      * @param <K> Type of message key
      * @param <V> Type of message value
      * @param keyDeserializer Class of deserializer to be used for keys.
@@ -226,7 +226,7 @@ Below is a **sample** of the functionality available to you:
     public AdminClient getAdminClient();
 
     /**
-     * Produce randomly generated records into a kafka topic.
+     * Produce randomly generated records into a Kafka topic.
      * Use when you don't care about the contents of the records.
      *
      * @param numberOfRecords how many records to produce
