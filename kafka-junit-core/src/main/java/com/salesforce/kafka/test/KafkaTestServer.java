@@ -101,8 +101,9 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     /**
      * Alternative constructor allowing override of brokerProperties.
      * @param overrideBrokerProperties Define Kafka broker properties.
+     * @throws IllegalArgumentException if overrideBrokerProperties argument is null.
      */
-    public KafkaTestServer(final Properties overrideBrokerProperties) {
+    public KafkaTestServer(final Properties overrideBrokerProperties) throws IllegalArgumentException {
         // Validate argument.
         if (overrideBrokerProperties == null) {
             throw new IllegalArgumentException("Cannot pass null overrideBrokerProperties argument");
@@ -113,11 +114,11 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     }
 
     /**
-     * Constructor allowing override of ZookeeperTestServer instance.
+     * Package protected constructor allowing override of ZookeeperTestServer instance.
      * @param overrideBrokerProperties Define Kafka broker properties.
      * @param zookeeperTestServer Zookeeper server instance to use.
      */
-    public KafkaTestServer(final Properties overrideBrokerProperties, final TestingServer zookeeperTestServer) {
+    KafkaTestServer(final Properties overrideBrokerProperties, final TestingServer zookeeperTestServer) {
         this(overrideBrokerProperties);
 
         // If instance is passed,
@@ -134,6 +135,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      */
     @Override
     public String getKafkaConnectString() {
+        validateState(true, "Cannot get connect string prior to service being started.");
         return getConfiguredHostname() + ":" + brokerPort;
     }
 
@@ -142,6 +144,8 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      */
     @Override
     public KafkaBrokerList getKafkaBrokers() {
+        validateState(true, "Cannot get brokers before service has been started.");
+
         return new KafkaBrokerList(
             Collections.singletonList(new KafkaBroker(getBrokerId(), getConfiguredHostname(), brokerPort))
         );
@@ -151,7 +155,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      * @return This brokers Id.
      */
     public int getBrokerId() {
-        // TODO Only if started.
+        validateState(true, "Cannot get brokerId prior to service being started.");
         return brokerConfig.brokerId();
     }
 
@@ -159,6 +163,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      * @return The proper connect string to use for Zookeeper.
      */
     public String getZookeeperConnectString() {
+        validateState(true, "Cannot get connect string prior to service being started.");
         return getConfiguredHostname() + ":" + zkServer.getPort();
     }
 
@@ -167,6 +172,9 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      * @throws Exception on startup errors.
      */
     public void start() throws Exception {
+        // Validate state.
+        validateState(false, "Cannot start service multiple times.");
+
         // If we have no zkServer instance
         if (zkServer == null) {
             // Create it.
@@ -237,6 +245,27 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     }
 
     /**
+     * Closes the internal servers. Failing to call this at the end of your tests will likely
+     * result in leaking instances.
+     */
+    @Override
+    public void close() throws Exception {
+        if (broker != null) {
+            // Shutdown and reset.
+            broker.shutdown();
+            broker = null;
+            brokerConfig = null;
+            brokerPort = 0;
+        }
+
+        // Conditionally close zookeeper
+        if (zkServer != null && isManagingZookeeper) {
+            // Only close the zkServer if we're in charge of managing it.
+            zkServer.close();
+        }
+    }
+
+    /**
      * Helper method to conditionally set a property if no value is already set.
      * @param properties The properties instance to update.
      * @param key The key to set if not already set.
@@ -274,23 +303,16 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     }
 
     /**
-     * Closes the internal servers. Failing to call this at the end of your tests will likely
-     * result in leaking instances.
+     * Helper method for ensure state consistency.
+     * @param requireServiceStarted True if service should have been started, false if not.
+     * @param errorMessage Error message to throw if the state is not consistent.
+     * @throws IllegalStateException if the kafkaCluster state is not consistent.
      */
-    @Override
-    public void close() throws Exception {
-        if (broker != null) {
-            // Shutdown and reset.
-            broker.shutdown();
-            broker = null;
-            brokerConfig = null;
-            brokerPort = 0;
-        }
-
-        // Conditionally close zookeeper
-        if (zkServer != null && isManagingZookeeper) {
-            // Only close the zkServer if we're in charge of managing it.
-            zkServer.close();
+    private void validateState(final boolean requireServiceStarted, final String errorMessage) throws IllegalStateException {
+        if (requireServiceStarted && broker == null) {
+            throw new IllegalStateException(errorMessage);
+        } else if (!requireServiceStarted && broker != null) {
+            throw new IllegalStateException(errorMessage);
         }
     }
 }
