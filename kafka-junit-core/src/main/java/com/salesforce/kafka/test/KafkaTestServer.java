@@ -50,12 +50,17 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     /**
      * Internal Test Kafka service.
      */
-    private KafkaServerStartable kafka;
+    private KafkaServerStartable broker;
 
     /**
      * Random Generated Kafka Port to listen on.
      */
-    private int kafkaPort;
+    private int brokerPort;
+
+    /**
+     * Holds the broker configuration.
+     */
+    private KafkaConfig brokerConfig;
 
     /**
      * Internal Test Zookeeper service.
@@ -129,7 +134,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      */
     @Override
     public String getKafkaConnectString() {
-        return getConfiguredHostname() + ":" + kafkaPort;
+        return getConfiguredHostname() + ":" + brokerPort;
     }
 
     /**
@@ -138,13 +143,16 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     @Override
     public KafkaBrokerList getKafkaBrokers() {
         return new KafkaBrokerList(
-            Collections.singletonList(new KafkaBroker(getBrokerId(), getConfiguredHostname(), kafkaPort))
+            Collections.singletonList(new KafkaBroker(getBrokerId(), getConfiguredHostname(), brokerPort))
         );
     }
 
+    /**
+     * @return This brokers Id.
+     */
     public int getBrokerId() {
         // TODO Only if started.
-        return kafka.serverConfig().brokerId();
+        return brokerConfig.brokerId();
     }
 
     /**
@@ -178,7 +186,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
         setPropertyIfNotSet(brokerProperties, "zookeeper.connect", zkConnectionString);
 
         // Conditionally generate a port for kafka to use if not already defined.
-        kafkaPort = Integer.parseInt(
+        brokerPort = Integer.parseInt(
             (String) setPropertyIfNotSet(brokerProperties, "port", String.valueOf(InstanceSpec.getRandomPort()))
         );
 
@@ -195,9 +203,9 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
         // Ensure that we're advertising appropriately
         setPropertyIfNotSet(brokerProperties, "host.name", getConfiguredHostname());
         setPropertyIfNotSet(brokerProperties, "advertised.host.name", getConfiguredHostname());
-        setPropertyIfNotSet(brokerProperties, "advertised.port", String.valueOf(kafkaPort));
-        setPropertyIfNotSet(brokerProperties, "advertised.listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + kafkaPort);
-        setPropertyIfNotSet(brokerProperties, "listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + kafkaPort);
+        setPropertyIfNotSet(brokerProperties, "advertised.port", String.valueOf(brokerPort));
+        setPropertyIfNotSet(brokerProperties, "advertised.listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + brokerPort);
+        setPropertyIfNotSet(brokerProperties, "listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + brokerPort);
 
         // Set other defaults if not defined.
         setPropertyIfNotSet(brokerProperties, "auto.create.topics.enable", "true");
@@ -220,10 +228,12 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
         setPropertyIfNotSet(brokerProperties, "status.storage.replication.factor", "1");
         setPropertyIfNotSet(brokerProperties, "default.replication.factor", "1");
 
+        // Retain the brokerConfig.
+        brokerConfig = new KafkaConfig(brokerProperties);
+
         // Create and start kafka service.
-        final KafkaConfig config = new KafkaConfig(brokerProperties);
-        kafka = new KafkaServerStartable(config);
-        kafka.startup();
+        broker = new KafkaServerStartable(brokerConfig);
+        broker.startup();
     }
 
     /**
@@ -269,9 +279,12 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      */
     @Override
     public void close() throws Exception {
-        if (kafka != null) {
-            kafka.shutdown();
-            kafka = null;
+        if (broker != null) {
+            // Shutdown and reset.
+            broker.shutdown();
+            broker = null;
+            brokerConfig = null;
+            brokerPort = 0;
         }
 
         // Conditionally close zookeeper
