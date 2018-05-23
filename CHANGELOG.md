@@ -2,6 +2,13 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.0.0 (5/24/2018)
+- Added ability to start 1 or more Kafka brokers configured within a functional cluster.  This allows you to now to test functionality that depends on more than one broker within your cluster, as well as scenarios around how your code handles broker availability.
+
+### Breaking Changes
+- Several accessors were removed from SharedKafkaTestResource and are not exclusively accessed
+  via the KafkaTestUtils class.  In most cases simply changing from `sharedKafkaTestResource.getKafkaServer()....` to `sharedKafkaTestResource.getKafkaTestUtils()...` will be sufficient to migrate your code. 
+
 ## 2.3.0 (5/17/2018)
 - [Issue-12](https://github.com/salesforce/kafka-junit/issues/12) Added ability to pass broker properties to be used by test kafka service instance.
 - Added helper method getAdminClient() on KafkaTestServer to get a configured AdminClient instance.
