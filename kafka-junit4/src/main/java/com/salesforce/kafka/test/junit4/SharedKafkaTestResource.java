@@ -26,10 +26,7 @@
 package com.salesforce.kafka.test.junit4;
 
 import com.salesforce.kafka.test.AbstractKafkaTestResource;
-import com.salesforce.kafka.test.KafkaBrokerList;
-import com.salesforce.kafka.test.KafkaCluster;
 import com.salesforce.kafka.test.KafkaTestCluster;
-import com.salesforce.kafka.test.KafkaTestUtils;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;

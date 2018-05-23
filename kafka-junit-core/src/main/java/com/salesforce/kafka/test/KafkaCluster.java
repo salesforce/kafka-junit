@@ -25,8 +25,6 @@
 
 package com.salesforce.kafka.test;
 
-import java.util.List;
-
 /**
  * This interface abstracts away knowing if the underlying 'kafka cluster' is a single server (KafkaTestServer)
  * or a cluster of 1 or more brokers (KafkaTestCluster).

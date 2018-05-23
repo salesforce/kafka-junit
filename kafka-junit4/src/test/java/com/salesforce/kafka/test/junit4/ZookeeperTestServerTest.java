@@ -25,7 +25,6 @@
 
 package com.salesforce.kafka.test.junit4;
 
-import org.apache.curator.test.TestingServer;
 import org.junit.ClassRule;
 import org.junit.Test;
 

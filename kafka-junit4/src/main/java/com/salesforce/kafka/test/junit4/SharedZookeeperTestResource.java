@@ -26,7 +26,6 @@
 package com.salesforce.kafka.test.junit4;
 
 import com.salesforce.kafka.test.ZookeeperTestServer;
-import org.apache.curator.test.TestingServer;
 import org.junit.rules.ExternalResource;
 
 /**
