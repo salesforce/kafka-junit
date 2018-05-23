@@ -26,7 +26,6 @@
 package com.salesforce.kafka.test.junit4;
 
 import com.salesforce.kafka.test.KafkaTestUtils;
-import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -174,18 +173,15 @@ public class SharedKafkaTestResourceTest {
     @Test
     public void testTwoBrokersStarted() throws ExecutionException, InterruptedException {
         final Set<Integer> foundBrokerIds = new HashSet<>();
+        final Collection<Node> nodes = getKafkaTestUtils().describeClusterNodes();
 
-        try (final AdminClient adminClient = getKafkaTestUtils().getAdminClient()) {
-            final Collection<Node> nodes = adminClient.describeCluster().nodes().get();
+        assertNotNull("Sanity test, should not be null", nodes);
+        assertEquals("Should have two entries", 2, nodes.size());
 
-            assertNotNull("Sanity test, should not be null", nodes);
-            assertEquals("Should have two entries", 2, nodes.size());
-
-            // Grab id for each node found.
-            nodes.forEach(
-                (node) -> foundBrokerIds.add(node.id())
-            );
-        }
+        // Grab id for each node found.
+        nodes.forEach(
+            (node) -> foundBrokerIds.add(node.id())
+        );
 
         assertEquals("Found 2 brokers.", 2, foundBrokerIds.size());
         assertTrue("Found brokerId 1", foundBrokerIds.contains(1));
