@@ -36,6 +36,7 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Wrapper containing immutable list of Kafka Brokers indexable by their brokerId.
@@ -54,7 +55,7 @@ public class KafkaBrokers implements Iterable<KafkaBroker> {
         // Build immutable map.
         this.brokerMap = Collections.unmodifiableMap(brokers
             .stream()
-            .collect(Collectors.toMap(KafkaBroker::getId, Function.identity()))
+            .collect(Collectors.toMap(KafkaBroker::getBrokerId, Function.identity()))
         );
     }
 
@@ -74,6 +75,13 @@ public class KafkaBrokers implements Iterable<KafkaBroker> {
         return Collections.unmodifiableList(
             new ArrayList<>(brokerMap.values())
         );
+    }
+
+    /**
+     * @return Stream of Brokers.
+     */
+    public Stream<KafkaBroker> stream() {
+        return asList().stream();
     }
 
     @Override

@@ -26,56 +26,40 @@
 package com.salesforce.kafka.test;
 
 /**
- * Defines information about a Broker.
+ * Defines information about a Kafka Broker.
  */
 public class KafkaBroker {
-    /**
-     * The broker's Id.
-     */
-    private final int id;
 
-    /**
-     * The broker's advertised hostname.
-     */
-    private final String hostname;
-
-    /**
-     * The broker's advertised port.
-     */
-    private final int port;
+    private final KafkaTestServer kafkaTestServer;
 
     /**
      * Constructor.
-     * @param id BrokerId.
-     * @param hostname Hostname to talk to the broker.
      */
-    public KafkaBroker(final int id, final String hostname, final int port) {
-        this.id = id;
-        this.hostname = hostname;
-        this.port = port;
+    public KafkaBroker(final KafkaTestServer kafkaTestServer) {
+        this.kafkaTestServer = kafkaTestServer;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public String getHostname() {
-        return hostname;
-    }
-
-    public int getPort() {
-        return port;
+    public int getBrokerId() {
+        return kafkaTestServer.getBrokerId();
     }
 
     public String getConnectString() {
-        return getHostname() + ":" + getPort();
+        return kafkaTestServer.getKafkaConnectString();
+    }
+
+    public void start() throws Exception {
+        kafkaTestServer.start();
+    }
+
+    public void stop() throws Exception {
+        kafkaTestServer.stop();
     }
 
     @Override
     public String toString() {
         return "KafkaBroker{"
-            + "id=" + id
-            + ", hostname='" + hostname + '\''
+            + "brokerId=" + getBrokerId()
+            + ", connectString='" + getConnectString() + '\''
             + '}';
     }
 }

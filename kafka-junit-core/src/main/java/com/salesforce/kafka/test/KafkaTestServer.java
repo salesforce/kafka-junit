@@ -106,7 +106,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     public KafkaTestServer(final Properties overrideBrokerProperties) throws IllegalArgumentException {
         // Validate argument.
         if (overrideBrokerProperties == null) {
-            throw new IllegalArgumentException("Cannot pass null overrideBrokerProperties argument");
+            throw new IllegalArgumentException("Cannot pass null overrideBrokerProperties argument.");
         }
 
         // Add passed in properties.
@@ -147,7 +147,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
         validateState(true, "Cannot get brokers before service has been started.");
 
         return new KafkaBrokers(
-            Collections.singletonList(new KafkaBroker(getBrokerId(), getConfiguredHostname(), brokerPort))
+            Collections.singletonList(new KafkaBroker(this))
         );
     }
 
@@ -172,9 +172,6 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      * @throws Exception on startup errors.
      */
     public void start() throws Exception {
-        // Validate state.
-        validateState(false, "Cannot start service multiple times.");
-
         // If we have no zkServer instance
         if (zkServer == null) {
             // Create it.
@@ -184,63 +181,69 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
 
         // Start zookeeper and get its connection string.
         zkServer.start();
-        final String zkConnectionString = zkServer.getConnectString();
 
-        // Build properties using a baseline from overrideBrokerProperties.
-        final Properties brokerProperties = new Properties();
-        brokerProperties.putAll(overrideBrokerProperties);
+        // If broker has not yet been created...
+        if (broker == null) {
+            // Build configs and create broker instance.
+            final String zkConnectionString = zkServer.getConnectString();
 
-        // Put required zookeeper connection properties.
-        setPropertyIfNotSet(brokerProperties, "zookeeper.connect", zkConnectionString);
+            // Build properties using a baseline from overrideBrokerProperties.
+            final Properties brokerProperties = new Properties();
+            brokerProperties.putAll(overrideBrokerProperties);
 
-        // Conditionally generate a port for kafka to use if not already defined.
-        brokerPort = Integer.parseInt(
-            (String) setPropertyIfNotSet(brokerProperties, "port", String.valueOf(InstanceSpec.getRandomPort()))
-        );
+            // Put required zookeeper connection properties.
+            setPropertyIfNotSet(brokerProperties, "zookeeper.connect", zkConnectionString);
 
-        // If log.dir is not set.
-        if (brokerProperties.getProperty("log.dir") == null) {
-            // Create temp path to store logs
-            final File logDir = Files.createTempDir();
-            logDir.deleteOnExit();
+            // Conditionally generate a port for kafka to use if not already defined.
+            brokerPort = Integer.parseInt(
+                (String) setPropertyIfNotSet(brokerProperties, "port", String.valueOf(InstanceSpec.getRandomPort()))
+            );
 
-            // Set property.
-            brokerProperties.setProperty("log.dir", logDir.getAbsolutePath());
+            // If log.dir is not set.
+            if (brokerProperties.getProperty("log.dir") == null) {
+                // Create temp path to store logs
+                final File logDir = Files.createTempDir();
+                logDir.deleteOnExit();
+
+                // Set property.
+                brokerProperties.setProperty("log.dir", logDir.getAbsolutePath());
+            }
+
+            // Ensure that we're advertising appropriately
+            setPropertyIfNotSet(brokerProperties, "host.name", getConfiguredHostname());
+            setPropertyIfNotSet(brokerProperties, "advertised.host.name", getConfiguredHostname());
+            setPropertyIfNotSet(brokerProperties, "advertised.port", String.valueOf(brokerPort));
+            setPropertyIfNotSet(brokerProperties, "advertised.listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + brokerPort);
+            setPropertyIfNotSet(brokerProperties, "listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + brokerPort);
+
+            // Set other defaults if not defined.
+            setPropertyIfNotSet(brokerProperties, "auto.create.topics.enable", "true");
+            setPropertyIfNotSet(brokerProperties, "zookeeper.session.timeout.ms", "30000");
+            setPropertyIfNotSet(brokerProperties, "broker.id", "1");
+            setPropertyIfNotSet(brokerProperties, "auto.offset.reset", "latest");
+
+            // Lower active threads.
+            setPropertyIfNotSet(brokerProperties, "num.io.threads", "2");
+            setPropertyIfNotSet(brokerProperties, "num.network.threads", "2");
+            setPropertyIfNotSet(brokerProperties, "log.flush.interval.messages", "1");
+
+            // Define replication factor for internal topics to 1
+            setPropertyIfNotSet(brokerProperties, "offsets.topic.replication.factor", "1");
+            setPropertyIfNotSet(brokerProperties, "offset.storage.replication.factor", "1");
+            setPropertyIfNotSet(brokerProperties, "transaction.state.log.replication.factor", "1");
+            setPropertyIfNotSet(brokerProperties, "transaction.state.log.min.isr", "1");
+            setPropertyIfNotSet(brokerProperties, "transaction.state.log.num.partitions", "4");
+            setPropertyIfNotSet(brokerProperties, "config.storage.replication.factor", "1");
+            setPropertyIfNotSet(brokerProperties, "status.storage.replication.factor", "1");
+            setPropertyIfNotSet(brokerProperties, "default.replication.factor", "1");
+
+            // Retain the brokerConfig.
+            brokerConfig = new KafkaConfig(brokerProperties);
+
+            // Create and start kafka service.
+            broker = new KafkaServerStartable(brokerConfig);
         }
-
-        // Ensure that we're advertising appropriately
-        setPropertyIfNotSet(brokerProperties, "host.name", getConfiguredHostname());
-        setPropertyIfNotSet(brokerProperties, "advertised.host.name", getConfiguredHostname());
-        setPropertyIfNotSet(brokerProperties, "advertised.port", String.valueOf(brokerPort));
-        setPropertyIfNotSet(brokerProperties, "advertised.listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + brokerPort);
-        setPropertyIfNotSet(brokerProperties, "listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + brokerPort);
-
-        // Set other defaults if not defined.
-        setPropertyIfNotSet(brokerProperties, "auto.create.topics.enable", "true");
-        setPropertyIfNotSet(brokerProperties, "zookeeper.session.timeout.ms", "30000");
-        setPropertyIfNotSet(brokerProperties, "broker.id", "1");
-        setPropertyIfNotSet(brokerProperties, "auto.offset.reset", "latest");
-
-        // Lower active threads.
-        setPropertyIfNotSet(brokerProperties, "num.io.threads", "2");
-        setPropertyIfNotSet(brokerProperties, "num.network.threads", "2");
-        setPropertyIfNotSet(brokerProperties, "log.flush.interval.messages", "1");
-
-        // Define replication factor for internal topics to 1
-        setPropertyIfNotSet(brokerProperties, "offsets.topic.replication.factor", "1");
-        setPropertyIfNotSet(brokerProperties, "offset.storage.replication.factor", "1");
-        setPropertyIfNotSet(brokerProperties, "transaction.state.log.replication.factor", "1");
-        setPropertyIfNotSet(brokerProperties, "transaction.state.log.min.isr", "1");
-        setPropertyIfNotSet(brokerProperties, "transaction.state.log.num.partitions", "4");
-        setPropertyIfNotSet(brokerProperties, "config.storage.replication.factor", "1");
-        setPropertyIfNotSet(brokerProperties, "status.storage.replication.factor", "1");
-        setPropertyIfNotSet(brokerProperties, "default.replication.factor", "1");
-
-        // Retain the brokerConfig.
-        brokerConfig = new KafkaConfig(brokerProperties);
-
-        // Create and start kafka service.
-        broker = new KafkaServerStartable(brokerConfig);
+        // Start broker.
         broker.startup();
     }
 
@@ -263,9 +266,6 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
         if (broker != null) {
             // Shutdown and reset.
             broker.shutdown();
-            broker = null;
-            brokerConfig = null;
-            brokerPort = 0;
         }
 
         // Conditionally close zookeeper
