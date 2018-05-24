@@ -23,39 +23,27 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.kafka.test.junit5;
+package com.salesforce.kafka.test;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import com.google.common.io.Files;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.io.File;
 
 /**
- * Test of SharedZookeeperTestResource.
- *
- * This also serves as an example of how to use this library!
+ * Collection of Utilities.
  */
-class SharedZookeeperTestResourceTest {
+class Utils {
     /**
-     * We have a single embedded zookeeper server that gets started when this test class is initialized.
-     *
-     * It's automatically started before any methods are run via the @ExtendWith annotation.
-     * It's automatically stopped after all of the tests are completed via the @ExtendWith annotation.
-     * This instance is passed to this class's constructor via the @ExtendWith annotation.
+     * Create a temporary directory on disk that will be cleaned up when the process terminates.
+     * @return Absolute path to the temporary directory.
      */
-    @RegisterExtension
-    public static final SharedZookeeperTestResource sharedZookeeperTestResource = new SharedZookeeperTestResource();
+    static File createTempDirectory() {
+        // Create temp path to store logs
+        final File logDir = Files.createTempDir();
 
-    /**
-     * Validates that we receive a sane looking ZK connection string.
-     */
-    @Test
-    void testGetZookeeperConnectString() {
-        final String actualConnectStr = sharedZookeeperTestResource.getZookeeperConnectString();
+        // Ensure its removed on termination.
+        logDir.deleteOnExit();
 
-        // Validate
-        assertNotNull(actualConnectStr, "Should have non-null connect string");
-        assertTrue(actualConnectStr.startsWith("127.0.0.1:"), "Should start with 127.0.0.1");
+        return logDir;
     }
 }

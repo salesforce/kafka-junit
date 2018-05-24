@@ -23,54 +23,30 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.kafka.test.junit4;
-
-import com.salesforce.kafka.test.AbstractZookeeperTestResource;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+package com.salesforce.kafka.test;
 
 /**
- * Creates and stands up an internal test Zookeeper server to be shared across test cases within the same test class.
- *
- * Example within your Test class.
- *
- *   &#064;ClassRule
- *   public static final SharedZookeeperTestResource sharedZookeeperTestResource = new sharedZookeeperTestResource();
- *
- * Within your test case method:
- *   sharedZookeeperTestResource.getZookeeperTestServer()...
+ * Shared code between JUnit4 and JUnit5 shared resources.
  */
-public class SharedZookeeperTestResource extends AbstractZookeeperTestResource implements TestRule {
+public abstract class AbstractZookeeperTestResource {
     /**
-     * Here we stand up an internal test zookeeper service.
-     * once for all tests that use this shared resource.
-     * @throws RuntimeException on startup errors.
+     * Our internal Zookeeper test server instance.
      */
-    private void before() throws RuntimeException {
-        getZookeeperTestServer().start();
+    private final ZookeeperTestServer zookeeperTestServer = new ZookeeperTestServer();
+
+    /**
+     * @return Shared Zookeeper test server instance.
+     * @throws IllegalStateException if before() has not been called yet.
+     */
+    public ZookeeperTestServer getZookeeperTestServer() throws IllegalStateException {
+        return zookeeperTestServer;
     }
 
     /**
-     * Here we shut down the internal test zookeeper service.
-     * @throws RuntimeException on shutdown errors.
+     * @return Connection string to connect to the Zookeeper instance.
+     * @throws IllegalStateException if before() has not been called yet.
      */
-    private void after() throws RuntimeException {
-        getZookeeperTestServer().stop();
-    }
-
-    @Override
-    public Statement apply(final Statement base, final Description description) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                before();
-                try {
-                    base.evaluate();
-                } finally {
-                    after();
-                }
-            }
-        };
+    public String getZookeeperConnectString() throws IllegalStateException {
+        return zookeeperTestServer.getConnectString();
     }
 }

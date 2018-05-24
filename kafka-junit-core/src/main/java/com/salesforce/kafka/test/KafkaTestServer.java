@@ -25,13 +25,10 @@
 
 package com.salesforce.kafka.test;
 
-import com.google.common.io.Files;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
 import org.apache.curator.test.InstanceSpec;
-import org.apache.curator.test.TestingServer;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.Properties;
 
@@ -65,7 +62,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     /**
      * Internal Test Zookeeper service.
      */
-    private TestingServer zkServer;
+    private ZookeeperTestServer zookeeperTestServer;
 
     /**
      * Flag to know if we are managing the zookeeper server.
@@ -118,7 +115,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      * @param overrideBrokerProperties Define Kafka broker properties.
      * @param zookeeperTestServer Zookeeper server instance to use.
      */
-    KafkaTestServer(final Properties overrideBrokerProperties, final TestingServer zookeeperTestServer) {
+    KafkaTestServer(final Properties overrideBrokerProperties, final ZookeeperTestServer zookeeperTestServer) {
         this(overrideBrokerProperties);
 
         // If instance is passed,
@@ -127,7 +124,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
             isManagingZookeeper = false;
         }
         // Save reference.
-        this.zkServer = zookeeperTestServer;
+        this.zookeeperTestServer = zookeeperTestServer;
     }
 
     /**
@@ -164,7 +161,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      */
     public String getZookeeperConnectString() {
         validateState(true, "Cannot get connect string prior to service being started.");
-        return getConfiguredHostname() + ":" + zkServer.getPort();
+        return zookeeperTestServer.getConnectString();
     }
 
     /**
@@ -172,34 +169,30 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      * @throws Exception on startup errors.
      */
     public void start() throws Exception {
-        // If we have no zkServer instance
-        if (zkServer == null) {
+        // If we have no zkTestServer instance
+        if (zookeeperTestServer == null) {
             // Create it.
-            final InstanceSpec zkInstanceSpec = new InstanceSpec(new File(createTempDirectory()), -1, -1, -1, false, -1, -1, 1000);
-            zkServer = new TestingServer(zkInstanceSpec, false);
+            zookeeperTestServer = new ZookeeperTestServer();
         }
 
         // If we're managing the zookeeper instance
         if (isManagingZookeeper) {
             // Call restart which allows us to restart KafkaTestServer instance w/o issues.
-            zkServer.restart();
+            zookeeperTestServer.restart();
         } else {
             // If we aren't managing the Zookeeper instance, call start() to ensure it's been started.
             // Starting an already started instance is a NOOP.
-            zkServer.start();
+            zookeeperTestServer.start();
         }
 
         // If broker has not yet been created...
         if (broker == null) {
-            // Build configs and create broker instance.
-            final String zkConnectionString = zkServer.getConnectString();
-
             // Build properties using a baseline from overrideBrokerProperties.
             final Properties brokerProperties = new Properties();
             brokerProperties.putAll(overrideBrokerProperties);
 
             // Put required zookeeper connection properties.
-            setPropertyIfNotSet(brokerProperties, "zookeeper.connect", zkConnectionString);
+            setPropertyIfNotSet(brokerProperties, "zookeeper.connect", zookeeperTestServer.getConnectString());
 
             // Conditionally generate a port for kafka to use if not already defined.
             brokerPort = Integer.parseInt(
@@ -209,7 +202,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
             // If log.dir is not set.
             if (brokerProperties.getProperty("log.dir") == null) {
                 // Create temp path to store logs and set property.
-                brokerProperties.setProperty("log.dir", createTempDirectory());
+                brokerProperties.setProperty("log.dir", Utils.createTempDirectory().getAbsolutePath());
             }
 
             // Ensure that we're advertising appropriately
@@ -272,9 +265,9 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
         }
 
         // Conditionally close zookeeper
-        if (zkServer != null && isManagingZookeeper) {
+        if (zookeeperTestServer != null && isManagingZookeeper) {
             // Call stop() on zk server instance.  This will not cleanup temp data.
-            zkServer.stop();
+            zookeeperTestServer.stop();
         }
     }
 
@@ -327,20 +320,5 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
         } else if (!requireServiceStarted && broker != null) {
             throw new IllegalStateException(errorMessage);
         }
-    }
-
-    /**
-     * Create a temporary directory on disk that will be cleaned up when the process terminates.
-     * @return Absolute path to the temporary directory.
-     */
-    private String createTempDirectory() {
-        // Create temp path to store logs
-        final File logDir = Files.createTempDir();
-
-        // Ensure its removed on termination.
-        logDir.deleteOnExit();
-
-        // Return the absolute path.
-        return logDir.getAbsolutePath();
     }
 }

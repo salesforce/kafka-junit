@@ -25,8 +25,7 @@
 
 package com.salesforce.kafka.test.junit5;
 
-import com.salesforce.kafka.test.ZookeeperTestServer;
-import org.apache.curator.test.TestingServer;
+import com.salesforce.kafka.test.AbstractZookeeperTestResource;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -34,28 +33,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 /**
  * Shared Zookeeper Test Resource instance.  Contains references to internal Zookeeper server instances.
  */
-public class SharedZookeeperTestResource implements BeforeAllCallback, AfterAllCallback {
-    /**
-     * Our internal Zookeeper test server instance.
-     */
-    private final ZookeeperTestServer zookeeperTestServer = new ZookeeperTestServer();
-
-    /**
-     * @return Shared Zookeeper test server instance.
-     * @throws IllegalStateException if before() has not been called yet.
-     */
-    public TestingServer getZookeeperTestServer() throws IllegalStateException {
-        return zookeeperTestServer.getZookeeperTestServer();
-    }
-
-    /**
-     * @return Connection string to connect to the Zookeeper instance.
-     * @throws IllegalStateException if before() has not been called yet.
-     */
-    public String getZookeeperConnectString() throws IllegalStateException {
-        return zookeeperTestServer.getZookeeperConnectString();
-    }
-
+public class SharedZookeeperTestResource extends AbstractZookeeperTestResource implements BeforeAllCallback, AfterAllCallback {
     /**
      * Here we stand up an internal test zookeeper service.
      * once for all tests that use this shared resource.
@@ -63,7 +41,7 @@ public class SharedZookeeperTestResource implements BeforeAllCallback, AfterAllC
      */
     @Override
     public void beforeAll(ExtensionContext context) throws RuntimeException {
-        zookeeperTestServer.start();
+        getZookeeperTestServer().start();
     }
 
     /**
@@ -72,6 +50,6 @@ public class SharedZookeeperTestResource implements BeforeAllCallback, AfterAllC
      */
     @Override
     public void afterAll(ExtensionContext context) {
-        zookeeperTestServer.stop();
+        getZookeeperTestServer().stop();
     }
 }

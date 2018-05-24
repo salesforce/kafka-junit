@@ -130,7 +130,7 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
             brokerProperties.put("broker.id", String.valueOf(brokerId));
 
             // Create new KafkaTestServer
-            final KafkaTestServer kafkaBroker = new KafkaTestServer(brokerProperties, zkTestServer.getZookeeperTestServer());
+            final KafkaTestServer kafkaBroker = new KafkaTestServer(brokerProperties, zkTestServer);
 
             // Start it
             kafkaBroker.start();
@@ -206,7 +206,7 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      * @return The proper connect string to use for Zookeeper.
      */
     public String getZookeeperConnectString() {
-        return zkTestServer.getZookeeperConnectString();
+        return zkTestServer.getConnectString();
     }
 
     /**
