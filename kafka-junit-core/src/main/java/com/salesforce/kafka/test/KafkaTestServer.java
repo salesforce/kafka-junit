@@ -143,10 +143,10 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      * @return immutable list of hosts for brokers within the cluster.
      */
     @Override
-    public KafkaBrokerList getKafkaBrokers() {
+    public KafkaBrokers getKafkaBrokers() {
         validateState(true, "Cannot get brokers before service has been started.");
 
-        return new KafkaBrokerList(
+        return new KafkaBrokers(
             Collections.singletonList(new KafkaBroker(getBrokerId(), getConfiguredHostname(), brokerPort))
         );
     }

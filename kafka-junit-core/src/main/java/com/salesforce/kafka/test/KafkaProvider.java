@@ -32,7 +32,7 @@ public interface KafkaProvider {
     /**
      * @return Immutable list of broker hosts.
      */
-    KafkaBrokerList getKafkaBrokers();
+    KafkaBrokers getKafkaBrokers();
 
     /**
      * @return The proper connect string to use for Kafka.

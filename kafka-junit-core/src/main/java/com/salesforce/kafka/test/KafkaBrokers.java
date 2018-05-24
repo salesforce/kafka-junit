@@ -34,11 +34,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
- * Wrapper containing list of Kafka Brokers indexable by their brokerId.
+ * Wrapper containing immutable list of Kafka Brokers indexable by their brokerId.
  */
-public class KafkaBrokerList implements Iterable<KafkaBroker> {
+public class KafkaBrokers implements Iterable<KafkaBroker> {
     /**
      * Immutable mapping of brokerId to KafkaBroker definition.
      */
@@ -48,17 +50,12 @@ public class KafkaBrokerList implements Iterable<KafkaBroker> {
      * Constructor.
      * @param brokers List of KafkaBrokers in a cluster.
      */
-    public KafkaBrokerList(final List<KafkaBroker> brokers) {
-        // Create new map.
-        final Map<Integer, KafkaBroker> map = new HashMap<>();
-
-        // Add entries to the map.
-        brokers.forEach((broker) -> {
-            map.put(broker.getId(), broker);
-        });
-
-        // Make immutable.
-        this.brokerMap = Collections.unmodifiableMap(map);
+    public KafkaBrokers(final List<KafkaBroker> brokers) {
+        // Build immutable map.
+        this.brokerMap = Collections.unmodifiableMap(brokers
+            .stream()
+            .collect(Collectors.toMap(KafkaBroker::getId, Function.identity()))
+        );
     }
 
     /**
@@ -96,7 +93,7 @@ public class KafkaBrokerList implements Iterable<KafkaBroker> {
 
     @Override
     public String toString() {
-        return "KafkaBrokerList{"
+        return "KafkaBrokers{"
             + brokerMap
             + '}';
     }

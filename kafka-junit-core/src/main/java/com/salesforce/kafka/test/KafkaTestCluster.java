@@ -40,6 +40,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
+
 /**
  * Utility for setting up a Cluster of KafkaTestServers.
  */
@@ -141,23 +143,23 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
     }
 
     /**
-     * @return immutable list of hosts for brokers within the cluster.
+     * @return KafkaBrokers containing the list of brokers within the cluster.
      */
     @Override
-    public KafkaBrokerList getKafkaBrokers() {
+    public KafkaBrokers getKafkaBrokers() {
         final List<KafkaBroker> kafkaBrokers = new ArrayList<>();
 
-        // Generate complete list.
         brokers.forEach((broker) -> {
             try {
-                broker.getKafkaBrokers().forEach(kafkaBrokers::add);
+                kafkaBrokers.addAll(broker.getKafkaBrokers().asList());
             } catch (final IllegalStateException exception) {
+                // TODO: I think this needs to be re-thought.
                 // Swallow, means the instance has not yet started, or was stopped intentionally.
             }
         });
 
         // Return it.
-        return new KafkaBrokerList(kafkaBrokers);
+        return new KafkaBrokers(kafkaBrokers);
     }
 
     /**
@@ -180,6 +182,7 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
             try {
                 hosts.add(broker.getKafkaConnectString());
             } catch (final IllegalStateException exception) {
+                // TODO: I think need to rethink this?
                 // Swallow? Means the instance has not yet started, or was stopped intentionally.
             }
         }
@@ -226,6 +229,7 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
 
         // Start looping.
         final long startTime = clock.millis();
+        int numberOfBrokersReady = 0;
         do {
             try (final AdminClient adminClient = kafkaTestUtils.getAdminClient()) {
                 // Ask for the nodes in the cluster.
@@ -234,10 +238,19 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
                 // We should know how many nodes there are
                 if (nodes.size() >= numberOfBrokers) {
                     // Looks like the cluster is ready to go.
-                    logger.info("Found {} brokers, looks like cluster is ready", nodes.size());
+                    logger.info("Found {} brokers on-line, cluster is ready.", nodes.size());
                     return;
                 }
-                logger.info("Found {} brokers, looks like cluster is still starting up.", nodes.size());
+
+                // Log when brokers found on-line changes.
+                if (nodes.size() > numberOfBrokersReady) {
+                    numberOfBrokersReady = nodes.size();
+                    logger.info(
+                        "Found {} of {} brokers ready, continuing to wait for cluster to start.",
+                        numberOfBrokersReady,
+                        nodes.size()
+                    );
+                }
 
                 // Small wait to throttle cycling.
                 Thread.sleep(100);

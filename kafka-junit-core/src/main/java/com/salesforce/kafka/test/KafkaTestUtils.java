@@ -303,7 +303,8 @@ public class KafkaTestUtils {
      */
     public <K, V> KafkaProducer<K, V> getKafkaProducer(
         final Class<? extends Serializer<K>> keySerializer,
-        final Class<? extends Serializer<V>> valueSerializer) {
+        final Class<? extends Serializer<V>> valueSerializer
+    ) {
 
         return getKafkaProducer(keySerializer, valueSerializer, new Properties());
     }
@@ -320,7 +321,8 @@ public class KafkaTestUtils {
     public <K, V> KafkaProducer<K, V> getKafkaProducer(
         final Class<? extends Serializer<K>> keySerializer,
         final Class<? extends Serializer<V>> valueSerializer,
-        final Properties config) {
+        final Properties config
+    ) {
 
         // Build config
         final Map<String, Object> kafkaProducerConfig = new HashMap<>();
@@ -353,7 +355,8 @@ public class KafkaTestUtils {
      */
     public <K, V> KafkaConsumer<K, V> getKafkaConsumer(
         final Class<? extends Deserializer<K>> keyDeserializer,
-        final Class<? extends Deserializer<V>> valueDeserializer) {
+        final Class<? extends Deserializer<V>> valueDeserializer
+    ) {
 
         return getKafkaConsumer(keyDeserializer, valueDeserializer, new Properties());
     }
@@ -370,17 +373,18 @@ public class KafkaTestUtils {
     public <K, V> KafkaConsumer<K, V> getKafkaConsumer(
         final Class<? extends Deserializer<K>> keyDeserializer,
         final Class<? extends Deserializer<V>> valueDeserializer,
-        final Properties config) {
+        final Properties config
+    ) {
 
         // Build config
-        Map<String, Object> kafkaConsumerConfig = buildDefaultClientConfig();
+        final Map<String, Object> kafkaConsumerConfig = buildDefaultClientConfig();
         kafkaConsumerConfig.put("key.deserializer", keyDeserializer);
         kafkaConsumerConfig.put("value.deserializer", valueDeserializer);
         kafkaConsumerConfig.put("partition.assignment.strategy", "org.apache.kafka.clients.consumer.RoundRobinAssignor");
 
         // Override config
         if (config != null) {
-            for (Map.Entry<Object, Object> entry: config.entrySet()) {
+            for (final Map.Entry<Object, Object> entry: config.entrySet()) {
                 kafkaConsumerConfig.put(entry.getKey().toString(), entry.getValue());
             }
         }

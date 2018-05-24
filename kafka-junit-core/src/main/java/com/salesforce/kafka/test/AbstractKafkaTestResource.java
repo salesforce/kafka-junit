@@ -144,7 +144,7 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
     /**
      * @return Immutable list of brokers within the Kafka cluster, indexed by their brokerIds.
      */
-    public KafkaBrokerList getKafkaBrokers() {
+    public KafkaBrokers getKafkaBrokers() {
         validateState(true, "Cannot access Kafka before service has been started.");
         return kafkaCluster.getKafkaBrokers();
     }
