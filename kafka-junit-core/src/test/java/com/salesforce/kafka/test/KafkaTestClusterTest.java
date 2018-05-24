@@ -167,8 +167,8 @@ class KafkaTestClusterTest {
     }
 
     /**
-     * This test calls getKafkaConnectString() before the cluster has been properly started. It is expected to throw an IllegalStateException
-     * in this scenario.
+     * This test calls getKafkaConnectString() before the cluster has been properly started.
+     * It is expected to throw an IllegalStateException in this scenario.
      */
     @Test
     void testGetKafkaConnectStringBeforeClusterIsStarted() throws Exception {
