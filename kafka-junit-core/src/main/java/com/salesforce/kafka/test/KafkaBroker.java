@@ -26,7 +26,9 @@
 package com.salesforce.kafka.test;
 
 /**
- * Defines information about a Kafka Broker.
+ * Contains information about a single Kafka broker within a cluster.
+ * Provides accessors to get connection information for a specific broker, as well as
+ * the ability to individually start/stop a specific Broker.
  */
 public class KafkaBroker {
 
@@ -47,10 +49,18 @@ public class KafkaBroker {
         return kafkaTestServer.getKafkaConnectString();
     }
 
+    /**
+     * Starts the Kafka broker.
+     * @throws Exception on startup errors.
+     */
     public void start() throws Exception {
         kafkaTestServer.start();
     }
 
+    /**
+     * Stop/shutdown Kafka broker.
+     * @throws Exception on shutdown errors.
+     */
     public void stop() throws Exception {
         kafkaTestServer.stop();
     }

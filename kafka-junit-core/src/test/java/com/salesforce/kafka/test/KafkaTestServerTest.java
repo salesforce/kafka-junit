@@ -25,9 +25,6 @@
 
 package com.salesforce.kafka.test;
 
-import com.google.common.collect.Iterables;
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.DescribeClusterResult;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -40,14 +37,15 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 
 /**
  * Validation tests against KafkaTestServer class.
  */
 class KafkaTestServerTest {
+
     /**
      * Integration test validates that we can use transactional consumers and producers against the Test kafka instance.
      */
@@ -118,11 +116,11 @@ class KafkaTestServerTest {
      */
     @Test
     void testOverrideBrokerProperties() throws Exception {
-        final String expectedBrokerId = "22";
+        final int expectedBrokerId = 22;
 
         // Define our override property
         final Properties overrideProperties = new Properties();
-        overrideProperties.put("broker.id", expectedBrokerId);
+        overrideProperties.put("broker.id", String.valueOf(expectedBrokerId));
         
         // Create our test server instance passing override properties.
         try (final KafkaTestServer kafkaTestServer = new KafkaTestServer(overrideProperties)) {
@@ -133,26 +131,107 @@ class KafkaTestServerTest {
             // Start service
             kafkaTestServer.start();
 
+            // Ask the instance for its brokerId.
+            Assertions.assertEquals(expectedBrokerId, kafkaTestServer.getBrokerId());
+
+            // Ask the cluster for the node's brokerId.
             // Create test utils instance.
             final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestServer);
 
-            // Create an AdminClient
-            try (final AdminClient adminClient = kafkaTestUtils.getAdminClient()) {
-                // Describe details about the cluster
-                final DescribeClusterResult result = adminClient.describeCluster();
+            // Get details about nodes in the cluster.
+            final List<Node> nodesInCluster = kafkaTestUtils.describeClusterNodes();
 
-                // Get details about the nodes
-                final Collection<Node> nodes = result.nodes().get();
+            // Sanity test
+            Assertions.assertEquals(1, nodesInCluster.size(), "Should only have a single node");
 
-                // Sanity test
-                Assertions.assertEquals(1, nodes.size(), "Should only have a single node");
+            // Get details about our test broker/node
+            final Node node = nodesInCluster.get(0);
 
-                // Get details about our test broker/node
-                final Node node = Iterables.get(nodes, 0);
+            // Validate
+            Assertions.assertEquals(expectedBrokerId, node.id(), "Has expected overridden broker Id");
+        }
+    }
 
-                // Validate
-                Assertions.assertEquals(expectedBrokerId, node.idString(), "Has expected overridden broker Id");
-            }
+    /**
+     * Test the getKafkaBrokers() getter method before the broker is started.
+     */
+    @Test
+    void testGetKafkaBrokersBeforeBrokerIsStarted() throws Exception {
+        // Create our test server instance
+        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer()) {
+            // Ask for brokers before starting
+            Assertions.assertThrows(IllegalStateException.class, kafkaTestServer::getKafkaBrokers);
+        }
+    }
+
+    /**
+     * Test the getKafkaBrokers() getter method.
+     */
+    @Test
+    void testGetKafkaBrokers() throws Exception {
+        final int expectedBrokerId = 1;
+        // Create our test server instance
+        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer()) {
+            // Start broker
+            kafkaTestServer.start();
+
+            final KafkaBrokers kafkaBrokers = kafkaTestServer.getKafkaBrokers();
+            Assertions.assertNotNull(kafkaBrokers, "Should not be null.");
+            Assertions.assertEquals(1, kafkaBrokers.size(), "Should have 1 broker in list.");
+
+            final KafkaBroker broker = kafkaBrokers.getBrokerById(expectedBrokerId);
+            Assertions.assertNotNull(broker);
+            Assertions.assertEquals(kafkaTestServer.getKafkaConnectString(), broker.getConnectString());
+            Assertions.assertEquals(expectedBrokerId, broker.getBrokerId());
+        }
+    }
+
+    /**
+     * Tests restarting the instance.  This validates you can restart a broker and it comes back up in a sane manner containing
+     * all the same data it contained prior to being shut down.
+     *
+     * This test does the following:
+     *      - Start broker
+     *      - Create a topic
+     *      - Produce 2 records into topic
+     *      - Stops broker
+     *      - Starts broker
+     *      - Consumes messages from broker
+     */
+    @Test
+    void testRestartingBroker() throws Exception {
+        final String topicName = "testRestartingBroker-" + System.currentTimeMillis();
+        final int expectedMsgCount = 2;
+
+        // Create our test server instance
+        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer()) {
+            // Start broker
+            kafkaTestServer.start();
+
+            // Create KafkaTestUtils
+            final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestServer);
+
+            // Create topic
+            kafkaTestUtils.createTopic(topicName, 1, (short) 1);
+
+            // Publish 2 messages into topic
+            kafkaTestUtils.produceRecords(expectedMsgCount, topicName, 0);
+
+            // Sanity test - Consume the messages back out before shutting down broker.
+            List<ConsumerRecord<byte[], byte[]>> records = kafkaTestUtils.consumeAllRecordsFromTopic(topicName);
+            Assertions.assertNotNull(records);
+            Assertions.assertEquals(expectedMsgCount, records.size(), "Should have found 2 records.");
+
+            // Call stop/close on the broker
+            kafkaTestServer.stop();
+
+            // Start instance back up
+            kafkaTestServer.start();
+
+            // Attempt to consume messages after restarting service.
+            records = kafkaTestUtils.consumeAllRecordsFromTopic(topicName);
+            Assertions.assertNotNull(records);
+            Assertions.assertEquals(expectedMsgCount, records.size(), "Should have found 2 records.");
         }
     }
 }

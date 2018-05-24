@@ -28,8 +28,6 @@ package com.salesforce.kafka.test;
 /**
  * This interface abstracts away knowing if the underlying 'kafka cluster' is a single server (KafkaTestServer)
  * or a cluster of 1 or more brokers (KafkaTestCluster).
- *
- * TODO: Fix this javadoc.
  */
 public interface KafkaCluster extends KafkaProvider, AutoCloseable {
 

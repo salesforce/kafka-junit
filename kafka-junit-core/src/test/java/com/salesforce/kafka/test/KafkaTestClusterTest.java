@@ -32,14 +32,17 @@ import org.apache.kafka.common.TopicPartitionInfo;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 class KafkaTestClusterTest {
+
     /**
-     * This test validates that the cluster contains 2 nodes.
+     * This test attempts to start a cluster with 2 brokers. It then validates that when the cluster
+     * is started, the correct number of brokers were brought on-line.
      */
     @Test
     void testMultipleNodesInBroker() throws Exception {
@@ -68,7 +71,156 @@ class KafkaTestClusterTest {
     }
 
     /**
-     * This test showing/validating creating a topic across multiple brokers.
+     * This test calls getKafkaBrokers() before the cluster has started. It is expected to throw an IllegalStateException
+     * in this scenario.
+     */
+    @Test
+    void testGetKafkaBrokersBeforeClusterHasStarted() throws Exception {
+        final int numberOfBrokers = 2;
+
+        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
+            // Call getKafkaBrokers() before the cluster has started.
+            Assertions.assertThrows(IllegalStateException.class, () -> {
+                kafkaTestCluster.getKafkaBrokers();
+            });
+        }
+    }
+
+    /**
+     * This test calls getKafkaBrokers() after the cluster has been properly started. It is expected
+     * to return all of the brokers within the cluster.
+     */
+    @Test
+    void testGetKafkaBrokers() throws Exception {
+        final int numberOfBrokers = 3;
+
+        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
+            // Start cluster
+            kafkaTestCluster.start();
+
+            // Call getKafkaBrokers()
+            final KafkaBrokers brokers = kafkaTestCluster.getKafkaBrokers();
+
+            // Validate
+            Assertions.assertNotNull(brokers, "Should have non-null result.");
+            Assertions.assertEquals(numberOfBrokers, brokers.size(), "Should have 3 brokers.");
+
+            validateKafkaBroker(brokers.getBrokerById(1), 1);
+            validateKafkaBroker(brokers.getBrokerById(2), 2);
+            validateKafkaBroker(brokers.getBrokerById(3), 3);
+
+            // Now ask for an invalid broker.
+            Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                brokers.getBrokerById(0);
+            });
+
+            // Now ask for an invalid broker.
+            Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                brokers.getBrokerById(4);
+            });
+        }
+    }
+
+    /**
+     * This test calls getKafkaBrokerId() before the cluster has been properly started. It is expected to throw an IllegalStateException
+     * in this scenario.
+     */
+    @Test
+    void testGetKafkaBrokerByIdBeforeClusterStarted() throws Exception {
+        final int numberOfBrokers = 2;
+
+        // Create cluster
+        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
+            // Call getKafkaBrokerById() before the cluster is started, it should throw exceptions.
+            Assertions.assertThrows(IllegalStateException.class, () -> kafkaTestCluster.getKafkaBrokerById(0));
+            Assertions.assertThrows(IllegalStateException.class, () -> kafkaTestCluster.getKafkaBrokerById(1));
+            Assertions.assertThrows(IllegalStateException.class, () -> kafkaTestCluster.getKafkaBrokerById(2));
+        }
+    }
+
+    /**
+     * This test calls getKafkaBrokers() after the cluster has been properly started. It is expected
+     * to return all of the brokers within the cluster.
+     */
+    @Test
+    void testGetKafkaBrokerById() throws Exception {
+        final int numberOfBrokers = 3;
+
+        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
+            // Start cluster
+            kafkaTestCluster.start();
+
+            validateKafkaBroker(kafkaTestCluster.getKafkaBrokerById(1), 1);
+            validateKafkaBroker(kafkaTestCluster.getKafkaBrokerById(2), 2);
+            validateKafkaBroker(kafkaTestCluster.getKafkaBrokerById(3), 3);
+
+            // Now ask for an invalid broker.
+            Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                kafkaTestCluster.getKafkaBrokerById(0);
+            });
+
+            // Now ask for an invalid broker.
+            Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                kafkaTestCluster.getKafkaBrokerById(4);
+            });
+        }
+    }
+
+    /**
+     * This test calls getKafkaConnectString() before the cluster has been properly started. It is expected to throw an IllegalStateException
+     * in this scenario.
+     */
+    @Test
+    void testGetKafkaConnectStringBeforeClusterIsStarted() throws Exception {
+        final int numberOfBrokers = 2;
+
+        // Create cluster
+        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
+            // Call getKafkaBrokerById() before the cluster is started, it should throw exceptions.
+            Assertions.assertThrows(IllegalStateException.class, () -> kafkaTestCluster.getKafkaConnectString());
+        }
+    }
+
+    /**
+     * This test calls getKafkaBrokers() after the cluster has been properly started. It is expected
+     * to return proper connect strings for each of the brokers.
+     */
+    @Test
+    void testGetKafkaConnectString() throws Exception {
+        final int numberOfBrokers = 3;
+
+        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
+            // Start cluster
+            kafkaTestCluster.start();
+
+            // Create test Utils
+            final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestCluster);
+
+            // Ask for the connect string
+            final String resultStr = kafkaTestCluster.getKafkaConnectString();
+            Assertions.assertNotNull(resultStr, "Should have non-null result");
+
+            // Split the result by commas to get individual hosts.
+            final Set<String> hosts = new HashSet<>(Arrays.asList(resultStr.split(",")));
+            Assertions.assertEquals(numberOfBrokers, hosts.size(), "Should contain 3 entries.");
+
+            // Ask for which nodes exist in the cluster
+            final List<Node> nodes = kafkaTestUtils.describeClusterNodes();
+
+            // Sanity test
+            Assertions.assertEquals(numberOfBrokers, nodes.size(), "Should have 3 brokers in the cluster");
+
+            // Make sure each node is represented properly.
+            for (final Node node: nodes) {
+                final String calculatedConnectString = node.host() + ":" + node.port();
+                Assertions.assertTrue(hosts.contains(calculatedConnectString), "Should contain " + calculatedConnectString);
+            }
+        }
+    }
+
+    /**
+     * This test starts a cluster with 2 brokers. It then attempts to create a topic
+     * that spans both brokers.  It acts mostly as a sanity test vs validating behavior of the library.
      */
     @Test
     void testCreateTopicAcrossMultipleBrokers() throws Exception {
@@ -100,13 +252,15 @@ class KafkaTestClusterTest {
     }
 
     /**
-     * This test more serves as an example of how to interact with the test Kafka brokers.
+     * Sanity test that a 2 node cluster behaves how we would expect it to.  It also serves as an example
+     * of how you can start a multi-node cluster and then individually shutdown a broker to validate
+     * the behavior of your application.
      *
      * This test does the following:
      *      - Starts a 2 node cluster.
      *      - Creates a topic with Partition Count = 2, ReplicationFactor = 2.
      *      - Publishes 2 messages to each partition (4 messages total)
-     *      - Stops brokerId 2.
+     *      - Stops brokerId 2.  At this point the partition broker2 was the leader for should be transferred to broker1.
      *      - Consumes from topic from remaining broker.
      *      - Validates that all messages are retrieved, including those that were originally published
      *        to the broker which is now off-line.
@@ -153,7 +307,7 @@ class KafkaTestClusterTest {
             }
 
             // Stop brokerId 2.
-            kafkaTestCluster.getKafkaBrokerById(2).close();
+            kafkaTestCluster.getKafkaBrokerById(2).stop();
 
             // Consume all messages
             final List<ConsumerRecord<byte[], byte[]>> consumedRecords = testUtils.consumeAllRecordsFromTopic(topicName);
@@ -165,5 +319,15 @@ class KafkaTestClusterTest {
                 "Found all records in kafka."
             );
         }
+    }
+
+    /**
+     * Helper method to validate a KafkaBroker instance.
+     * @param broker The KafkaBroker instance under test.
+     * @param expectedBrokerId The expected brokerId.
+     */
+    private void validateKafkaBroker(final KafkaBroker broker, final int expectedBrokerId) {
+        Assertions.assertNotNull(broker);
+        Assertions.assertEquals(expectedBrokerId, broker.getBrokerId());
     }
 }

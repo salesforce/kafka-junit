@@ -34,6 +34,7 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -147,6 +148,11 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      */
     @Override
     public KafkaBrokers getKafkaBrokers() {
+        // If we have no brokers yet, the cluster has not yet started.
+        if (brokers.isEmpty()) {
+            throw new IllegalStateException("Cannot access brokers before cluster has been started.");
+        }
+
         return new KafkaBrokers(
             brokers
                 .stream()
@@ -160,15 +166,36 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      * @param brokerId the Id of the broker to retrieve.
      * @return KafkaTestServer instance for the given broker Id.
      */
-    public KafkaTestServer getKafkaBrokerById(final int brokerId) {
-        // Brokers are zero indexed in the array, so just subtract one from the brokerId to find it's index.
-        return brokers.get(brokerId - 1);
+    public KafkaBroker getKafkaBrokerById(final int brokerId) {
+        // If we have no brokers yet, the cluster has not yet started.
+        if (brokers.isEmpty()) {
+            throw new IllegalStateException("Cannot access brokers before cluster has been started.");
+        }
+
+        // Find the requested broker.
+        final Optional<KafkaTestServer> kafkaTestServer = brokers
+            .stream()
+            .filter((testServer) -> testServer.getBrokerId() == brokerId)
+            .findFirst();
+
+        // If we found a match
+        if (kafkaTestServer.isPresent()) {
+            // Return it!
+            return new KafkaBroker(kafkaTestServer.get());
+        }
+        // Otherwise toss an IllegalArgument exception.
+        throw new IllegalArgumentException("Broker with id " + brokerId + " does not exist.");
     }
 
     /**
      * @return The proper connect string to use for this Kafka cluster.
      */
     public String getKafkaConnectString() {
+        // If we have no brokers yet, the cluster has not yet started.
+        if (brokers.isEmpty()) {
+            throw new IllegalStateException("Cannot access brokers before cluster has been started.");
+        }
+
         return brokers
             .stream()
             .map((KafkaTestServer::getKafkaConnectString))
@@ -194,6 +221,8 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
         }
 
         // Empty our list of brokers.
+        // TODO: Do we want to support shutting down the entire cluster and being able to start it back up?
+        // TODO: Probably, lets figure out how to support that.
         brokers.clear();
 
         // Stop zkServer

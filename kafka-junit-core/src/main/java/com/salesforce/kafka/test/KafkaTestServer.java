@@ -175,12 +175,19 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
         // If we have no zkServer instance
         if (zkServer == null) {
             // Create it.
-            final InstanceSpec zkInstanceSpec = new InstanceSpec(null, -1, -1, -1, true, -1, -1, 1000);
+            final InstanceSpec zkInstanceSpec = new InstanceSpec(new File(createTempDirectory()), -1, -1, -1, false, -1, -1, 1000);
             zkServer = new TestingServer(zkInstanceSpec, false);
         }
 
-        // Start zookeeper and get its connection string.
-        zkServer.start();
+        // If we're managing the zookeeper instance
+        if (isManagingZookeeper) {
+            // Call restart which allows us to restart KafkaTestServer instance w/o issues.
+            zkServer.restart();
+        } else {
+            // If we aren't managing the Zookeeper instance, call start() to ensure it's been started.
+            // Starting an already started instance is a NOOP.
+            zkServer.start();
+        }
 
         // If broker has not yet been created...
         if (broker == null) {
@@ -201,12 +208,8 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
 
             // If log.dir is not set.
             if (brokerProperties.getProperty("log.dir") == null) {
-                // Create temp path to store logs
-                final File logDir = Files.createTempDir();
-                logDir.deleteOnExit();
-
-                // Set property.
-                brokerProperties.setProperty("log.dir", logDir.getAbsolutePath());
+                // Create temp path to store logs and set property.
+                brokerProperties.setProperty("log.dir", createTempDirectory());
             }
 
             // Ensure that we're advertising appropriately
@@ -270,8 +273,8 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
 
         // Conditionally close zookeeper
         if (zkServer != null && isManagingZookeeper) {
-            // Only close the zkServer if we're in charge of managing it.
-            zkServer.close();
+            // Call stop() on zk server instance.  This will not cleanup temp data.
+            zkServer.stop();
         }
     }
 
@@ -324,5 +327,20 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
         } else if (!requireServiceStarted && broker != null) {
             throw new IllegalStateException(errorMessage);
         }
+    }
+
+    /**
+     * Create a temporary directory on disk that will be cleaned up when the process terminates.
+     * @return Absolute path to the temporary directory.
+     */
+    private String createTempDirectory() {
+        // Create temp path to store logs
+        final File logDir = Files.createTempDir();
+
+        // Ensure its removed on termination.
+        logDir.deleteOnExit();
+
+        // Return the absolute path.
+        return logDir.getAbsolutePath();
     }
 }

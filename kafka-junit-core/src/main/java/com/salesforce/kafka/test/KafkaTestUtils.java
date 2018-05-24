@@ -275,11 +275,11 @@ public class KafkaTestUtils {
      * Describe nodes within Kafka cluster.
      * @return Collection of nodes within the Kafka cluster.
      */
-    public Collection<Node> describeClusterNodes() {
+    public List<Node> describeClusterNodes() {
         // Create admin client
         try (final AdminClient adminClient = getAdminClient()) {
             final DescribeClusterResult describeClusterResult = adminClient.describeCluster();
-            return describeClusterResult.nodes().get();
+            return new ArrayList<>(describeClusterResult.nodes().get());
         } catch (final InterruptedException | ExecutionException e) {
             throw new RuntimeException(e.getMessage(), e);
         }

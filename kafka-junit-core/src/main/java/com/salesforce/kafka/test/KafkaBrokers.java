@@ -26,12 +26,11 @@
 package com.salesforce.kafka.test;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -43,7 +42,7 @@ import java.util.stream.Stream;
  */
 public class KafkaBrokers implements Iterable<KafkaBroker> {
     /**
-     * Immutable mapping of brokerId to KafkaBroker definition.
+     * Immutable mapping of brokerId to KafkaBroker instance.
      */
     private Map<Integer, KafkaBroker> brokerMap;
 
@@ -51,7 +50,7 @@ public class KafkaBrokers implements Iterable<KafkaBroker> {
      * Constructor.
      * @param brokers List of KafkaBrokers in a cluster.
      */
-    public KafkaBrokers(final List<KafkaBroker> brokers) {
+    public KafkaBrokers(final Collection<KafkaBroker> brokers) {
         // Build immutable map.
         this.brokerMap = Collections.unmodifiableMap(brokers
             .stream()
@@ -63,9 +62,13 @@ public class KafkaBrokers implements Iterable<KafkaBroker> {
      * Lookup and return Kafka Broker by its id.
      * @param brokerId id of the broker.
      * @return KafkaBroker.
+     * @throws IllegalArgumentException if requested an invalid broker id.
      */
-    public Optional<KafkaBroker> getBrokerById(final int brokerId) {
-        return Optional.ofNullable(brokerMap.get(brokerId));
+    public KafkaBroker getBrokerById(final int brokerId) throws IllegalArgumentException {
+        if (!brokerMap.containsKey(brokerId)) {
+            throw new IllegalArgumentException("No broker exists with id " + brokerId);
+        }
+        return brokerMap.get(brokerId);
     }
 
     /**
@@ -82,6 +85,13 @@ public class KafkaBrokers implements Iterable<KafkaBroker> {
      */
     public Stream<KafkaBroker> stream() {
         return asList().stream();
+    }
+
+    /**
+     * @return Number of brokers.
+     */
+    public int size() {
+        return brokerMap.size();
     }
 
     @Override
@@ -102,7 +112,7 @@ public class KafkaBrokers implements Iterable<KafkaBroker> {
     @Override
     public String toString() {
         return "KafkaBrokers{"
-            + brokerMap
+            + asList()
             + '}';
     }
 }
