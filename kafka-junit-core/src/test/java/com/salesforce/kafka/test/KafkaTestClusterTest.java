@@ -322,6 +322,44 @@ class KafkaTestClusterTest {
     }
 
     /**
+     * This test attempts to start a cluster with 2 brokers, produce some data into the cluster, and then shut it down.
+     * It then starts the cluster instance back up and attempts to consume the original messages.
+     */
+    @Test
+    void testRestartingCluster() throws Exception {
+        final int numberOfBrokers = 2;
+        final String topicName = "RestartClusterTest-" + System.currentTimeMillis();
+
+        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
+            // Start the cluster
+            kafkaTestCluster.start();
+
+            // Create kafka test utils
+            final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestCluster);
+
+            // Create a topic with 2 partitions.
+            kafkaTestUtils.createTopic(topicName, numberOfBrokers, (short) numberOfBrokers);
+
+            // Produce data into each partition of the topic
+            for (int partitionId = 0; partitionId < numberOfBrokers; partitionId++) {
+                kafkaTestUtils.produceRecords(2, topicName, partitionId);
+            }
+
+            // Shutdown cluster.
+            kafkaTestCluster.stop();
+
+            // Start it back up
+            kafkaTestCluster.start();
+
+            // Attempt to consume records back out of the cluster after being restarted.
+            final List<ConsumerRecord<byte[], byte[]>> records = kafkaTestUtils.consumeAllRecordsFromTopic(topicName);
+
+            // Validate
+            Assertions.assertEquals((numberOfBrokers * 2), records.size());
+        }
+    }
+
+    /**
      * Helper method to validate a KafkaBroker instance.
      * @param broker The KafkaBroker instance under test.
      * @param expectedBrokerId The expected brokerId.

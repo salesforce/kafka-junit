@@ -109,34 +109,32 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      * @throws TimeoutException When the cluster fails to start up within a timely manner.
      */
     public void start() throws Exception, TimeoutException {
-        // If our brokers list is not empty
-        if (!brokers.isEmpty()) {
-            // That means we've already started the cluster.
-            throw new IllegalStateException("Cluster has already been started.");
-        }
-
-        // Start Zookeeper instance.
+        // Ensure zookeeper instance has been started.
         zkTestServer.start();
 
-        // Loop over brokers, starting with brokerId 1.
-        for (int brokerId = 1; brokerId <= numberOfBrokers; brokerId++) {
-            // Create properties for brokers
-            final Properties brokerProperties = new Properties();
+        // If we have no brokers defined yet...
+        if (brokers.isEmpty()) {
+            // Loop over brokers, starting with brokerId 1.
+            for (int brokerId = 1; brokerId <= numberOfBrokers; brokerId++) {
+                // Create properties for brokers
+                final Properties brokerProperties = new Properties();
 
-            // Add user defined properties.
-            brokerProperties.putAll(overrideBrokerProperties);
+                // Add user defined properties.
+                brokerProperties.putAll(overrideBrokerProperties);
 
-            // Set broker.id
-            brokerProperties.put("broker.id", String.valueOf(brokerId));
+                // Set broker.id
+                brokerProperties.put("broker.id", String.valueOf(brokerId));
 
-            // Create new KafkaTestServer
-            final KafkaTestServer kafkaBroker = new KafkaTestServer(brokerProperties, zkTestServer);
+                // Create new KafkaTestServer and add to our broker list
+                brokers.add(
+                    new KafkaTestServer(brokerProperties, zkTestServer)
+                );
+            }
+        }
 
-            // Start it
-            kafkaBroker.start();
-
-            // Add to our broker list
-            brokers.add(kafkaBroker);
+        // Loop over each broker and start it
+        for (KafkaTestServer broker : brokers) {
+            broker.start();
         }
 
         // Block until the cluster is 'up' or the timeout is exceeded.
@@ -213,20 +211,23 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      * Shuts the cluster down.
      * @throws Exception on shutdown errors.
      */
-    @Override
-    public void close() throws Exception {
+    public void stop() throws Exception {
         // Loop over brokers
         for (final KafkaTestServer kafkaBroker : brokers) {
-            kafkaBroker.close();
+            kafkaBroker.stop();
         }
-
-        // Empty our list of brokers.
-        // TODO: Do we want to support shutting down the entire cluster and being able to start it back up?
-        // TODO: Probably, lets figure out how to support that.
-        brokers.clear();
 
         // Stop zkServer
         zkTestServer.stop();
+    }
+
+    /**
+     * Alias for stop().
+     * @throws Exception on shutdown errors.
+     */
+    @Override
+    public void close() throws Exception {
+        stop();
     }
 
     /**
