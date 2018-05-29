@@ -25,27 +25,12 @@
 
 package com.salesforce.kafka.test;
 
-import com.google.common.io.Files;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
 import org.apache.curator.test.InstanceSpec;
-import org.apache.curator.test.TestingServer;
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.CreateTopicsResult;
-import org.apache.kafka.clients.admin.KafkaAdminClient;
-import org.apache.kafka.clients.admin.NewTopic;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.common.errors.TopicExistsException;
-import org.apache.kafka.common.serialization.Deserializer;
-import org.apache.kafka.common.serialization.Serializer;
 
-import java.io.File;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
 
 /**
  * This will spin up a ZooKeeper and Kafka server for use in integration tests. Simply
@@ -53,26 +38,36 @@ import java.util.concurrent.ExecutionException;
  * topics in an integration test. Be sure to call shutdown() when the test is complete
  * or use the AutoCloseable interface.
  */
-public class KafkaTestServer implements AutoCloseable {
+public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseable {
     /**
      * This defines the hostname the kafka instance will listen on by default.
      */
     private static final String DEFAULT_HOSTNAME = "127.0.0.1";
 
     /**
-     * Internal Test Zookeeper service.
-     */
-    private TestingServer zkServer;
-
-    /**
      * Internal Test Kafka service.
      */
-    private KafkaServerStartable kafka;
+    private KafkaServerStartable broker;
 
     /**
-     * Random Generated Kafka Port.
+     * Random Generated Kafka Port to listen on.
      */
-    private String kafkaPort;
+    private int brokerPort;
+
+    /**
+     * Holds the broker configuration.
+     */
+    private KafkaConfig brokerConfig;
+
+    /**
+     * Internal Test Zookeeper service.
+     */
+    private ZookeeperTestServer zookeeperTestServer;
+
+    /**
+     * Flag to know if we are managing the zookeeper server.
+     */
+    private boolean isManagingZookeeper = true;
 
     /**
      * Defines overridden broker properties.
@@ -80,7 +75,7 @@ public class KafkaTestServer implements AutoCloseable {
     private final Properties overrideBrokerProperties = new Properties();
 
     /**
-     * Default constructor.
+     * Default constructor, no overridden broker properties.
      */
     public KafkaTestServer() {
         this(new Properties());
@@ -103,11 +98,12 @@ public class KafkaTestServer implements AutoCloseable {
     /**
      * Alternative constructor allowing override of brokerProperties.
      * @param overrideBrokerProperties Define Kafka broker properties.
+     * @throws IllegalArgumentException if overrideBrokerProperties argument is null.
      */
-    public KafkaTestServer(final Properties overrideBrokerProperties) {
+    public KafkaTestServer(final Properties overrideBrokerProperties) throws IllegalArgumentException {
         // Validate argument.
         if (overrideBrokerProperties == null) {
-            throw new IllegalArgumentException("Cannot pass null overrideBrokerProperties argument");
+            throw new IllegalArgumentException("Cannot pass null overrideBrokerProperties argument.");
         }
 
         // Add passed in properties.
@@ -115,31 +111,57 @@ public class KafkaTestServer implements AutoCloseable {
     }
 
     /**
-     * @return Internal Zookeeper Server.
+     * Package protected constructor allowing override of ZookeeperTestServer instance.
+     * @param overrideBrokerProperties Define Kafka broker properties.
+     * @param zookeeperTestServer Zookeeper server instance to use.
      */
-    public TestingServer getZookeeperServer() {
-        return this.zkServer;
-    }
+    KafkaTestServer(final Properties overrideBrokerProperties, final ZookeeperTestServer zookeeperTestServer) {
+        this(overrideBrokerProperties);
 
-    /**
-     * @return Internal Kafka Server.
-     */
-    public KafkaServerStartable getKafkaServer() {
-        return this.kafka;
+        // If instance is passed,
+        if (zookeeperTestServer != null) {
+            // We are no longer in charge of managing it.
+            isManagingZookeeper = false;
+        }
+        // Save reference.
+        this.zookeeperTestServer = zookeeperTestServer;
     }
 
     /**
      * @return The proper connect string to use for Kafka.
      */
+    @Override
     public String getKafkaConnectString() {
-        return getConfiguredHostname() + ":" + kafkaPort;
+        validateState(true, "Cannot get connect string prior to service being started.");
+        return getConfiguredHostname() + ":" + brokerPort;
+    }
+
+    /**
+     * @return immutable list of hosts for brokers within the cluster.
+     */
+    @Override
+    public KafkaBrokers getKafkaBrokers() {
+        validateState(true, "Cannot get brokers before service has been started.");
+
+        return new KafkaBrokers(
+            Collections.singletonList(new KafkaBroker(this))
+        );
+    }
+
+    /**
+     * @return This brokers Id.
+     */
+    public int getBrokerId() {
+        validateState(true, "Cannot get brokerId prior to service being started.");
+        return brokerConfig.brokerId();
     }
 
     /**
      * @return The proper connect string to use for Zookeeper.
      */
     public String getZookeeperConnectString() {
-        return getConfiguredHostname() + ":" + getZookeeperServer().getPort();
+        validateState(true, "Cannot get connect string prior to service being started.");
+        return zookeeperTestServer.getConnectString();
     }
 
     /**
@@ -147,222 +169,106 @@ public class KafkaTestServer implements AutoCloseable {
      * @throws Exception on startup errors.
      */
     public void start() throws Exception {
-        // Start zookeeper
-        final InstanceSpec zkInstanceSpec = new InstanceSpec(null, -1, -1, -1, true, -1, -1, 1000);
-        zkServer = new TestingServer(zkInstanceSpec, true);
-        final String zkConnectionString = getZookeeperServer().getConnectString();
-
-        // Build properties using a baseline from overrideBrokerProperties.
-        final Properties brokerProperties = new Properties();
-        brokerProperties.putAll(overrideBrokerProperties);
-
-        // Put required zookeeper connection properties.
-        setPropertyIfNotSet(brokerProperties, "zookeeper.connect", zkConnectionString);
-
-        // Conditionally generate a port for kafka to use if not already defined.
-        kafkaPort = (String) setPropertyIfNotSet(brokerProperties, "port", String.valueOf(InstanceSpec.getRandomPort()));
-
-        // If log.dir is not set.
-        if (brokerProperties.getProperty("log.dir") == null) {
-            // Create temp path to store logs
-            final File logDir = Files.createTempDir();
-            logDir.deleteOnExit();
-
-            // Set property.
-            brokerProperties.setProperty("log.dir", logDir.getAbsolutePath());
+        // If we have no zkTestServer instance
+        if (zookeeperTestServer == null) {
+            // Create it.
+            zookeeperTestServer = new ZookeeperTestServer();
         }
 
-        // Ensure that we're advertising appropriately
-        setPropertyIfNotSet(brokerProperties, "host.name", getConfiguredHostname());
-        setPropertyIfNotSet(brokerProperties, "advertised.host.name", getConfiguredHostname());
-        setPropertyIfNotSet(brokerProperties, "advertised.port", kafkaPort);
-        setPropertyIfNotSet(brokerProperties, "advertised.listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + kafkaPort);
-        setPropertyIfNotSet(brokerProperties, "listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + kafkaPort);
+        // If we're managing the zookeeper instance
+        if (isManagingZookeeper) {
+            // Call restart which allows us to restart KafkaTestServer instance w/o issues.
+            zookeeperTestServer.restart();
+        } else {
+            // If we aren't managing the Zookeeper instance, call start() to ensure it's been started.
+            // Starting an already started instance is a NOOP.
+            zookeeperTestServer.start();
+        }
 
-        // Set other defaults if not defined.
-        setPropertyIfNotSet(brokerProperties, "auto.create.topics.enable", "true");
-        setPropertyIfNotSet(brokerProperties, "zookeeper.session.timeout.ms", "30000");
-        setPropertyIfNotSet(brokerProperties, "broker.id", "1");
-        setPropertyIfNotSet(brokerProperties, "auto.offset.reset", "latest");
+        // If broker has not yet been created...
+        if (broker == null) {
+            // Build properties using a baseline from overrideBrokerProperties.
+            final Properties brokerProperties = new Properties();
+            brokerProperties.putAll(overrideBrokerProperties);
 
-        // Lower active threads.
-        setPropertyIfNotSet(brokerProperties, "num.io.threads", "2");
-        setPropertyIfNotSet(brokerProperties, "num.network.threads", "2");
-        setPropertyIfNotSet(brokerProperties, "log.flush.interval.messages", "1");
+            // Put required zookeeper connection properties.
+            setPropertyIfNotSet(brokerProperties, "zookeeper.connect", zookeeperTestServer.getConnectString());
 
-        // Define replication factor for internal topics to 1
-        setPropertyIfNotSet(brokerProperties, "offsets.topic.replication.factor", "1");
-        setPropertyIfNotSet(brokerProperties, "offset.storage.replication.factor", "1");
-        setPropertyIfNotSet(brokerProperties, "transaction.state.log.replication.factor", "1");
-        setPropertyIfNotSet(brokerProperties, "transaction.state.log.min.isr", "1");
-        setPropertyIfNotSet(brokerProperties, "transaction.state.log.num.partitions", "4");
-        setPropertyIfNotSet(brokerProperties, "config.storage.replication.factor", "1");
-        setPropertyIfNotSet(brokerProperties, "status.storage.replication.factor", "1");
-        setPropertyIfNotSet(brokerProperties, "default.replication.factor", "1");
+            // Conditionally generate a port for kafka to use if not already defined.
+            brokerPort = Integer.parseInt(
+                (String) setPropertyIfNotSet(brokerProperties, "port", String.valueOf(InstanceSpec.getRandomPort()))
+            );
 
-        // Create and start kafka service.
-        final KafkaConfig config = new KafkaConfig(brokerProperties);
-        kafka = new KafkaServerStartable(config);
-        getKafkaServer().startup();
-    }
-
-    /**
-     * Creates a namespace in Kafka. If the namespace already exists this does nothing.
-     * Will create a namespace with exactly 1 partition.
-     * @param topicName - the namespace name to create.
-     */
-    public void createTopic(final String topicName) {
-        createTopic(topicName, 1);
-    }
-
-    /**
-     * Creates a topic in Kafka. If the topic already exists this does nothing.
-     * @param topicName - the namespace name to create.
-     * @param partitions - the number of partitions to create.
-     */
-    public void createTopic(final String topicName, final int partitions) {
-        final short replicationFactor = 1;
-
-        // Create admin client
-        try (final AdminClient adminClient = getAdminClient()) {
-            try {
-                // Define topic
-                final NewTopic newTopic = new NewTopic(topicName, partitions, replicationFactor);
-
-                // Create topic, which is async call.
-                final CreateTopicsResult createTopicsResult = adminClient.createTopics(Collections.singleton(newTopic));
-
-                // Since the call is Async, Lets wait for it to complete.
-                createTopicsResult.values().get(topicName).get();
-            } catch (InterruptedException | ExecutionException e) {
-                if (!(e.getCause() instanceof TopicExistsException)) {
-                    throw new RuntimeException(e.getMessage(), e);
-                }
-                // TopicExistsException - Swallow this exception, just means the topic already exists.
+            // If log.dir is not set.
+            if (brokerProperties.getProperty("log.dir") == null) {
+                // Create temp path to store logs and set property.
+                brokerProperties.setProperty("log.dir", Utils.createTempDirectory().getAbsolutePath());
             }
+
+            // Ensure that we're advertising appropriately
+            setPropertyIfNotSet(brokerProperties, "host.name", getConfiguredHostname());
+            setPropertyIfNotSet(brokerProperties, "advertised.host.name", getConfiguredHostname());
+            setPropertyIfNotSet(brokerProperties, "advertised.port", String.valueOf(brokerPort));
+            setPropertyIfNotSet(brokerProperties, "advertised.listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + brokerPort);
+            setPropertyIfNotSet(brokerProperties, "listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + brokerPort);
+
+            // Set other defaults if not defined.
+            setPropertyIfNotSet(brokerProperties, "auto.create.topics.enable", "true");
+            setPropertyIfNotSet(brokerProperties, "zookeeper.session.timeout.ms", "30000");
+            setPropertyIfNotSet(brokerProperties, "broker.id", "1");
+            setPropertyIfNotSet(brokerProperties, "auto.offset.reset", "latest");
+
+            // Lower active threads.
+            setPropertyIfNotSet(brokerProperties, "num.io.threads", "2");
+            setPropertyIfNotSet(brokerProperties, "num.network.threads", "2");
+            setPropertyIfNotSet(brokerProperties, "log.flush.interval.messages", "1");
+
+            // Define replication factor for internal topics to 1
+            setPropertyIfNotSet(brokerProperties, "offsets.topic.replication.factor", "1");
+            setPropertyIfNotSet(brokerProperties, "offset.storage.replication.factor", "1");
+            setPropertyIfNotSet(brokerProperties, "transaction.state.log.replication.factor", "1");
+            setPropertyIfNotSet(brokerProperties, "transaction.state.log.min.isr", "1");
+            setPropertyIfNotSet(brokerProperties, "transaction.state.log.num.partitions", "4");
+            setPropertyIfNotSet(brokerProperties, "config.storage.replication.factor", "1");
+            setPropertyIfNotSet(brokerProperties, "status.storage.replication.factor", "1");
+            setPropertyIfNotSet(brokerProperties, "default.replication.factor", "1");
+
+            // Retain the brokerConfig.
+            brokerConfig = new KafkaConfig(brokerProperties);
+
+            // Create and start kafka service.
+            broker = new KafkaServerStartable(brokerConfig);
         }
+        // Start broker.
+        broker.startup();
     }
 
     /**
-     * Shuts down the ZooKeeper and Kafka server instances. This *must* be called before the integration
-     * test completes in order to clean up any running processes and data that was created.
-     * @throws Exception on shutdown errors.
+     * Closes the internal servers. Failing to call this at the end of your tests will likely
+     * result in leaking instances.
+     *
+     * Provided alongside close() to stay consistent with start().
      */
-    public void shutdown() throws Exception {
+    public void stop() throws Exception {
         close();
     }
 
     /**
-     * Creates a Kafka AdminClient connected to our test server.
-     * @return Kafka AdminClient instance.
+     * Closes the internal servers. Failing to call this at the end of your tests will likely
+     * result in leaking instances.
      */
-    public AdminClient getAdminClient() {
-        return KafkaAdminClient.create(buildDefaultClientConfig());
-    }
-
-    /**
-     * Creates a kafka producer that is connected to our test server.
-     * @param <K> Type of message key
-     * @param <V> Type of message value
-     * @param keySerializer Class of serializer to be used for keys.
-     * @param valueSerializer Class of serializer to be used for values.
-     * @return KafkaProducer configured to produce into Test server.
-     */
-    public <K, V> KafkaProducer<K, V> getKafkaProducer(
-        final Class<? extends Serializer<K>> keySerializer,
-        final Class<? extends Serializer<V>> valueSerializer) {
-
-        return getKafkaProducer(keySerializer, valueSerializer, new Properties());
-    }
-
-    /**
-     * Creates a kafka producer that is connected to our test server.
-     * @param <K> Type of message key
-     * @param <V> Type of message value
-     * @param keySerializer Class of serializer to be used for keys.
-     * @param valueSerializer Class of serializer to be used for values.
-     * @param config Additional producer configuration options to be set.
-     * @return KafkaProducer configured to produce into Test server.
-     */
-    public <K, V> KafkaProducer<K, V> getKafkaProducer(
-        final Class<? extends Serializer<K>> keySerializer,
-        final Class<? extends Serializer<V>> valueSerializer,
-        final Properties config) {
-
-        // Build config
-        final Map<String, Object> kafkaProducerConfig = new HashMap<>();
-        kafkaProducerConfig.put("bootstrap.servers", getKafkaConnectString());
-        kafkaProducerConfig.put("max.in.flight.requests.per.connection", 1);
-        kafkaProducerConfig.put("retries", 5);
-        kafkaProducerConfig.put("client.id", getClass().getSimpleName() + " Producer");
-        kafkaProducerConfig.put("batch.size", 0);
-        kafkaProducerConfig.put("key.serializer", keySerializer);
-        kafkaProducerConfig.put("value.serializer", valueSerializer);
-
-        // Override config
-        if (config != null) {
-            for (Map.Entry<Object, Object> entry: config.entrySet()) {
-                kafkaProducerConfig.put(entry.getKey().toString(), entry.getValue());
-            }
+    @Override
+    public void close() throws Exception {
+        if (broker != null) {
+            // Shutdown and reset.
+            broker.shutdown();
         }
 
-        // Create and return Producer.
-        return new KafkaProducer<>(kafkaProducerConfig);
-    }
-
-    /**
-     * Return Kafka Consumer configured to consume from internal Kafka Server.
-     * @param <K> Type of message key
-     * @param <V> Type of message value
-     * @param keyDeserializer Class of deserializer to be used for keys.
-     * @param valueDeserializer Class of deserializer to be used for values.
-     * @return KafkaProducer configured to produce into Test server.
-     */
-    public <K, V> KafkaConsumer<K, V> getKafkaConsumer(
-        final Class<? extends Deserializer<K>> keyDeserializer,
-        final Class<? extends Deserializer<V>> valueDeserializer) {
-        return getKafkaConsumer(keyDeserializer, valueDeserializer, new Properties());
-    }
-
-    /**
-     * Return Kafka Consumer configured to consume from internal Kafka Server.
-     * @param <K> Type of message key
-     * @param <V> Type of message value
-     * @param keyDeserializer Class of deserializer to be used for keys.
-     * @param valueDeserializer Class of deserializer to be used for values.
-     * @param config Additional consumer configuration options to be set.
-     * @return KafkaProducer configured to produce into Test server.
-     */
-    public <K, V> KafkaConsumer<K, V> getKafkaConsumer(
-        final Class<? extends Deserializer<K>> keyDeserializer,
-        final Class<? extends Deserializer<V>> valueDeserializer,
-        final Properties config) {
-
-        // Build config
-        Map<String, Object> kafkaConsumerConfig = buildDefaultClientConfig();
-        kafkaConsumerConfig.put("key.deserializer", keyDeserializer);
-        kafkaConsumerConfig.put("value.deserializer", valueDeserializer);
-        kafkaConsumerConfig.put("partition.assignment.strategy", "org.apache.kafka.clients.consumer.RoundRobinAssignor");
-
-        // Override config
-        if (config != null) {
-            for (Map.Entry<Object, Object> entry: config.entrySet()) {
-                kafkaConsumerConfig.put(entry.getKey().toString(), entry.getValue());
-            }
+        // Conditionally close zookeeper
+        if (zookeeperTestServer != null && isManagingZookeeper) {
+            // Call stop() on zk server instance.  This will not cleanup temp data.
+            zookeeperTestServer.stop();
         }
-
-        // Create and return Consumer.
-        return new KafkaConsumer<>(kafkaConsumerConfig);
-    }
-
-    /**
-     * Internal helper method to build a default configuration.
-     */
-    private Map<String, Object> buildDefaultClientConfig() {
-        final Map<String, Object> defaultClientConfig = new HashMap<>();
-        defaultClientConfig.put("bootstrap.servers", getKafkaConnectString());
-        defaultClientConfig.put("client.id", "test-consumer-id");
-        return defaultClientConfig;
     }
 
     /**
@@ -403,18 +309,16 @@ public class KafkaTestServer implements AutoCloseable {
     }
 
     /**
-     * Closes the internal servers. Failing to call this at the end of your tests will likely
-     * result in leaking instances.
+     * Helper method for ensure state consistency.
+     * @param requireServiceStarted True if service should have been started, false if not.
+     * @param errorMessage Error message to throw if the state is not consistent.
+     * @throws IllegalStateException if the kafkaCluster state is not consistent.
      */
-    @Override
-    public void close() throws Exception {
-        if (getKafkaServer() != null) {
-            getKafkaServer().shutdown();
-            kafka = null;
-        }
-        if (getZookeeperServer() != null) {
-            getZookeeperServer().close();
-            zkServer = null;
+    private void validateState(final boolean requireServiceStarted, final String errorMessage) throws IllegalStateException {
+        if (requireServiceStarted && broker == null) {
+            throw new IllegalStateException(errorMessage);
+        } else if (!requireServiceStarted && broker != null) {
+            throw new IllegalStateException(errorMessage);
         }
     }
 }

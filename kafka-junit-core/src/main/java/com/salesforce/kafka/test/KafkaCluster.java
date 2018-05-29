@@ -23,54 +23,33 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.kafka.test.junit4;
-
-import com.salesforce.kafka.test.AbstractZookeeperTestResource;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+package com.salesforce.kafka.test;
 
 /**
- * Creates and stands up an internal test Zookeeper server to be shared across test cases within the same test class.
- *
- * Example within your Test class.
- *
- *   &#064;ClassRule
- *   public static final SharedZookeeperTestResource sharedZookeeperTestResource = new sharedZookeeperTestResource();
- *
- * Within your test case method:
- *   sharedZookeeperTestResource.getZookeeperTestServer()...
+ * This interface abstracts away knowing if the underlying 'kafka cluster' is a single server (KafkaTestServer)
+ * or a cluster of 1 or more brokers (KafkaTestCluster).
  */
-public class SharedZookeeperTestResource extends AbstractZookeeperTestResource implements TestRule {
-    /**
-     * Here we stand up an internal test zookeeper service.
-     * once for all tests that use this shared resource.
-     * @throws RuntimeException on startup errors.
-     */
-    private void before() throws RuntimeException {
-        getZookeeperTestServer().start();
-    }
+public interface KafkaCluster extends KafkaProvider, AutoCloseable {
 
     /**
-     * Here we shut down the internal test zookeeper service.
-     * @throws RuntimeException on shutdown errors.
+     * Creates and starts ZooKeeper and Kafka server instances.
+     * @throws Exception on startup errors.
      */
-    private void after() throws RuntimeException {
-        getZookeeperTestServer().stop();
-    }
+    void start() throws Exception;
 
-    @Override
-    public Statement apply(final Statement base, final Description description) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                before();
-                try {
-                    base.evaluate();
-                } finally {
-                    after();
-                }
-            }
-        };
-    }
+    /**
+     * Closes the internal servers. Failing to call this at the end of your tests will likely
+     * result in leaking instances.
+     */
+    void close() throws Exception;
+
+    /**
+     * @return The proper connect string to use for Kafka.
+     */
+    String getKafkaConnectString();
+
+    /**
+     * @return The proper connect string to use for Zookeeper.
+     */
+    String getZookeeperConnectString();
 }

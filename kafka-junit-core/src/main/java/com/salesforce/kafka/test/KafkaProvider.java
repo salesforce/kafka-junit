@@ -23,54 +23,26 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.kafka.test.junit4;
-
-import com.salesforce.kafka.test.AbstractZookeeperTestResource;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+package com.salesforce.kafka.test;
 
 /**
- * Creates and stands up an internal test Zookeeper server to be shared across test cases within the same test class.
- *
- * Example within your Test class.
- *
- *   &#064;ClassRule
- *   public static final SharedZookeeperTestResource sharedZookeeperTestResource = new sharedZookeeperTestResource();
- *
- * Within your test case method:
- *   sharedZookeeperTestResource.getZookeeperTestServer()...
+ * Provides a slimmed down view onto KafkaCluster to avoid circular references in code.
  */
-public class SharedZookeeperTestResource extends AbstractZookeeperTestResource implements TestRule {
+public interface KafkaProvider {
     /**
-     * Here we stand up an internal test zookeeper service.
-     * once for all tests that use this shared resource.
-     * @throws RuntimeException on startup errors.
+     * @return Immutable list of broker hosts.
      */
-    private void before() throws RuntimeException {
-        getZookeeperTestServer().start();
-    }
+    KafkaBrokers getKafkaBrokers();
 
     /**
-     * Here we shut down the internal test zookeeper service.
-     * @throws RuntimeException on shutdown errors.
+     * @return The proper connect string to use for Kafka.
      */
-    private void after() throws RuntimeException {
-        getZookeeperTestServer().stop();
-    }
+    String getKafkaConnectString();
 
-    @Override
-    public Statement apply(final Statement base, final Description description) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                before();
-                try {
-                    base.evaluate();
-                } finally {
-                    after();
-                }
-            }
-        };
-    }
+    /**
+     * @return The proper connect string to use for Zookeeper.
+     */
+    String getZookeeperConnectString();
+
+
 }

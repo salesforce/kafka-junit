@@ -26,27 +26,45 @@
 package com.salesforce.kafka.test;
 
 import com.google.common.base.Charsets;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.CreateTopicsResult;
+import org.apache.kafka.clients.admin.DescribeClusterResult;
+import org.apache.kafka.clients.admin.DescribeTopicsResult;
+import org.apache.kafka.clients.admin.KafkaAdminClient;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.admin.TopicDescription;
+import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.apache.kafka.common.PartitionInfo;
+import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.TopicPartitionInfo;
+import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
+import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 /**
  * A collection of re-usable patterns for interacting with embedded Kafka server.
@@ -55,17 +73,24 @@ public class KafkaTestUtils {
     private static final Logger logger = LoggerFactory.getLogger(KafkaTestUtils.class);
 
     // The embedded Kafka server to interact with.
-    private final KafkaTestServer kafkaTestServer;
+    private final KafkaProvider kafkaProvider;
 
-    public KafkaTestUtils(KafkaTestServer kafkaTestServer) {
-        this.kafkaTestServer = kafkaTestServer;
+    /**
+     * Constructor.
+     * @param kafkaProvider The kafka cluster to operate on.
+     */
+    public KafkaTestUtils(KafkaProvider kafkaProvider) {
+        if (kafkaProvider == null) {
+            throw new IllegalArgumentException("KafkaCluster argument cannot be null.");
+        }
+        this.kafkaProvider = kafkaProvider;
     }
 
     /**
-     * Produce some records into the defined kafka namespace.
+     * Produce some records into the defined kafka topic.
      *
      * @param keysAndValues Records you want to produce.
-     * @param topicName the namespace name to produce into.
+     * @param topicName the topic to produce into.
      * @param partitionId the partition to produce into.
      * @return List of ProducedKafkaRecords.
      */
@@ -80,23 +105,26 @@ public class KafkaTestUtils {
         // This holds futures returned
         final List<Future<RecordMetadata>> producerFutures = new ArrayList<>();
 
-        final KafkaProducer<byte[], byte[]> producer = kafkaTestServer.getKafkaProducer(
+        try (final KafkaProducer<byte[], byte[]> producer = getKafkaProducer(
             ByteArraySerializer.class,
-            ByteArraySerializer.class
-        );
-        for (final Map.Entry<byte[], byte[]> entry: keysAndValues.entrySet()) {
-            // Construct filter
-            final ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topicName, partitionId, entry.getKey(), entry.getValue());
-            producedRecords.add(record);
+            ByteArraySerializer.class,
+            new Properties()
+        )) {
+            for (final Map.Entry<byte[], byte[]> entry: keysAndValues.entrySet()) {
+                // Construct filter
+                final ProducerRecord<byte[], byte[]> record
+                    = new ProducerRecord<>(topicName, partitionId, entry.getKey(), entry.getValue());
 
-            // Send it.
-            producerFutures.add(producer.send(record));
+                producedRecords.add(record);
+
+                // Send it.
+                producerFutures.add(producer.send(record));
+            }
+
+            // Publish to the topic and close.
+            producer.flush();
+            logger.info("Produce completed");
         }
-
-        // Publish to the namespace and close.
-        producer.flush();
-        logger.info("Produce completed");
-        producer.close();
 
         // Loop thru the futures, and build KafkaRecord objects
         final List<ProducedKafkaRecord<byte[], byte[]>> kafkaRecords = new ArrayList<>();
@@ -115,10 +143,10 @@ public class KafkaTestUtils {
     }
 
     /**
-     * Produce randomly generated records into the defined kafka namespace.
+     * Produce randomly generated records into the defined kafka topic.
      *
      * @param numberOfRecords how many records to produce
-     * @param topicName the namespace name to produce into.
+     * @param topicName the topic to produce into.
      * @param partitionId the partition to produce into.
      * @return List of ProducedKafkaRecords.
      */
@@ -127,14 +155,14 @@ public class KafkaTestUtils {
         final String topicName,
         final int partitionId
     ) {
-        Map<byte[], byte[]> keysAndValues = new HashMap<>();
+        final Map<byte[], byte[]> keysAndValues = new HashMap<>();
 
         // Generate random & unique data
-        for (int x = 0; x < numberOfRecords; x++) {
+        for (int index = 0; index < numberOfRecords; index++) {
             // Construct key and value
-            long timeStamp = Clock.systemUTC().millis();
-            String key = "key" + timeStamp;
-            String value = "value" + timeStamp;
+            final long timeStamp = Clock.systemUTC().millis();
+            final String key = "key" + timeStamp;
+            final String value = "value" + timeStamp;
 
             // Add to map
             keysAndValues.put(key.getBytes(Charsets.UTF_8), value.getBytes(Charsets.UTF_8));
@@ -149,19 +177,7 @@ public class KafkaTestUtils {
      * @return List of ConsumerRecords consumed.
      */
     public List<ConsumerRecord<byte[], byte[]>> consumeAllRecordsFromTopic(final String topic) {
-        // Connect to broker to determine what partitions are available.
-        KafkaConsumer<byte[], byte[]> kafkaConsumer = kafkaTestServer.getKafkaConsumer(
-            ByteArrayDeserializer.class,
-            ByteArrayDeserializer.class
-        );
-
-        final List<Integer> partitionIds = new ArrayList<>();
-        for (PartitionInfo partitionInfo: kafkaConsumer.partitionsFor(topic)) {
-            partitionIds.add(partitionInfo.partition());
-        }
-        kafkaConsumer.close();
-
-        return consumeAllRecordsFromTopic(topic, partitionIds);
+        return consumeAllRecordsFromTopic(topic, ByteArrayDeserializer.class, ByteArrayDeserializer.class);
     }
 
     /**
@@ -171,38 +187,322 @@ public class KafkaTestUtils {
      * @return List of ConsumerRecords consumed.
      */
     public List<ConsumerRecord<byte[], byte[]>> consumeAllRecordsFromTopic(final String topic, Collection<Integer> partitionIds) {
+        return consumeAllRecordsFromTopic(topic, partitionIds, ByteArrayDeserializer.class, ByteArrayDeserializer.class);
+    }
+
+    /**
+     * This will consume all records from all partitions on the given topic.
+     * @param topic Topic to consume from.
+     * @param keyDeserializer How to deserialize the key values.
+     * @param valueDeserializer How to deserialize the messages.
+     * @return List of ConsumerRecords consumed.
+     */
+    public <K, V> List<ConsumerRecord<K, V>> consumeAllRecordsFromTopic(
+        final String topic,
+        final Class<? extends Deserializer<K>> keyDeserializer,
+        final Class<? extends Deserializer<V>> valueDeserializer
+    ) {
+        // Find all partitions on topic.
+        final TopicDescription topicDescription = describeTopic(topic);
+        final Collection<Integer> partitions = topicDescription
+            .partitions()
+            .stream()
+            .map(TopicPartitionInfo::partition)
+            .collect(Collectors.toList());
+
+        // Consume messages
+        return consumeAllRecordsFromTopic(topic, partitions, keyDeserializer, valueDeserializer);
+    }
+
+    /**
+     * This will consume all records from the partitions passed on the given topic.
+     *
+     * @param topic Topic to consume from.
+     * @param partitionIds Which partitions to consume from.
+     * @param keyDeserializer How to deserialize the key values.
+     * @param valueDeserializer How to deserialize the messages.
+     * @return List of ConsumerRecords consumed.
+     */
+    public <K, V> List<ConsumerRecord<K, V>> consumeAllRecordsFromTopic(
+        final String topic,
+        final Collection<Integer> partitionIds,
+        final Class<? extends Deserializer<K>> keyDeserializer,
+        final Class<? extends Deserializer<V>> valueDeserializer
+    ) {
         // Create topic Partitions
-        List<TopicPartition> topicPartitions = new ArrayList<>();
-        for (Integer partitionId: partitionIds) {
-            topicPartitions.add(new TopicPartition(topic, partitionId));
-        }
+        final List<TopicPartition> topicPartitions = partitionIds
+            .stream()
+            .map((partitionId) -> new TopicPartition(topic, partitionId))
+            .collect(Collectors.toList());
+
+        // Holds our results.
+        final List<ConsumerRecord<K, V>> allRecords = new ArrayList<>();
 
         // Connect Consumer
-        KafkaConsumer<byte[], byte[]> kafkaConsumer =
-            kafkaTestServer.getKafkaConsumer(ByteArrayDeserializer.class, ByteArrayDeserializer.class);
+        try (final KafkaConsumer<K, V> kafkaConsumer = getKafkaConsumer(keyDeserializer, valueDeserializer, new Properties())) {
 
-        // Assign topic partitions & seek to head of them
-        kafkaConsumer.assign(topicPartitions);
-        kafkaConsumer.seekToBeginning(topicPartitions);
+            // Assign topic partitions & seek to head of them
+            kafkaConsumer.assign(topicPartitions);
+            kafkaConsumer.seekToBeginning(topicPartitions);
 
-        // Pull records from kafka, keep polling until we get nothing back
-        final List<ConsumerRecord<byte[], byte[]>> allRecords = new ArrayList<>();
-        ConsumerRecords<byte[], byte[]> records;
-        do {
-            // Grab records from kafka
-            records = kafkaConsumer.poll(2000L);
-            logger.info("Found {} records in kafka", records.count());
+            // Pull records from kafka, keep polling until we get nothing back
+            ConsumerRecords<K, V> records;
+            do {
+                // Grab records from kafka
+                records = kafkaConsumer.poll(2000L);
+                logger.info("Found {} records in kafka", records.count());
 
-            // Add to our array list
-            records.forEach(allRecords::add);
-
+                // Add to our array list
+                records.forEach(allRecords::add);
+            }
+            while (!records.isEmpty());
         }
-        while (!records.isEmpty());
-
-        // close consumer
-        kafkaConsumer.close();
 
         // return all records
         return allRecords;
+    }
+
+    /**
+     * Creates a topic in Kafka. If the topic already exists this does nothing.
+     * @param topicName the topic name to create.
+     * @param partitions the number of partitions to create.
+     * @param replicationFactor the number of replicas for the topic.
+     */
+    public void createTopic(final String topicName, final int partitions, final short replicationFactor) {
+        // Create admin client
+        try (final AdminClient adminClient = getAdminClient()) {
+            // Define topic
+            final NewTopic newTopic = new NewTopic(topicName, partitions, replicationFactor);
+
+            // Create topic, which is async call.
+            final CreateTopicsResult createTopicsResult = adminClient.createTopics(Collections.singleton(newTopic));
+
+            // Since the call is Async, Lets wait for it to complete.
+            createTopicsResult.values().get(topicName).get();
+        } catch (InterruptedException | ExecutionException e) {
+            if (!(e.getCause() instanceof TopicExistsException)) {
+                throw new RuntimeException(e.getMessage(), e);
+            }
+            // TopicExistsException - Swallow this exception, just means the topic already exists.
+        }
+    }
+
+    /**
+     * Describes a topic in Kafka.
+     * @param topicName the topic to describe.
+     * @return Description of the topic.
+     */
+    public TopicDescription describeTopic(final String topicName) {
+        // Create admin client
+        try (final AdminClient adminClient = getAdminClient()) {
+            // Make async call to describe the topic.
+            final DescribeTopicsResult describeTopicsResult = adminClient.describeTopics(Collections.singleton(topicName));
+
+            return describeTopicsResult.values().get(topicName).get();
+        } catch (final InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * List all names of topics in Kafka.
+     * @return Set of topics found in Kafka.
+     */
+    public Set<String> getTopicNames() {
+        try (final AdminClient adminClient = getAdminClient()) {
+            return adminClient.listTopics().names().get();
+        } catch (final InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Get information about all topics in Kafka.
+     * @return Set of topics found in Kafka.
+     */
+    public List<TopicListing> getTopics() {
+        try (final AdminClient adminClient = getAdminClient()) {
+            return new ArrayList<>(adminClient.listTopics().listings().get());
+        } catch (final InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Describe nodes within Kafka cluster.
+     * @return Collection of nodes within the Kafka cluster.
+     */
+    public List<Node> describeClusterNodes() {
+        // Create admin client
+        try (final AdminClient adminClient = getAdminClient()) {
+            final DescribeClusterResult describeClusterResult = adminClient.describeCluster();
+            return new ArrayList<>(describeClusterResult.nodes().get());
+        } catch (final InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Creates a Kafka AdminClient connected to our test server.
+     * @return Kafka AdminClient instance.
+     */
+    public AdminClient getAdminClient() {
+        return KafkaAdminClient.create(buildDefaultClientConfig());
+    }
+
+    /**
+     * Creates a kafka producer that is connected to our test server.
+     * @param <K> Type of message key
+     * @param <V> Type of message value
+     * @param keySerializer Class of serializer to be used for keys.
+     * @param valueSerializer Class of serializer to be used for values.
+     * @return KafkaProducer configured to produce into Test server.
+     */
+    public <K, V> KafkaProducer<K, V> getKafkaProducer(
+        final Class<? extends Serializer<K>> keySerializer,
+        final Class<? extends Serializer<V>> valueSerializer
+    ) {
+
+        return getKafkaProducer(keySerializer, valueSerializer, new Properties());
+    }
+
+    /**
+     * Creates a kafka producer that is connected to our test server.
+     * @param <K> Type of message key
+     * @param <V> Type of message value
+     * @param keySerializer Class of serializer to be used for keys.
+     * @param valueSerializer Class of serializer to be used for values.
+     * @param config Additional producer configuration options to be set.
+     * @return KafkaProducer configured to produce into Test server.
+     */
+    public <K, V> KafkaProducer<K, V> getKafkaProducer(
+        final Class<? extends Serializer<K>> keySerializer,
+        final Class<? extends Serializer<V>> valueSerializer,
+        final Properties config
+    ) {
+
+        // Build config
+        final Map<String, Object> kafkaProducerConfig = new HashMap<>();
+        kafkaProducerConfig.put("bootstrap.servers", kafkaProvider.getKafkaConnectString());
+        kafkaProducerConfig.put("max.in.flight.requests.per.connection", 1);
+        kafkaProducerConfig.put("retries", 5);
+        kafkaProducerConfig.put("client.id", getClass().getSimpleName() + " Producer");
+        kafkaProducerConfig.put("batch.size", 0);
+        kafkaProducerConfig.put("key.serializer", keySerializer);
+        kafkaProducerConfig.put("value.serializer", valueSerializer);
+
+        // Override config
+        if (config != null) {
+            for (final Map.Entry<Object, Object> entry: config.entrySet()) {
+                kafkaProducerConfig.put(entry.getKey().toString(), entry.getValue());
+            }
+        }
+
+        // Create and return Producer.
+        return new KafkaProducer<>(kafkaProducerConfig);
+    }
+
+    /**
+     * Return Kafka Consumer configured to consume from internal Kafka Server.
+     * @param <K> Type of message key
+     * @param <V> Type of message value
+     * @param keyDeserializer Class of deserializer to be used for keys.
+     * @param valueDeserializer Class of deserializer to be used for values.
+     * @return KafkaProducer configured to produce into Test server.
+     */
+    public <K, V> KafkaConsumer<K, V> getKafkaConsumer(
+        final Class<? extends Deserializer<K>> keyDeserializer,
+        final Class<? extends Deserializer<V>> valueDeserializer
+    ) {
+
+        return getKafkaConsumer(keyDeserializer, valueDeserializer, new Properties());
+    }
+
+    /**
+     * Return Kafka Consumer configured to consume from internal Kafka Server.
+     * @param <K> Type of message key
+     * @param <V> Type of message value
+     * @param keyDeserializer Class of deserializer to be used for keys.
+     * @param valueDeserializer Class of deserializer to be used for values.
+     * @param config Additional consumer configuration options to be set.
+     * @return KafkaProducer configured to produce into Test server.
+     */
+    public <K, V> KafkaConsumer<K, V> getKafkaConsumer(
+        final Class<? extends Deserializer<K>> keyDeserializer,
+        final Class<? extends Deserializer<V>> valueDeserializer,
+        final Properties config
+    ) {
+
+        // Build config
+        final Map<String, Object> kafkaConsumerConfig = buildDefaultClientConfig();
+        kafkaConsumerConfig.put("key.deserializer", keyDeserializer);
+        kafkaConsumerConfig.put("value.deserializer", valueDeserializer);
+        kafkaConsumerConfig.put("partition.assignment.strategy", "org.apache.kafka.clients.consumer.RoundRobinAssignor");
+
+        // Override config
+        if (config != null) {
+            for (final Map.Entry<Object, Object> entry: config.entrySet()) {
+                kafkaConsumerConfig.put(entry.getKey().toString(), entry.getValue());
+            }
+        }
+
+        // Create and return Consumer.
+        return new KafkaConsumer<>(kafkaConsumerConfig);
+    }
+
+    /**
+     * Utility method for waiting until a broker has successfully joined a cluster.
+     *
+     * @param brokerId The if of the broker to wait for.
+     * @param timeoutDuration How long to wait before throwing a TimeoutException.
+     * @param timeUnit The unit of time for how long to wait.
+     * @throws TimeoutException If the broker is not online before the timeoutDuration has expired.
+     */
+    public void waitForBrokerToComeOnLine(final int brokerId, final long timeoutDuration, final TimeUnit timeUnit) throws TimeoutException {
+        // Use system clock to calculate timeout.
+        final Clock clock = Clock.systemUTC();
+
+        // Calculate our timeout in ms.
+        final long timeoutMs = clock.millis() + TimeUnit.MILLISECONDS.convert(timeoutDuration, timeUnit);
+
+        // Start looping.
+        do {
+            try {
+                // Ask for the nodes in the cluster.
+                final Collection<Node> nodes = describeClusterNodes();
+
+                // Look for broker
+                final boolean foundBroker = nodes
+                    .stream()
+                    .map(Node::id)
+                    .anyMatch((id) -> id == brokerId);
+
+                // If we found the broker,
+                if (foundBroker) {
+                    // Good, return.
+                    return;
+                }
+
+                // Small wait to throttle cycling.
+                Thread.sleep(100);
+            } catch (final InterruptedException exception) {
+                // Caught interrupt, break out of loop.
+                break;
+            }
+        }
+        while (clock.millis() <= timeoutMs);
+
+        // If we got here, throw timeout exception
+        throw new TimeoutException("Cluster failed to come online within " + timeoutMs + " milliseconds.");
+    }
+
+    /**
+     * Internal helper method to build a default configuration.
+     */
+    private Map<String, Object> buildDefaultClientConfig() {
+        final Map<String, Object> defaultClientConfig = new HashMap<>();
+        defaultClientConfig.put("bootstrap.servers", kafkaProvider.getKafkaConnectString());
+        defaultClientConfig.put("client.id", "test-consumer-id");
+        return defaultClientConfig;
     }
 }

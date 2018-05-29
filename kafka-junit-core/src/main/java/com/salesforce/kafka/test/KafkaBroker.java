@@ -23,54 +23,53 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.kafka.test.junit4;
-
-import com.salesforce.kafka.test.AbstractZookeeperTestResource;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+package com.salesforce.kafka.test;
 
 /**
- * Creates and stands up an internal test Zookeeper server to be shared across test cases within the same test class.
- *
- * Example within your Test class.
- *
- *   &#064;ClassRule
- *   public static final SharedZookeeperTestResource sharedZookeeperTestResource = new sharedZookeeperTestResource();
- *
- * Within your test case method:
- *   sharedZookeeperTestResource.getZookeeperTestServer()...
+ * Contains information about a single Kafka broker within a cluster.
+ * Provides accessors to get connection information for a specific broker, as well as
+ * the ability to individually start/stop a specific Broker.
  */
-public class SharedZookeeperTestResource extends AbstractZookeeperTestResource implements TestRule {
+public class KafkaBroker {
+
+    private final KafkaTestServer kafkaTestServer;
+
     /**
-     * Here we stand up an internal test zookeeper service.
-     * once for all tests that use this shared resource.
-     * @throws RuntimeException on startup errors.
+     * Constructor.
      */
-    private void before() throws RuntimeException {
-        getZookeeperTestServer().start();
+    public KafkaBroker(final KafkaTestServer kafkaTestServer) {
+        this.kafkaTestServer = kafkaTestServer;
+    }
+
+    public int getBrokerId() {
+        return kafkaTestServer.getBrokerId();
+    }
+
+    public String getConnectString() {
+        return kafkaTestServer.getKafkaConnectString();
     }
 
     /**
-     * Here we shut down the internal test zookeeper service.
-     * @throws RuntimeException on shutdown errors.
+     * Starts the Kafka broker.
+     * @throws Exception on startup errors.
      */
-    private void after() throws RuntimeException {
-        getZookeeperTestServer().stop();
+    public void start() throws Exception {
+        kafkaTestServer.start();
+    }
+
+    /**
+     * Stop/shutdown Kafka broker.
+     * @throws Exception on shutdown errors.
+     */
+    public void stop() throws Exception {
+        kafkaTestServer.stop();
     }
 
     @Override
-    public Statement apply(final Statement base, final Description description) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                before();
-                try {
-                    base.evaluate();
-                } finally {
-                    after();
-                }
-            }
-        };
+    public String toString() {
+        return "KafkaBroker{"
+            + "brokerId=" + getBrokerId()
+            + ", connectString='" + getConnectString() + '\''
+            + '}';
     }
 }

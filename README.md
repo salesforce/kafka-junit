@@ -2,18 +2,18 @@
 
 [![Build Status](https://travis-ci.org/salesforce/kafka-junit.svg?branch=master)](https://travis-ci.org/salesforce/kafka-junit)
 
-This library wraps Kafka Test Server and allows you to easily create and run tests against
-a "real" kafka server running within your tests, no more needing to stand up an external kafka cluster!
+This library wraps Apache Kafka's [KafkaServerStartable](https://github.com/apache/kafka/blob/1.1/core/src/main/scala/kafka/server/KafkaServerStartable.scala#L32) class and allows you to easily create and run tests against
+one or more "real" kafka brokers running within your tests. No longer do you need to setup and coordinate with an external kafka cluster for your tests! 
 
-Supports Kafka versions 1.1.x, 1.0.x, and 0.11.0.x.
+Currently the library supports Kafka versions 1.1.x, 1.0.x, and 0.11.0.x.
 
 ## Using Kafka-JUnit with JUnit 4.
 
-Please review [Kafka-JUnit4 Readme](kafka-junit4/) for instructions.
+Please review [Kafka-JUnit4 Readme](kafka-junit4/) for usage instructions with JUnit4.
 
 ## Using Kafka-JUnit with JUnit 5.
 
-Please review [Kafka-JUnit5 Readme](kafka-junit5/) for instructions.
+Please review [Kafka-JUnit5 Readme](kafka-junit5/) for usage instructions with JUnit5.
 
 ## Changelog
 

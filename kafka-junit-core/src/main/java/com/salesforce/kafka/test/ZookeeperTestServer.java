@@ -33,32 +33,62 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 /**
- * Wrapper around TestingServer zookeeper test server instance.  This is here to 'DRY' out the code
- * between the JUnit4 and JUnit5 implementations.
+ * Wrapper around TestingServer zookeeper test server instance.
  */
-public class ZookeeperTestServer {
+public class ZookeeperTestServer implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(ZookeeperTestServer.class);
 
     /**
-     * Our internal Zookeeper test server instance.
+     * Internal Zookeeper test server instance.
      */
-    private TestingServer zookeeperTestServer = null;
+    private TestingServer zkServer = null;
 
     /**
      * Starts the internal Test zookeeper server instance.
      */
     public void start() {
         logger.info("Starting Zookeeper test server");
-        if (zookeeperTestServer != null) {
-            throw new IllegalStateException("Unknown State! Zookeeper test server already exists!");
+        try {
+            if (zkServer == null) {
+                // Define configuration
+                final InstanceSpec zkInstanceSpec = new InstanceSpec(
+                    Utils.createTempDirectory(),
+                    -1,
+                    -1,
+                    -1,
+                    false,
+                    -1,
+                    -1,
+                    1000
+                );
+
+                // Create instance
+                zkServer = new TestingServer(zkInstanceSpec, true);
+            } else {
+                // Instance already exists, so 'start' by calling restart on instance.
+                zkServer.restart();
+            }
+        } catch (final Exception exception) {
+            throw new RuntimeException(exception.getMessage(), exception);
+        }
+    }
+
+    /**
+     * Restarts the internal Test zookeeper server instance.
+     */
+    public void restart() {
+        // If we have no instance yet
+        if (zkServer == null) {
+            // Call start instead and return.
+            start();
+            return;
         }
 
-        // Setup zookeeper test server
-        final InstanceSpec zkInstanceSpec = new InstanceSpec(null, -1, -1, -1, true, -1, -1, 1000);
+        // Otherwise call restart.
         try {
-            zookeeperTestServer = new TestingServer(zkInstanceSpec, true);
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage(), e);
+            zkServer.restart();
+        } catch (final Exception exception) {
+            throw new RuntimeException(exception.getMessage(), exception);
         }
     }
 
@@ -69,35 +99,33 @@ public class ZookeeperTestServer {
         logger.info("Shutting down zookeeper test server");
 
         // If we don't have an instance
-        if (zookeeperTestServer != null) {
+        if (zkServer != null) {
             try {
-                zookeeperTestServer.stop();
-                zookeeperTestServer.close();
-
-                // null out reference
-                zookeeperTestServer = null;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+                // Call stop, this keeps the temporary data on disk around
+                // and allows us to be able to restart it again later.
+                zkServer.stop();
+            } catch (final IOException exception) {
+                throw new RuntimeException(exception.getMessage(), exception);
             }
         }
     }
 
     /**
-     * @return Underlying shared Zookeeper test server instance.
-     * @throws IllegalStateException if start() has not been called yet.
+     * Alias for stop().
      */
-    public TestingServer getZookeeperTestServer() {
-        if (zookeeperTestServer == null) {
-            throw new IllegalStateException("Unable to get test server instance before being created!");
-        }
-        return zookeeperTestServer;
+    @Override
+    public void close() {
+        stop();
     }
 
     /**
      * @return Connection string to connect to the Zookeeper instance.
      * @throws IllegalStateException if start() has not been called yet.
      */
-    public String getZookeeperConnectString() {
-        return getZookeeperTestServer().getConnectString();
+    public String getConnectString() {
+        if (zkServer == null) {
+            throw new IllegalStateException("Cannot get connect string before service is started.");
+        }
+        return zkServer.getConnectString();
     }
 }

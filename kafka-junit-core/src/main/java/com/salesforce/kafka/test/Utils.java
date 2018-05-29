@@ -23,38 +23,27 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.kafka.test.junit4;
+package com.salesforce.kafka.test;
 
-import org.junit.ClassRule;
-import org.junit.Test;
+import com.google.common.io.Files;
 
-import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertTrue;
+import java.io.File;
 
 /**
- * Test of Zookeeper Test instance.
- *
- * This also serves as an example of how to use this library!
+ * Collection of Utilities.
  */
-public class ZookeeperTestServerTest {
+class Utils {
     /**
-     * We have a single embedded kafka server that gets started when this test class is initialized.
-     *
-     * It's automatically started before any methods are run via the @ClassRule annotation.
-     * It's automatically stopped after all of the tests are completed via the @ClassRule annotation.
+     * Create a temporary directory on disk that will be cleaned up when the process terminates.
+     * @return Absolute path to the temporary directory.
      */
-    @ClassRule
-    public static final SharedZookeeperTestResource sharedZookeeperTestResource = new SharedZookeeperTestResource();
+    static File createTempDirectory() {
+        // Create temp path to store logs
+        final File logDir = Files.createTempDir();
 
-    /**
-     * Validates that we receive a sane looking ZK connection string.
-     */
-    @Test
-    public void testGetZookeeperConnectString() {
-        final String actualConnectStr = sharedZookeeperTestResource.getZookeeperConnectString();
+        // Ensure its removed on termination.
+        logDir.deleteOnExit();
 
-        // Validate
-        assertNotNull("Should have non-null connect string", actualConnectStr);
-        assertTrue("Should start with 127.0.0.1", actualConnectStr.startsWith("127.0.0.1:"));
+        return logDir;
     }
 }

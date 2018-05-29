@@ -25,7 +25,6 @@
 
 package com.salesforce.kafka.test.junit5;
 
-import org.apache.curator.test.TestingServer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -58,16 +57,5 @@ class SharedZookeeperTestResourceTest {
         // Validate
         assertNotNull(actualConnectStr, "Should have non-null connect string");
         assertTrue(actualConnectStr.startsWith("127.0.0.1:"), "Should start with 127.0.0.1");
-    }
-
-    /**
-     * Validates that we receive a sane looking ZK connection string.
-     */
-    @Test
-    void testZookeeperServer() {
-        final TestingServer zkTestServer = sharedZookeeperTestResource.getZookeeperTestServer();
-
-        // Validate
-        assertNotNull(zkTestServer, "Should have non-null instance");
     }
 }

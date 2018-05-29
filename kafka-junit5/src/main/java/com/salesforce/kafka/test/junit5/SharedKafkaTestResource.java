@@ -25,9 +25,8 @@
 
 package com.salesforce.kafka.test.junit5;
 
-import com.salesforce.kafka.test.KafkaTestServer;
-import com.salesforce.kafka.test.KafkaTestUtils;
-import org.apache.curator.test.TestingServer;
+import com.salesforce.kafka.test.AbstractKafkaTestResource;
+import com.salesforce.kafka.test.KafkaTestCluster;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -47,29 +46,16 @@ import java.util.Properties;
  * Within your test case method:
  *   sharedKafkaTestResource.getKafkaTestServer()...
  */
-public class SharedKafkaTestResource implements BeforeAllCallback, AfterAllCallback {
+public class SharedKafkaTestResource
+    extends AbstractKafkaTestResource<SharedKafkaTestResource>
+    implements BeforeAllCallback, AfterAllCallback {
     private static final Logger logger = LoggerFactory.getLogger(SharedKafkaTestResource.class);
-
-    /**
-     * Our internal Kafka Test Server instance.
-     */
-    private KafkaTestServer kafkaTestServer = null;
-
-    /**
-     * Cached instance of KafkaTestUtils.
-     */
-    private KafkaTestUtils kafkaTestUtils = null;
-
-    /**
-     * Additional broker properties.
-     */
-    private final Properties brokerProperties = new Properties();
 
     /**
      * Default constructor.
      */
     public SharedKafkaTestResource() {
-        this(new Properties());
+        super();
     }
 
     /**
@@ -77,74 +63,7 @@ public class SharedKafkaTestResource implements BeforeAllCallback, AfterAllCallb
      * @param brokerProperties properties for Kafka broker.
      */
     public SharedKafkaTestResource(final Properties brokerProperties) {
-        this.brokerProperties.putAll(brokerProperties);
-    }
-
-    /**
-     * @return Shared Kafka Test server instance.
-     */
-    public KafkaTestServer getKafkaTestServer() {
-        return kafkaTestServer;
-    }
-
-    /**
-     * @return Instance of KafkaTestUtils configured and ready to go.
-     */
-    public KafkaTestUtils getKafkaTestUtils() {
-        if (kafkaTestUtils == null) {
-            kafkaTestUtils = new KafkaTestUtils(getKafkaTestServer());
-        }
-        return kafkaTestUtils;
-    }
-
-    /**
-     * @return Shared Zookeeper test server instance.
-     */
-    public TestingServer getZookeeperTestServer() {
-        return getKafkaTestServer().getZookeeperServer();
-    }
-
-    /**
-     * @return Connection string to connect to the Zookeeper instance.
-     */
-    public String getZookeeperConnectString() {
-        return getZookeeperTestServer().getConnectString();
-    }
-
-    /**
-     * @return The proper connect string to use for Kafka.
-     */
-    public String getKafkaConnectString() {
-        return getKafkaTestServer().getKafkaConnectString();
-    }
-
-    /**
-     * Helper to allow overriding Kafka broker properties.  Can only be called prior to the service
-     * being started.
-     * @param name Kafka broker configuration property name.
-     * @param value Value to set for the configuration property.
-     * @return SharedKafkaTestResource instance for method chaining.
-     * @throws IllegalArgumentException if name argument is null.
-     * @throws IllegalStateException if method called after service has started.
-     */
-    public SharedKafkaTestResource withBrokerProperty(final String name, final String value) {
-        // Validate input.
-        if (name == null) {
-            throw new IllegalArgumentException("Cannot pass null name argument");
-        }
-
-        // Validate state.
-        if (kafkaTestServer != null) {
-            throw new IllegalStateException("Cannot add properties after service has started");
-        }
-
-        // Add or set property.
-        if (value == null) {
-            brokerProperties.remove(name);
-        } else {
-            brokerProperties.put(name, value);
-        }
-        return this;
+        super(brokerProperties);
     }
 
     /**
@@ -154,30 +73,31 @@ public class SharedKafkaTestResource implements BeforeAllCallback, AfterAllCallb
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
         logger.info("Starting kafka test server");
-        if (kafkaTestServer != null) {
-            throw new IllegalStateException("Unknown State!  Kafka Test Server already exists!");
-        }
+
+        // Validate state.
+        validateState(false, "Unknown State! Kafka Test Server already exists!");
+
         // Setup kafka test server
-        kafkaTestServer = new KafkaTestServer(brokerProperties);
-        kafkaTestServer.start();
+        setKafkaCluster(new KafkaTestCluster(getNumberOfBrokers(), getBrokerProperties()));
+        getKafkaCluster().start();
     }
 
     /**
      * Here we shut down the internal test kafka and zookeeper services.
      */
     @Override
-    public void afterAll(ExtensionContext context) throws Exception {
+    public void afterAll(ExtensionContext context) {
         logger.info("Shutting down kafka test server");
 
         // Close out kafka test server if needed
-        if (kafkaTestServer == null) {
+        if (getKafkaCluster() == null) {
             return;
         }
         try {
-            kafkaTestServer.shutdown();
+            getKafkaCluster().close();
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }
-        kafkaTestServer = null;
+        setKafkaCluster(null);
     }
 }
