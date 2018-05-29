@@ -2,11 +2,12 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 3.0.0 (5/24/2018)
+## 3.0.0 (5/29/2018)
 - Added ability to start 1 or more Kafka brokers configured within a functional cluster.  This allows you to now to test functionality that depends on more than one broker within your cluster, as well as scenarios around how your code handles broker availability.
+- Expanded the methods available in the [KafkaTestUtils](kafka-junit-core/src/main/java/com/salesforce/kafka/test/KafkaTestUtils.java) class.
 
 ### Breaking Changes
-- Several accessors were removed from SharedKafkaTestResource and are not exclusively accessed
+- Several accessors were removed from SharedKafkaTestResource and should now be accessed
   via the KafkaTestUtils class.  In most cases simply changing from `sharedKafkaTestResource.getKafkaServer()....` to `sharedKafkaTestResource.getKafkaTestUtils()...` will be sufficient to migrate your code. 
 
 ## 2.3.0 (5/17/2018)
