@@ -28,7 +28,15 @@ package com.salesforce.kafka.test.junit5;
 import com.google.common.base.Charsets;
 import com.salesforce.kafka.test.KafkaTestUtils;
 import com.salesforce.kafka.test.ProducedKafkaRecord;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.Node;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -36,13 +44,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Serves both as a test for the Utilities, but also as a good example of how to use them.
+ * Serves as an example of how to make use of KafkaTestUtils.
  */
 class KafkaTestUtilsTest {
     private static final Logger logger = LoggerFactory.getLogger(KafkaTestUtilsTest.class);
@@ -52,6 +62,8 @@ class KafkaTestUtilsTest {
      *
      * It's automatically started before any methods are run via the @ClassRule annotation.
      * It's automatically stopped after all of the tests are completed via the @ClassRule annotation.
+     *
+     * It must be scoped as 'public static' in order for the appropriate startup/shutdown hooks to be called on the extension.
      */
     @RegisterExtension
     public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource();
@@ -64,20 +76,110 @@ class KafkaTestUtilsTest {
 
     /**
      * This happens once before every test method.
-     * Create a new empty namespace with randomly generated name.
+     * Create a new topic with unique name.
      */
     @BeforeEach
     void beforeTest() {
-        // Generate topic name
+        // Generate unique topic name
         topicName = getClass().getSimpleName() + Clock.systemUTC().millis();
 
         // Create topic with 3 partitions,
-        // NOTE: This will create partition ids 0 thru 2, because partitions are indexed at 0 :)
+        // NOTE: This will create partition ids 0 through 2, because partitions are indexed at 0 :)
         getKafkaTestUtils().createTopic(topicName, 3, (short) 1);
     }
 
     /**
-     * Simple smoke test and example of how to use this Utility class.
+     * Example showing how to get information about a topic in your Kafka cluster.
+     */
+    @Test
+    void testDescribeTopic() {
+        final TopicDescription topicDescription = getKafkaTestUtils().describeTopic(topicName);
+        Assertions.assertNotNull(topicDescription, "Should return a result");
+
+        // Debug logging.
+        logger.info("Found topic with name {} and {} partitions.", topicDescription.name(), topicDescription.partitions().size());
+
+        Assertions.assertEquals(3, topicDescription.partitions().size(), "Topic should have 3 partitions");
+        Assertions.assertFalse(topicDescription.isInternal(), "Our topic is not an internal topic");
+        Assertions.assertEquals(topicName, topicDescription.name(), "Has the correct name");
+    }
+
+    /**
+     * Example showing how to get information about brokers in your Kafka cluster.
+     */
+    @Test
+    void testDescribeClusterNodes() {
+        final List<Node> clusterNodes = getKafkaTestUtils().describeClusterNodes();
+        Assertions.assertNotNull(clusterNodes, "Should return a result");
+
+        // Debug logging
+        logger.info("Found {} nodes in your cluster", clusterNodes.size());
+
+        Assertions.assertFalse(clusterNodes.isEmpty(), "Should not be empty");
+        Assertions.assertEquals(1, clusterNodes.size(), "Should have one node");
+        Assertions.assertEquals(1, clusterNodes.get(0).id(), "Should have brokerId 1");
+    }
+
+    /**
+     * Example showing how to get an AdminClient connected to your Kafka cluster.
+     */
+    @Test
+    void testGetAdminClient() {
+        // Get admin client connected to Kafka cluster.
+        try (final AdminClient adminClient = getKafkaTestUtils().getAdminClient()) {
+            // Use to do whatever you need.
+            Assertions.assertNotNull(adminClient);
+        }
+    }
+
+    /**
+     * Simple example of how to produce records into a topic.
+     */
+    @Test
+    void testProducerAndConsumer() {
+        final int numberOfRecords = 12;
+
+        // Create our utility class
+        final KafkaTestUtils kafkaTestUtils = getKafkaTestUtils();
+
+        // Get a producer
+        try (
+            final KafkaProducer<String, String> producer = kafkaTestUtils.getKafkaProducer(StringSerializer.class, StringSerializer.class)
+        ) {
+            // Produce 12 records
+            for (int recordCount = 0; recordCount < numberOfRecords; recordCount++) {
+                // Create a record.
+                final ProducerRecord<String, String> record = new ProducerRecord<>(
+                    topicName,
+                    "My Key " + recordCount,
+                    "My Value " + recordCount
+                );
+                producer.send(record);
+            }
+            // Ensure messages are flushed.
+            producer.flush();
+        }
+
+        // Consume records back out
+        final List<ConsumerRecord<String, String>> consumerRecords
+            = kafkaTestUtils.consumeAllRecordsFromTopic(topicName, StringDeserializer.class, StringDeserializer.class);
+
+        Assertions.assertNotNull(consumerRecords, "Should have non-null result.");
+        Assertions.assertEquals(numberOfRecords, consumerRecords.size(), "Should have 10 records.");
+
+        // Log the records we found.
+        for (final ConsumerRecord<String, String> consumerRecord : consumerRecords) {
+            logger.info(
+                "Found Key: {} on Partition: {} with Value: {}",
+                consumerRecord.key(),
+                consumerRecord.partition(),
+                consumerRecord.value()
+            );
+        }
+    }
+
+    /**
+     * Sometimes you don't care what the contents of the records you produce or consume are.
      */
     @Test
     void testProducerAndConsumerUtils() {
@@ -91,10 +193,15 @@ class KafkaTestUtilsTest {
         final List<ProducedKafkaRecord<byte[], byte[]>> producedRecordsList =
             kafkaTestUtils.produceRecords(numberOfRecords, topicName, partitionId);
 
-        // You can get details about what get produced
+        // You can get details about what got produced into Kafka, including the partition and offset for each message.
         for (final ProducedKafkaRecord<byte[], byte[]> producedKafkaRecord: producedRecordsList) {
+            // This is the key of the message that was produced.
             final String key = new String(producedKafkaRecord.getKey(), Charsets.UTF_8);
+
+            // This is the value of the message that was produced.
             final String value = new String(producedKafkaRecord.getValue(), Charsets.UTF_8);
+
+            // Other details about topic, partition, and offset it was written onto.
             final String topic = producedKafkaRecord.getTopic();
             final int partition = producedKafkaRecord.getPartition();
             final long offset = producedKafkaRecord.getOffset();
@@ -103,23 +210,28 @@ class KafkaTestUtilsTest {
             logger.info("Produced into topic:{} partition:{} offset:{} key:{} value:{}", topic, partition, offset, key, value);
         }
 
-        // Now we'll try to consume these records.
-        final List<ConsumerRecord<byte[], byte[]>> consumerRecords = kafkaTestUtils.consumeAllRecordsFromTopic(topicName);
+        // Now to consume all records from partition 2 only.
+        final List<ConsumerRecord<String, String>> consumerRecords = kafkaTestUtils.consumeAllRecordsFromTopic(
+            topicName,
+            Collections.singleton(partitionId),
+            StringDeserializer.class,
+            StringDeserializer.class
+        );
 
         // Validate
         assertEquals(numberOfRecords, consumerRecords.size(), "Should have 10 records");
 
-        final Iterator<ConsumerRecord<byte[], byte[]>> consumerRecordIterator = consumerRecords.iterator();
+        final Iterator<ConsumerRecord<String, String>> consumerRecordIterator = consumerRecords.iterator();
         final Iterator<ProducedKafkaRecord<byte[], byte[]>> producedKafkaRecordIterator = producedRecordsList.iterator();
 
         while (consumerRecordIterator.hasNext()) {
-            final ConsumerRecord<byte[], byte[]> consumerRecord = consumerRecordIterator.next();
+            final ConsumerRecord<String, String> consumerRecord = consumerRecordIterator.next();
             final ProducedKafkaRecord<byte[], byte[]> producedKafkaRecord = producedKafkaRecordIterator.next();
 
             final String expectedKey = new String(producedKafkaRecord.getKey(), Charsets.UTF_8);
             final String expectedValue = new String(producedKafkaRecord.getValue(), Charsets.UTF_8);
-            final String actualKey = new String(consumerRecord.key(), Charsets.UTF_8);
-            final String actualValue = new String(consumerRecord.value(), Charsets.UTF_8);
+            final String actualKey = consumerRecord.key();
+            final String actualValue = consumerRecord.value();
 
             // Make sure they match
             assertEquals(producedKafkaRecord.getTopic(), consumerRecord.topic(), "Has correct topic");
@@ -128,6 +240,20 @@ class KafkaTestUtilsTest {
             assertEquals(expectedKey, actualKey, "Has correct key");
             assertEquals(expectedValue, actualValue, "Has correct value");
         }
+    }
+
+    /**
+     * Test if we create a topic more than once, no errors occur.
+     */
+    @Test
+    void testCreatingTopicMultipleTimes() {
+        final String myTopic = "myTopic" + System.currentTimeMillis();
+        for (int creationCounter = 0; creationCounter < 5; creationCounter++) {
+            getKafkaTestUtils().createTopic(myTopic, 1, (short) 1);
+        }
+
+        final Set<String> topicNames = getKafkaTestUtils().getTopicNames();
+        Assertions.assertTrue(topicNames.contains(myTopic));
     }
 
     /**

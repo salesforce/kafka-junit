@@ -33,6 +33,7 @@ import org.apache.kafka.clients.admin.DescribeTopicsResult;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.admin.TopicDescription;
+import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -40,8 +41,8 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.Node;
-import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
@@ -58,8 +59,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 /**
  * A collection of re-usable patterns for interacting with embedded Kafka server.
@@ -172,19 +177,7 @@ public class KafkaTestUtils {
      * @return List of ConsumerRecords consumed.
      */
     public List<ConsumerRecord<byte[], byte[]>> consumeAllRecordsFromTopic(final String topic) {
-        final List<Integer> partitionIds = new ArrayList<>();
-
-        // Connect to broker to determine what partitions are available.
-        try (final KafkaConsumer<byte[], byte[]> kafkaConsumer = getKafkaConsumer(
-            ByteArrayDeserializer.class,
-            ByteArrayDeserializer.class,
-            new Properties()
-        )) {
-            for (final PartitionInfo partitionInfo : kafkaConsumer.partitionsFor(topic)) {
-                partitionIds.add(partitionInfo.partition());
-            }
-        }
-        return consumeAllRecordsFromTopic(topic, partitionIds);
+        return consumeAllRecordsFromTopic(topic, ByteArrayDeserializer.class, ByteArrayDeserializer.class);
     }
 
     /**
@@ -194,25 +187,66 @@ public class KafkaTestUtils {
      * @return List of ConsumerRecords consumed.
      */
     public List<ConsumerRecord<byte[], byte[]>> consumeAllRecordsFromTopic(final String topic, Collection<Integer> partitionIds) {
+        return consumeAllRecordsFromTopic(topic, partitionIds, ByteArrayDeserializer.class, ByteArrayDeserializer.class);
+    }
+
+    /**
+     * This will consume all records from all partitions on the given topic.
+     * @param topic Topic to consume from.
+     * @param keyDeserializer How to deserialize the key values.
+     * @param valueDeserializer How to deserialize the messages.
+     * @return List of ConsumerRecords consumed.
+     */
+    public <K, V> List<ConsumerRecord<K, V>> consumeAllRecordsFromTopic(
+        final String topic,
+        final Class<? extends Deserializer<K>> keyDeserializer,
+        final Class<? extends Deserializer<V>> valueDeserializer
+    ) {
+        // Find all partitions on topic.
+        final TopicDescription topicDescription = describeTopic(topic);
+        final Collection<Integer> partitions = topicDescription
+            .partitions()
+            .stream()
+            .map(TopicPartitionInfo::partition)
+            .collect(Collectors.toList());
+
+        // Consume messages
+        return consumeAllRecordsFromTopic(topic, partitions, keyDeserializer, valueDeserializer);
+    }
+
+    /**
+     * This will consume all records from the partitions passed on the given topic.
+     *
+     * @param topic Topic to consume from.
+     * @param partitionIds Which partitions to consume from.
+     * @param keyDeserializer How to deserialize the key values.
+     * @param valueDeserializer How to deserialize the messages.
+     * @return List of ConsumerRecords consumed.
+     */
+    public <K, V> List<ConsumerRecord<K, V>> consumeAllRecordsFromTopic(
+        final String topic,
+        final Collection<Integer> partitionIds,
+        final Class<? extends Deserializer<K>> keyDeserializer,
+        final Class<? extends Deserializer<V>> valueDeserializer
+    ) {
         // Create topic Partitions
-        final List<TopicPartition> topicPartitions = new ArrayList<>();
-        for (Integer partitionId: partitionIds) {
-            topicPartitions.add(new TopicPartition(topic, partitionId));
-        }
+        final List<TopicPartition> topicPartitions = partitionIds
+            .stream()
+            .map((partitionId) -> new TopicPartition(topic, partitionId))
+            .collect(Collectors.toList());
 
         // Holds our results.
-        final List<ConsumerRecord<byte[], byte[]>> allRecords = new ArrayList<>();
+        final List<ConsumerRecord<K, V>> allRecords = new ArrayList<>();
 
         // Connect Consumer
-        try (final KafkaConsumer<byte[], byte[]> kafkaConsumer =
-            getKafkaConsumer(ByteArrayDeserializer.class, ByteArrayDeserializer.class, new Properties())) {
+        try (final KafkaConsumer<K, V> kafkaConsumer = getKafkaConsumer(keyDeserializer, valueDeserializer, new Properties())) {
 
             // Assign topic partitions & seek to head of them
             kafkaConsumer.assign(topicPartitions);
             kafkaConsumer.seekToBeginning(topicPartitions);
 
             // Pull records from kafka, keep polling until we get nothing back
-            ConsumerRecords<byte[], byte[]> records;
+            ConsumerRecords<K, V> records;
             do {
                 // Grab records from kafka
                 records = kafkaConsumer.poll(2000L);
@@ -220,7 +254,6 @@ public class KafkaTestUtils {
 
                 // Add to our array list
                 records.forEach(allRecords::add);
-
             }
             while (!records.isEmpty());
         }
@@ -266,6 +299,30 @@ public class KafkaTestUtils {
             final DescribeTopicsResult describeTopicsResult = adminClient.describeTopics(Collections.singleton(topicName));
 
             return describeTopicsResult.values().get(topicName).get();
+        } catch (final InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * List all names of topics in Kafka.
+     * @return Set of topics found in Kafka.
+     */
+    public Set<String> getTopicNames() {
+        try (final AdminClient adminClient = getAdminClient()) {
+            return adminClient.listTopics().names().get();
+        } catch (final InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Get information about all topics in Kafka.
+     * @return Set of topics found in Kafka.
+     */
+    public List<TopicListing> getTopics() {
+        try (final AdminClient adminClient = getAdminClient()) {
+            return new ArrayList<>(adminClient.listTopics().listings().get());
         } catch (final InterruptedException | ExecutionException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
@@ -391,6 +448,52 @@ public class KafkaTestUtils {
 
         // Create and return Consumer.
         return new KafkaConsumer<>(kafkaConsumerConfig);
+    }
+
+    /**
+     * Utility method for waiting until a broker has successfully joined a cluster.
+     *
+     * @param brokerId The if of the broker to wait for.
+     * @param timeoutDuration How long to wait before throwing a TimeoutException.
+     * @param timeUnit The unit of time for how long to wait.
+     * @throws TimeoutException If the broker is not online before the timeoutDuration has expired.
+     */
+    public void waitForBrokerToComeOnLine(final int brokerId, final long timeoutDuration, final TimeUnit timeUnit) throws TimeoutException {
+        // Use system clock to calculate timeout.
+        final Clock clock = Clock.systemUTC();
+
+        // Calculate our timeout in ms.
+        final long timeoutMs = clock.millis() + TimeUnit.MILLISECONDS.convert(timeoutDuration, timeUnit);
+
+        // Start looping.
+        do {
+            try {
+                // Ask for the nodes in the cluster.
+                final Collection<Node> nodes = describeClusterNodes();
+
+                // Look for broker
+                final boolean foundBroker = nodes
+                    .stream()
+                    .map(Node::id)
+                    .anyMatch((id) -> id == brokerId);
+
+                // If we found the broker,
+                if (foundBroker) {
+                    // Good, return.
+                    return;
+                }
+
+                // Small wait to throttle cycling.
+                Thread.sleep(100);
+            } catch (final InterruptedException exception) {
+                // Caught interrupt, break out of loop.
+                break;
+            }
+        }
+        while (clock.millis() <= timeoutMs);
+
+        // If we got here, throw timeout exception
+        throw new TimeoutException("Cluster failed to come online within " + timeoutMs + " milliseconds.");
     }
 
     /**

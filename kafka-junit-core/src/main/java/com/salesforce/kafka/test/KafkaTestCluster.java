@@ -25,7 +25,6 @@
 
 package com.salesforce.kafka.test;
 
-import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.common.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +35,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -133,7 +130,7 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
         }
 
         // Loop over each broker and start it
-        for (KafkaTestServer broker : brokers) {
+        for (final KafkaTestServer broker : brokers) {
             broker.start();
         }
 
@@ -243,9 +240,9 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
         final long startTime = clock.millis();
         int numberOfBrokersReady = 0;
         do {
-            try (final AdminClient adminClient = kafkaTestUtils.getAdminClient()) {
+            try {
                 // Ask for the nodes in the cluster.
-                final Collection<Node> nodes = adminClient.describeCluster().nodes().get(timeoutMs, TimeUnit.MILLISECONDS);
+                final Collection<Node> nodes = kafkaTestUtils.describeClusterNodes();
 
                 // We should know how many nodes there are
                 if (nodes.size() >= numberOfBrokers) {
@@ -269,9 +266,6 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
             } catch (final InterruptedException exception) {
                 // Caught interrupt, break out of loop.
                 break;
-            } catch (final ExecutionException exception) {
-                // Skip to next iteration of loop
-                continue;
             }
         }
         while (clock.millis() <= startTime + timeoutMs);

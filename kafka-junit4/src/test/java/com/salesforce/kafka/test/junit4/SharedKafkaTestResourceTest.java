@@ -25,6 +25,7 @@
 
 package com.salesforce.kafka.test.junit4;
 
+import com.salesforce.kafka.test.KafkaBroker;
 import com.salesforce.kafka.test.KafkaTestUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -37,22 +38,21 @@ import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -63,7 +63,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class SharedKafkaTestResourceTest {
     private static final Logger logger = LoggerFactory.getLogger(SharedKafkaTestResourceTest.class);
-
+    
     /**
      * We have a single embedded kafka server that gets started when this test class is initialized.
      *
@@ -81,32 +81,76 @@ public class SharedKafkaTestResourceTest {
         .withBrokerProperty("auto.create.topics.enable", "false");
 
     /**
-     * Before every test, we generate a random topic name and create it within the embedded kafka server.
-     * Each test can then be segmented run any tests against its own topic.
+     * Validate that we started 2 brokers.
      */
-    private String topicName;
+    @Test
+    public void testTwoBrokersStarted() {
+        final Collection<Node> nodes = getKafkaTestUtils().describeClusterNodes();
+        assertNotNull("Sanity test, should not be null", nodes);
+        assertEquals("Should have two entries", 2, nodes.size());
 
-    /**
-     * This happens once before every test method.
-     * Create a new empty namespace with randomly generated name.
-     */
-    @Before
-    public void beforeTest() {
-        // Generate topic name
-        topicName = getClass().getSimpleName() + Clock.systemUTC().millis();
+        // Grab id for each node found.
+        final Set<Integer> foundBrokerIds = nodes.stream()
+            .map(Node::id)
+            .collect(Collectors.toSet());
 
-        // Create topic with a single partition, replication factor of 2
-        // NOTE: This will create partition id 0, because partitions are indexed at 0 :)
-        getKafkaTestUtils().createTopic(topicName, 1, (short) 2);
+        assertEquals("Found 2 brokers.", 2, foundBrokerIds.size());
+        assertTrue("Found brokerId 1", foundBrokerIds.contains(1));
+        assertTrue("Found brokerId 2", foundBrokerIds.contains(2));
     }
 
     /**
-     * Test that KafkaServer works as expected!
-     *
-     * This also serves as a decent example of how to use the producer and consumer.
+     * Example in a multi-broker cluster, how to stop an individual broker and bring it back on-line.
+     */
+    @Test
+    public void testBringingBrokerOffLine() throws Exception {
+        // Now we want to test behavior by stopping brokerId 2.
+        final KafkaBroker broker2 = sharedKafkaTestResource
+            .getKafkaBrokers()
+            .getBrokerById(2);
+
+        // Shutdown broker Id 2.
+        broker2.stop();
+
+        // Describe the cluster
+        List<Node> nodes = getKafkaTestUtils().describeClusterNodes();
+
+        // We should only have 1 node now, and it should not include broker Id 2.
+        assertEquals(1, nodes.size());
+        nodes.forEach((node) -> assertNotEquals("Should not include brokerId 2", 2, node.id()));
+
+        // Test your applications behavior when a broker becomes unavailable or leadership changes.
+
+        // Bring the broker back up
+        broker2.start();
+
+        // It may take a while for the broker to successfully rejoin the cluster,
+        // Block until the broker has come on-line and then continue.
+        getKafkaTestUtils()
+            .waitForBrokerToComeOnLine(2, 10, TimeUnit.SECONDS);
+
+        // We should have 2 nodes again.
+        nodes = getKafkaTestUtils().describeClusterNodes();
+        assertEquals(2, nodes.size());
+
+        // Collect the brokerIds in the cluster.
+        final Set<Integer> foundBrokerIds = nodes.stream()
+            .map(Node::id)
+            .collect(Collectors.toSet());
+
+        assertTrue("Found brokerId 1", foundBrokerIds.contains(1));
+        assertTrue("Found brokerId 2", foundBrokerIds.contains(2));
+    }
+
+    /**
+     * Test consuming and producing via KafkaProducer and KafkaConsumer instances.
      */
     @Test
     public void testProducerAndConsumer() throws Exception {
+        // Create a topic
+        final String topicName = "ProducerAndConsumerTest" + System.currentTimeMillis();
+        getKafkaTestUtils().createTopic(topicName, 1, (short) 1);
+
         final int partitionId = 0;
 
         // Define our message
@@ -118,7 +162,7 @@ public class SharedKafkaTestResourceTest {
 
         // Create a new producer
         try (final KafkaProducer<String, String> producer =
-             getKafkaTestUtils().getKafkaProducer(StringSerializer.class, StringSerializer.class)) {
+                 getKafkaTestUtils().getKafkaProducer(StringSerializer.class, StringSerializer.class)) {
 
             // Produce it & wait for it to complete.
             final Future<RecordMetadata> future = producer.send(producerRecord);
@@ -131,7 +175,7 @@ public class SharedKafkaTestResourceTest {
 
         // Create consumer
         try (final KafkaConsumer<String, String> kafkaConsumer =
-             getKafkaTestUtils().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class)) {
+                 getKafkaTestUtils().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class)) {
 
             final List<TopicPartition> topicPartitionList = new ArrayList<>();
             for (final PartitionInfo partitionInfo: kafkaConsumer.partitionsFor(topicName)) {
@@ -153,39 +197,6 @@ public class SharedKafkaTestResourceTest {
             }
             while (!records.isEmpty());
         }
-    }
-
-    /**
-     * Test if we create a topic more than once, no errors occur.
-     */
-    @Test
-    public void testCreatingTopicMultipleTimes() {
-        final String myTopic = "myTopic";
-        for (int creationCounter = 0; creationCounter < 5; creationCounter++) {
-            getKafkaTestUtils().createTopic(myTopic, 1, (short) 1);
-        }
-        assertTrue("Made it here!", true);
-    }
-
-    /**
-     * Validate that we started 2 brokers.
-     */
-    @Test
-    public void testTwoBrokersStarted() throws ExecutionException, InterruptedException {
-        final Set<Integer> foundBrokerIds = new HashSet<>();
-        final Collection<Node> nodes = getKafkaTestUtils().describeClusterNodes();
-
-        assertNotNull("Sanity test, should not be null", nodes);
-        assertEquals("Should have two entries", 2, nodes.size());
-
-        // Grab id for each node found.
-        nodes.forEach(
-            (node) -> foundBrokerIds.add(node.id())
-        );
-
-        assertEquals("Found 2 brokers.", 2, foundBrokerIds.size());
-        assertTrue("Found brokerId 1", foundBrokerIds.contains(1));
-        assertTrue("Found brokerId 2", foundBrokerIds.contains(2));
     }
 
     /**

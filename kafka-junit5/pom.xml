@@ -109,7 +109,7 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <argLine>-Xmx512M</argLine>
+                    <argLine>-Xmx1024M</argLine>
                     <skipTests>${skipTests}</skipTests>
                     <reportFormat>plain</reportFormat>
                 </configuration>
