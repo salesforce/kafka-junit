@@ -38,11 +38,6 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
     private KafkaCluster kafkaCluster = null;
 
     /**
-     * Cached instance of KafkaTestUtils.
-     */
-    private KafkaTestUtils kafkaTestUtils = null;
-
-    /**
      * Additional broker properties.
      */
     private final Properties brokerProperties = new Properties();
@@ -117,12 +112,7 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
     public KafkaTestUtils getKafkaTestUtils() {
         // Validate internal state.
         validateState(true, "Cannot access KafkaTestUtils before Kafka service has been started.");
-
-        // Create instance if it doesn't exist yet.
-        if (kafkaTestUtils == null) {
-            kafkaTestUtils = new KafkaTestUtils(kafkaCluster);
-        }
-        return kafkaTestUtils;
+        return new KafkaTestUtils(kafkaCluster);
     }
 
     /**
