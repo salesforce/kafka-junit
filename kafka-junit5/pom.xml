@@ -31,12 +31,12 @@
     <parent>
         <artifactId>kafka-junit</artifactId>
         <groupId>com.salesforce.kafka.test</groupId>
-        <version>3.0.0</version>
+        <version>3.0.1</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kafka-junit5</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1</version>
 
     <!-- defined properties -->
     <properties>
@@ -51,7 +51,7 @@
         <dependency>
             <groupId>com.salesforce.kafka.test</groupId>
             <artifactId>kafka-junit-core</artifactId>
-            <version>3.0.0</version>
+            <version>3.0.1</version>
         </dependency>
 
         <!-- JUnit is Required -->
