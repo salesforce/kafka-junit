@@ -32,14 +32,21 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.Node;
+import org.apache.kafka.common.serialization.Serde;
+import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.KeyValue;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.kstream.KStreamBuilder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Validation tests against KafkaTestServer class.
@@ -108,6 +115,96 @@ class KafkaTestServerTest {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Integration test validates that streams can be used against KafkaTestServer.
+     */
+    @Test
+    void testStreamConsumer() throws Exception {
+        // Define topic to test with.
+        final String inputTopic = "stream-input-topic" + System.currentTimeMillis();
+        final String outputTopic = "stream-output-topic" + System.currentTimeMillis();
+
+        // Define how many records
+        final int numberOfRecords = 25;
+        final int partitionId = 0;
+
+        // Tracks how many records the Stream consumer has processed.
+        final AtomicInteger recordCounter = new AtomicInteger(0);
+
+        // Create our test server instance.
+        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer()) {
+            // Start it and create our topic.
+            kafkaTestServer.start();
+
+            // Create test utils instance.
+            final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestServer);
+
+            // Create topics
+            kafkaTestUtils.createTopic(inputTopic, 1, (short) 1);
+            kafkaTestUtils.createTopic(outputTopic, 1, (short) 1);
+
+            // Produce random data into input topic
+            kafkaTestUtils.produceRecords(numberOfRecords, inputTopic, partitionId);
+
+            // Define stream consumer properties.
+            final Properties config = new Properties();
+            config.put(StreamsConfig.APPLICATION_ID_CONFIG, "testStreamProcessor");
+            config.setProperty(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaTestServer.getKafkaConnectString());
+            config.put("group.id", "test-stream-group");
+            config.put("auto.offset.reset", "earliest");
+
+            // Serialization definition.
+            final Serde<String> stringSerde = Serdes.String();
+
+            // Build the stream
+            final KStreamBuilder kStreamBuilder = new KStreamBuilder();
+            kStreamBuilder
+                // Read from input topic.
+                .stream(stringSerde, stringSerde, inputTopic)
+
+                // For each record processed, increment our counter
+                .map((key, word) -> {
+                    recordCounter.incrementAndGet();
+                    return new KeyValue<>(word, word);
+                })
+
+                // Write to output topic.
+                .to(stringSerde, stringSerde, outputTopic);
+
+            // Create stream
+            final KafkaStreams kafkaStreams = new KafkaStreams(kStreamBuilder, new StreamsConfig(config));
+            try {
+                // Start the stream consumer
+                kafkaStreams.start();
+
+                // Since stream processing is async, we need to wait for the Stream processor to start, consume messages
+                // from the input topic, and process them. We'll wait for Wait for it to do its thing up to 10 seconds.
+                for (int timeoutCounter = 0; timeoutCounter <= 10; timeoutCounter++) {
+                    // If we've processed all of our records
+                    if (recordCounter.get() >= numberOfRecords) {
+                        // Break out of sleep loop.
+                        break;
+                    }
+                    // Otherwise, we need to wait longer, sleep 1 second.
+                    Thread.sleep(1000L);
+                }
+            } finally {
+                // Close the stream consumer.
+                kafkaStreams.close();
+            }
+
+            // Validation.
+            Assertions.assertEquals(numberOfRecords, recordCounter.get(), "Should have 25 records processed");
+
+            // Consume records from output topic.
+            final List<ConsumerRecord<String, String>> outputRecords =
+                kafkaTestUtils.consumeAllRecordsFromTopic(outputTopic, StringDeserializer.class, StringDeserializer.class);
+
+            // Validate we got the correct number of records.
+            Assertions.assertEquals(numberOfRecords, outputRecords.size());
         }
     }
 

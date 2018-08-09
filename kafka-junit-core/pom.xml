@@ -37,5 +37,13 @@
             <version>3.4.12</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- Streams Validation in tests -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-streams</artifactId>
+            <version>${kafkaVersion}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
