@@ -31,6 +31,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
@@ -46,6 +47,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -113,6 +115,85 @@ class KafkaTestServerTest {
                         Assertions.assertEquals(theMsg, record.value(), "Values should match");
                         consumer.commitSync();
                     }
+                }
+            }
+        }
+    }
+
+    /**
+     * Test consuming using subscribe.
+     */
+    @Test
+    void testProducerAndConsumerSubscribe() throws Exception {
+        // Define topic to test with.
+        final String theTopic = "subscribe-topic" + System.currentTimeMillis();
+        final int partitionId = 0;
+
+        // Define our message
+        final String expectedKey = "my-key";
+        final String expectedValue = "my test message";
+
+        // Create our test server instance.
+        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer()) {
+            // Start it and create our topic.
+            kafkaTestServer.start();
+
+            // Create test utils instance.
+            final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestServer);
+
+            // Create a topic.
+            kafkaTestUtils.createTopic(theTopic, 1, (short) 1);
+
+            // Define override properties.
+            final Properties config = new Properties();
+            config.put("group.id", "test-consumer-group");
+            config.put("enable.auto.commit", "false");
+            config.put("auto.offset.reset", "earliest");
+
+            // Define the record we want to produce
+            final ProducerRecord<String, String> producerRecord = new ProducerRecord<>(theTopic, partitionId, expectedKey, expectedValue);
+
+            // Create a new producer
+            try (final KafkaProducer<String, String> producer =
+                kafkaTestUtils.getKafkaProducer(StringSerializer.class, StringSerializer.class, config)) {
+
+                // Produce it & wait for it to complete.
+                final Future<RecordMetadata> future = producer.send(producerRecord);
+                producer.flush();
+                while (!future.isDone()) {
+                    Thread.sleep(500L);
+                }
+            }
+
+            // Create a consumer
+            try (final KafkaConsumer<String, String> consumer =
+                kafkaTestUtils.getKafkaConsumer(StringDeserializer.class, StringDeserializer.class, config)) {
+
+                // Subscribe to the topic.
+                consumer.subscribe(Collections.singleton(theTopic));
+
+                // Consume messages.
+                ConsumerRecords<String, String> records = consumer.poll(1000L);
+
+                // poll() doesn't make any promises that it will return records.  On first poll() it does
+                // several async background requests, so try up to 10 times.
+                if (records.isEmpty()) {
+                    for (int attempts = 0; attempts < 10; attempts++) {
+                        records = consumer.poll(1000L);
+
+                        // If we got any records
+                        if (!records.isEmpty()) {
+                            // Break out of loop
+                            break;
+                        }
+                    }
+                }
+
+                // Validate we got our message
+                Assertions.assertEquals(1, records.count(), "Should have 1 record");
+                for (final ConsumerRecord<String, String> record : records) {
+                    Assertions.assertEquals(expectedKey, record.key(), "Keys should match");
+                    Assertions.assertEquals(expectedValue, record.value(), "Values should match");
                 }
             }
         }
