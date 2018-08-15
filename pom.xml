@@ -195,6 +195,7 @@
                         <exclude>**.xml</exclude>
                         <exclude>**.versionsBackup</exclude>
                         <exclude>script/**</exclude>
+                        <exclude>**/resources/**.xml</exclude>
                     </excludes>
                 </configuration>
                 <executions>
