@@ -30,11 +30,12 @@ package com.salesforce.kafka.test;
  */
 public abstract class AbstractZookeeperTestResource {
     /**
-     * Our internal Zookeeper test server instance.
+     * Internal Zookeeper test server instance.
      */
     private final ZookeeperTestServer zookeeperTestServer = new ZookeeperTestServer();
 
     /**
+     * Access to the underlying zookeeper test server instance.
      * @return Shared Zookeeper test server instance.
      * @throws IllegalStateException if before() has not been called yet.
      */
@@ -43,6 +44,7 @@ public abstract class AbstractZookeeperTestResource {
     }
 
     /**
+     * Returns connection string for zookeeper clients.
      * @return Connection string to connect to the Zookeeper instance.
      * @throws IllegalStateException if before() has not been called yet.
      */

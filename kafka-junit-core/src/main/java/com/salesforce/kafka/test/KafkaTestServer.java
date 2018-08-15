@@ -128,7 +128,8 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     }
 
     /**
-     * @return The proper connect string to use for Kafka.
+     * bootstrap.servers string to configure Kafka consumers or producers to access the Kafka cluster.
+     * @return Connect string to use for Kafka clients.
      */
     @Override
     public String getKafkaConnectString() {
@@ -137,6 +138,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     }
 
     /**
+     * Returns an immutable list of broker hosts for the kafka cluster.
      * @return immutable list of hosts for brokers within the cluster.
      */
     @Override
@@ -149,6 +151,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     }
 
     /**
+     * Returns the brokers Id.
      * @return This brokers Id.
      */
     public int getBrokerId() {
@@ -157,7 +160,8 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     }
 
     /**
-     * @return The proper connect string to use for Zookeeper.
+     * Returns properly formatted zookeeper connection string for zookeeper clients.
+     * @return Connect string to use for Zookeeper clients.
      */
     public String getZookeeperConnectString() {
         validateState(true, "Cannot get connect string prior to service being started.");
@@ -248,6 +252,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      * result in leaking instances.
      *
      * Provided alongside close() to stay consistent with start().
+     * @throws Exception on shutdown errors.
      */
     public void stop() throws Exception {
         close();
@@ -256,6 +261,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     /**
      * Closes the internal servers. Failing to call this at the end of your tests will likely
      * result in leaking instances.
+     * @throws Exception on shutdown errors.
      */
     @Override
     public void close() throws Exception {

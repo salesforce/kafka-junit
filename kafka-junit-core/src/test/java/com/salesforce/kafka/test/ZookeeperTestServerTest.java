@@ -228,7 +228,7 @@ class ZookeeperTestServerTest {
     }
 
     /**
-     * Attempts to validate a Zookeeper server by:
+     * Attempts to validate a Zookeeper server by the following criteria.
      *      - connecting
      *      - create a new node
      *      - reading that node
@@ -237,7 +237,6 @@ class ZookeeperTestServerTest {
      * @param zkConnectString Zookeeper host.
      */
     private void testZookeeperConnection(final String zkConnectString) throws Exception {
-        final CountDownLatch connectionLatch = new CountDownLatch(1);
         final String pathStr = "/zkTest" + System.currentTimeMillis();
         final String dataStr = "zkData" + System.currentTimeMillis();
 

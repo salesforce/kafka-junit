@@ -72,6 +72,7 @@ public class KafkaBrokers implements Iterable<KafkaBroker> {
     }
 
     /**
+     * Returns an immutable list of KafkaBroker instances.
      * @return Immutable List of Brokers.
      */
     public List<KafkaBroker> asList() {
@@ -81,6 +82,7 @@ public class KafkaBrokers implements Iterable<KafkaBroker> {
     }
 
     /**
+     * Returns a stream of brokers.
      * @return Stream of Brokers.
      */
     public Stream<KafkaBroker> stream() {
@@ -88,6 +90,7 @@ public class KafkaBrokers implements Iterable<KafkaBroker> {
     }
 
     /**
+     * Returns how many brokers are represented.
      * @return Number of brokers.
      */
     public int size() {

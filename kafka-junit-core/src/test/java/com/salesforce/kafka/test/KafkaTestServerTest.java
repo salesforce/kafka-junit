@@ -82,7 +82,7 @@ class KafkaTestServerTest {
             config.put("auto.offset.reset", "earliest");
 
             try (final KafkaConsumer<String, String> consumer
-                     = kafkaTestUtils.getKafkaConsumer(StringDeserializer.class, StringDeserializer.class, config)) {
+                = kafkaTestUtils.getKafkaConsumer(StringDeserializer.class, StringDeserializer.class, config)) {
 
                 // Subscribe to the topic
                 consumer.subscribe(Collections.singletonList(theTopic));
@@ -92,7 +92,7 @@ class KafkaTestServerTest {
                 config.put("transactional.id", "MyRandomString" + System.currentTimeMillis());
 
                 try (final KafkaProducer<String, String> producer
-                         = kafkaTestUtils.getKafkaProducer(StringSerializer.class, StringSerializer.class, config)) {
+                    = kafkaTestUtils.getKafkaProducer(StringSerializer.class, StringSerializer.class, config)) {
                     // Init transaction and begin
                     producer.initTransactions();
                     producer.beginTransaction();
