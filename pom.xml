@@ -93,6 +93,11 @@
         <!-- For logging in tests -->
         <slf4jVersion>1.7.25</slf4jVersion>
 
+        <!-- JUnit versions -->
+        <junit4.version>4.12</junit4.version>
+        <junit5.version>5.2.0</junit5.version>
+        <junit5PlatformProvider.version>1.2.0</junit5PlatformProvider.version>
+
         <!-- test toggling -->
         <skipTests>false</skipTests>
         <skipCheckStyle>false</skipCheckStyle>
@@ -101,6 +106,7 @@
         <!-- plugin versions -->
         <checkstyle.version>3.0.0</checkstyle.version>
         <javadoc.version>3.0.1</javadoc.version>
+        <surefire.version>2.22.0</surefire.version>
     </properties>
 
     <!-- Module Scoped Dependencies -->
@@ -166,8 +172,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.6.1</version>
+                <version>3.8.0</version>
                 <configuration>
+                    <!-- source and target is java 1.8 -->
                     <source>1.8</source>
                     <target>1.8</target>
                 </configuration>

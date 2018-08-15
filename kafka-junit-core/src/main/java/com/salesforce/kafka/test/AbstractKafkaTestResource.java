@@ -31,7 +31,7 @@ import java.util.Properties;
  * Shared code between JUnit4 and JUnit5 shared resources.
  * @param <T> The concrete implementation of this class, to allow for method chaining.
  */
-public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResource> {
+public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResource<T>> {
     /**
      * Our internal Kafka Test Server instance.
      */
@@ -71,6 +71,7 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
      * @throws IllegalArgumentException if name argument is null.
      * @throws IllegalStateException if method called after service has started.
      */
+    @SuppressWarnings("unchecked")
     public T withBrokerProperty(final String name, final String value) {
         // Validate state.
         validateState(false, "Cannot add properties after service has started.");
@@ -94,6 +95,7 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
      * @param brokerCount The number of brokers.
      * @return SharedKafkaTestResource for method chaining.
      */
+    @SuppressWarnings("unchecked")
     public T withBrokers(final int brokerCount) {
         // Validate state.
         validateState(false, "Cannot set brokers after service has started.");
