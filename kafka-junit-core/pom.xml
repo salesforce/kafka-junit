@@ -94,7 +94,7 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <argLine>-Xmx1024M</argLine>
+                    <argLine>-Xmx2048M</argLine>
                     <skipTests>${skipTests}</skipTests>
                     <reportFormat>plain</reportFormat>
                 </configuration>
