@@ -5,7 +5,7 @@ one or more "real" kafka brokers running within your tests. No longer do you nee
 
 Kafka-JUnit4 is built on-top of **JUnit 4** as a SharedResource using the **@ClassRule** annotation.
 
-Kafka-JUnit4 works with Kafka versions **0.11.0.x**, **1.0.x**, and **1.1.x** and requires your project to explicitly declare/include Kafka in your project's POM dependency list.
+Kafka-JUnit4 works with Kafka versions **0.11.0.x**, **1.0.x**, **1.1.x**, and **2.0.x**. The library requires your project to explicitly declare/include Kafka in your project's POM dependency list.
 
 For usage with JUnit5 or more general project information please review top level [README](../README.md).
 
@@ -25,6 +25,32 @@ Include this library in your project's POM with test scope.  **You'll also need 
 </dependency>
 ```
 
+#### POM entries for Kafka 2.0.x
+
+```xml
+<!-- Declare kafka-junit4 dependency -->
+<dependency>
+    <groupId>com.salesforce.kafka.test</groupId>
+    <artifactId>kafka-junit4</artifactId>
+    <version>3.0.1</version>
+    <scope>test</scope>
+</dependency>
+
+<!-- Include Kafka 2.0.x -->
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka_2.11</artifactId>
+    <version>2.0.0</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka-clients</artifactId>
+    <version>2.0.0</version>
+    <scope>test</scope>
+</dependency>
+```
+
 #### POM entries for Kafka 1.1.x
 
 ```xml
@@ -40,13 +66,13 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>org.apache.kafka</groupId>
     <artifactId>kafka_2.11</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <scope>test</scope>
 </dependency>
 <dependency>
     <groupId>org.apache.kafka</groupId>
     <artifactId>kafka-clients</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -66,13 +92,13 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>org.apache.kafka</groupId>
     <artifactId>kafka_2.11</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <scope>test</scope>
 </dependency>
 <dependency>
     <groupId>org.apache.kafka</groupId>
     <artifactId>kafka-clients</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -92,13 +118,13 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>org.apache.kafka</groupId>
     <artifactId>kafka_2.11</artifactId>
-    <version>0.11.0.2</version>
+    <version>0.11.0.3</version>
     <scope>test</scope>
 </dependency>
 <dependency>
     <groupId>org.apache.kafka</groupId>
     <artifactId>kafka-clients</artifactId>
-    <version>0.11.0.2</version>
+    <version>0.11.0.3</version>
     <scope>test</scope>
 </dependency>
 ```
