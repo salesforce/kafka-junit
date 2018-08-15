@@ -7,6 +7,11 @@
 
     <property name="severity" value="warning"/>
 
+    <!-- Exclude module-info.java -->
+    <module name="BeforeExecutionExclusionFileFilter">
+        <property name="fileNamePattern" value="module\-info\.java$"/>
+    </module>
+
     <!-- Checks for whitespace                               -->
     <!-- See http://checkstyle.sf.net/config_whitespace.html -->
     <module name="FileTabCharacter">
@@ -19,7 +24,7 @@
         <property name="fileExtensions" value="java"/>
     </module>
 
-    <module name="SuppressionCommentFilter">
+    <module name="SuppressWithPlainTextCommentFilter">
         <property name="offCommentFormat" value="CHECKSTYLE.OFF\: ([\w\|]+)"/>
         <property name="onCommentFormat" value="CHECKSTYLE.ON\: ([\w\|]+)"/>
         <property name="checkFormat" value="$1"/>
@@ -28,7 +33,6 @@
     <module name="SuppressWarningsFilter" />
 
     <module name="TreeWalker">
-        <module name="FileContentsHolder"/>
         <module name="SuppressWarningsHolder" />
         <module name="OuterTypeFilename"/>
         <module name="IllegalTokenText">

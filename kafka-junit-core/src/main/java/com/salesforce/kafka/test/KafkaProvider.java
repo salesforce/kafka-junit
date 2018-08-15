@@ -30,19 +30,20 @@ package com.salesforce.kafka.test;
  */
 public interface KafkaProvider {
     /**
-     * @return Immutable list of broker hosts.
+     * Returns an immutable list of broker hosts for the kafka cluster.
+     * @return immutable list of hosts for brokers within the cluster.
      */
     KafkaBrokers getKafkaBrokers();
 
     /**
-     * @return The proper connect string to use for Kafka.
+     * bootstrap.servers string to configure Kafka consumers or producers to access the Kafka cluster.
+     * @return Connect string to use for Kafka clients.
      */
     String getKafkaConnectString();
 
     /**
-     * @return The proper connect string to use for Zookeeper.
+     * Returns connection string for zookeeper clients.
+     * @return Connection string to connect to the Zookeeper instance.
      */
     String getZookeeperConnectString();
-
-
 }

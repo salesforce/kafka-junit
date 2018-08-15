@@ -192,6 +192,8 @@ public class KafkaTestUtils {
 
     /**
      * This will consume all records from all partitions on the given topic.
+     * @param <K> Type of key values.
+     * @param <V> Type of message values.
      * @param topic Topic to consume from.
      * @param keyDeserializer How to deserialize the key values.
      * @param valueDeserializer How to deserialize the messages.
@@ -216,7 +218,8 @@ public class KafkaTestUtils {
 
     /**
      * This will consume all records from the partitions passed on the given topic.
-     *
+     * @param <K> Type of key values.
+     * @param <V> Type of message values.
      * @param topic Topic to consume from.
      * @param partitionIds Which partitions to consume from.
      * @param keyDeserializer How to deserialize the key values.

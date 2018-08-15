@@ -97,6 +97,10 @@
         <skipTests>false</skipTests>
         <skipCheckStyle>false</skipCheckStyle>
         <checkstyle.ruleset>script/checkstyle-ruleset.xml</checkstyle.ruleset>
+
+        <!-- plugin versions -->
+        <checkstyle.version>3.0.0</checkstyle.version>
+        <javadoc.version>3.0.1</javadoc.version>
     </properties>
 
     <!-- Module Scoped Dependencies -->
@@ -200,7 +204,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.17</version>
+                <version>${checkstyle.version}</version>
                 <executions>
                     <execution>
                         <id>checkstyle-validate</id>
@@ -249,12 +253,12 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
-                    <version>3.0.0</version>
+                    <version>${checkstyle.version}</version>
                     <dependencies>
                         <dependency>
                             <groupId>com.puppycrawl.tools</groupId>
                             <artifactId>checkstyle</artifactId>
-                            <version>8.0</version>
+                            <version>8.12</version>
                         </dependency>
                     </dependencies>
                 </plugin>
@@ -268,7 +272,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.0.0</version>
+                <version>${javadoc.version}</version>
                 <configuration>
                     <show>public</show>
                 </configuration>
@@ -278,7 +282,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.0.0</version>
+                <version>${checkstyle.version}</version>
                 <configuration>
                     <configLocation>${checkstyle.ruleset}</configLocation>
                 </configuration>
@@ -309,7 +313,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.0.0</version>
+                        <version>${javadoc.version}</version>
                         <executions>
                             <execution>
                                 <id>build-javadocs</id>

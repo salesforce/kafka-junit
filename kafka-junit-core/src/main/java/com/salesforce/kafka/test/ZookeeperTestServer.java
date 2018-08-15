@@ -119,6 +119,7 @@ public class ZookeeperTestServer implements AutoCloseable {
     }
 
     /**
+     * Returns connection string for zookeeper clients.
      * @return Connection string to connect to the Zookeeper instance.
      * @throws IllegalStateException if start() has not been called yet.
      */

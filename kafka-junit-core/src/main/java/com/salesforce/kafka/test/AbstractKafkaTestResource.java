@@ -116,6 +116,7 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
     }
 
     /**
+     * Returns connection string for zookeeper clients.
      * @return Connection string to connect to the Zookeeper instance.
      */
     public String getZookeeperConnectString() {
@@ -124,7 +125,8 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
     }
 
     /**
-     * @return bootstrap.servers string to configure Kafka consumers or producers to access the Kafka cluster.
+     * bootstrap.servers string to configure Kafka consumers or producers to access the Kafka cluster.
+     * @return Connect string to use for Kafka clients.
      */
     public String getKafkaConnectString() {
         validateState(true, "Cannot access Kafka before service has been started.");
@@ -132,7 +134,8 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
     }
 
     /**
-     * @return Immutable list of brokers within the Kafka cluster, indexed by their brokerIds.
+     * Returns an immutable list of broker hosts for the kafka cluster.
+     * @return immutable list of hosts for brokers within the cluster.
      */
     public KafkaBrokers getKafkaBrokers() {
         validateState(true, "Cannot access Kafka before service has been started.");

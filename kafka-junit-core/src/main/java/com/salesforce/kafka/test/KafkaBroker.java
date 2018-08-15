@@ -36,6 +36,7 @@ public class KafkaBroker {
 
     /**
      * Constructor.
+     * @param kafkaTestServer Internal KafkaTestServer instance.
      */
     public KafkaBroker(final KafkaTestServer kafkaTestServer) {
         this.kafkaTestServer = kafkaTestServer;
@@ -45,6 +46,10 @@ public class KafkaBroker {
         return kafkaTestServer.getBrokerId();
     }
 
+    /**
+     * bootstrap.servers string to configure Kafka consumers or producers to access the Kafka cluster.
+     * @return Connect string to use for Kafka clients.
+     */
     public String getConnectString() {
         return kafkaTestServer.getKafkaConnectString();
     }

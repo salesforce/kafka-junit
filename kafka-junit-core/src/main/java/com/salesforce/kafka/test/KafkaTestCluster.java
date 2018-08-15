@@ -139,7 +139,8 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
     }
 
     /**
-     * @return KafkaBrokers containing the list of brokers within the cluster.
+     * Returns an immutable list of broker hosts for the kafka cluster.
+     * @return immutable list of hosts for brokers within the cluster.
      */
     @Override
     public KafkaBrokers getKafkaBrokers() {
@@ -183,7 +184,8 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
     }
 
     /**
-     * @return The proper connect string to use for this Kafka cluster.
+     * bootstrap.servers string to configure Kafka consumers or producers to access the Kafka cluster.
+     * @return Connect string to use for Kafka clients.
      */
     public String getKafkaConnectString() {
         // If we have no brokers yet, the cluster has not yet started.
@@ -198,7 +200,8 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
     }
 
     /**
-     * @return The proper connect string to use for Zookeeper.
+     * Returns connection string for zookeeper clients.
+     * @return Connection string to connect to the Zookeeper instance.
      */
     public String getZookeeperConnectString() {
         return zkTestServer.getConnectString();
