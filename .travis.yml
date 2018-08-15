@@ -9,9 +9,10 @@ install: true
 
 ## Define kafka versions to build against
 env:
-  - KAFKA_VERSION=0.11.0.2
-  - KAFKA_VERSION=1.0.1
-  - KAFKA_VERSION=1.1.0
+- KAFKA_VERSION=0.11.0.3
+- KAFKA_VERSION=1.0.2
+- KAFKA_VERSION=1.1.1
+- KAFKA_VERSION=2.0.0
 script:
   - mvn clean install -DskipTests=true -DskipCheckStyle=false -Dmaven.javadoc.skip=true -B -V -DkafkaVersion=$KAFKA_VERSION
   - mvn test -B -DkafkaVersion=$KAFKA_VERSION -DskipCheckStyle=true
