@@ -2,6 +2,9 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## UNRELEASED
+- Officially support Kafka 2.0.0
+
 ## 3.0.1 (06/20/2018)
 - [Issue-16](https://github.com/salesforce/kafka-junit/issues/16) Bugfix for re-using the same SharedKafkaTestResource instance multiple times, as might happen if you run a test multiple times.
 - Update checkstyle plugin version to 3.0.0

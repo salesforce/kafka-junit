@@ -85,7 +85,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Define which kafka version -->
-        <kafkaVersion>0.11.0.1</kafkaVersion>
+        <kafkaVersion>1.0.2</kafkaVersion>
 
         <!-- Define which Curator Test version -->
         <curatorTestVersion>2.12.0</curatorTestVersion>
@@ -107,6 +107,10 @@
         <checkstyle.version>3.0.0</checkstyle.version>
         <javadoc.version>3.0.1</javadoc.version>
         <surefire.version>2.22.0</surefire.version>
+
+        <!-- excluded tests based on specific kafka versions -->
+        <!-- default to excluding 0.11.0.1 tests -->
+        <tests.excluded>0_11_0_x</tests.excluded>
     </properties>
 
     <!-- Module Scoped Dependencies -->
@@ -177,6 +181,10 @@
                     <!-- source and target is java 1.8 -->
                     <source>1.8</source>
                     <target>1.8</target>
+                    <testExcludes>
+                        <!-- by default exclude kafka 0.11.0.x specific tests -->
+                        <testExclude>**/kafka_${tests.excluded}/*.java</testExclude>
+                    </testExcludes>
                 </configuration>
             </plugin>
 
