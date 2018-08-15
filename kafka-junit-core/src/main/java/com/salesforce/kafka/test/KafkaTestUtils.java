@@ -123,7 +123,7 @@ public class KafkaTestUtils {
 
             // Publish to the topic and close.
             producer.flush();
-            logger.info("Produce completed");
+            logger.debug("Produce completed");
         }
 
         // Loop thru the futures, and build KafkaRecord objects
@@ -232,6 +232,35 @@ public class KafkaTestUtils {
         final Class<? extends Deserializer<K>> keyDeserializer,
         final Class<? extends Deserializer<V>> valueDeserializer
     ) {
+
+        // Pass through.
+        return consumeAllRecordsFromTopic(
+            topic,
+            partitionIds,
+            keyDeserializer,
+            valueDeserializer,
+            2000L
+        );
+    }
+
+    /**
+     * This will consume all records from the partitions passed on the given topic.
+     * @param <K> Type of key values.
+     * @param <V> Type of message values.
+     * @param topic Topic to consume from.
+     * @param partitionIds Which partitions to consume from.
+     * @param keyDeserializer How to deserialize the key values.
+     * @param valueDeserializer How to deserialize the messages.
+     * @param timeoutMs How long to wait for messages, in milliseconds.
+     * @return List of ConsumerRecords consumed.
+     */
+    public <K, V> List<ConsumerRecord<K, V>> consumeAllRecordsFromTopic(
+        final String topic,
+        final Collection<Integer> partitionIds,
+        final Class<? extends Deserializer<K>> keyDeserializer,
+        final Class<? extends Deserializer<V>> valueDeserializer,
+        final long timeoutMs
+    ) {
         // Create topic Partitions
         final List<TopicPartition> topicPartitions = partitionIds
             .stream()
@@ -250,15 +279,27 @@ public class KafkaTestUtils {
 
             // Pull records from kafka, keep polling until we get nothing back
             ConsumerRecords<K, V> records;
+            final int maxEmptyLoops = 2;
+            int loopsLeft = maxEmptyLoops;
             do {
                 // Grab records from kafka
-                records = kafkaConsumer.poll(2000L);
-                logger.info("Found {} records in kafka", records.count());
+                records = kafkaConsumer.poll(timeoutMs);
+                logger.debug("Found {} records in kafka", records.count());
 
                 // Add to our array list
                 records.forEach(allRecords::add);
+
+                // We want two full poll() calls that return empty results to break the loop.
+                if (!records.isEmpty()) {
+                    // If we found records, reset our loop control variable.
+                    loopsLeft = maxEmptyLoops;
+                } else {
+                    // Otherwise decrement the loop control variable.
+                    loopsLeft--;
+                }
+
             }
-            while (!records.isEmpty());
+            while (loopsLeft > 0);
         }
 
         // return all records
