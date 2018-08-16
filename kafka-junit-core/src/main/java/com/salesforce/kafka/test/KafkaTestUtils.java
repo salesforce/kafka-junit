@@ -99,6 +99,10 @@ public class KafkaTestUtils {
         final String topicName,
         final int partitionId
     ) {
+        // Defines customized producer properties.  Ensure data written to all ISRs.
+        final Properties producerProperties = new Properties();
+        producerProperties.put("acks", "all");
+
         // This holds the records we produced
         final List<ProducerRecord<byte[], byte[]>> producedRecords = new ArrayList<>();
 
@@ -108,7 +112,7 @@ public class KafkaTestUtils {
         try (final KafkaProducer<byte[], byte[]> producer = getKafkaProducer(
             ByteArraySerializer.class,
             ByteArraySerializer.class,
-            new Properties()
+            producerProperties
         )) {
             for (final Map.Entry<byte[], byte[]> entry: keysAndValues.entrySet()) {
                 // Construct filter
