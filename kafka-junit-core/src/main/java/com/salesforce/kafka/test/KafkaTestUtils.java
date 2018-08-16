@@ -236,35 +236,6 @@ public class KafkaTestUtils {
         final Class<? extends Deserializer<K>> keyDeserializer,
         final Class<? extends Deserializer<V>> valueDeserializer
     ) {
-
-        // Pass through.
-        return consumeAllRecordsFromTopic(
-            topic,
-            partitionIds,
-            keyDeserializer,
-            valueDeserializer,
-            2000L
-        );
-    }
-
-    /**
-     * This will consume all records from the partitions passed on the given topic.
-     * @param <K> Type of key values.
-     * @param <V> Type of message values.
-     * @param topic Topic to consume from.
-     * @param partitionIds Which partitions to consume from.
-     * @param keyDeserializer How to deserialize the key values.
-     * @param valueDeserializer How to deserialize the messages.
-     * @param timeoutMs How long to wait for messages, in milliseconds.
-     * @return List of ConsumerRecords consumed.
-     */
-    public <K, V> List<ConsumerRecord<K, V>> consumeAllRecordsFromTopic(
-        final String topic,
-        final Collection<Integer> partitionIds,
-        final Class<? extends Deserializer<K>> keyDeserializer,
-        final Class<? extends Deserializer<V>> valueDeserializer,
-        final long timeoutMs
-    ) {
         // Create topic Partitions
         final List<TopicPartition> topicPartitions = partitionIds
             .stream()
@@ -287,7 +258,7 @@ public class KafkaTestUtils {
             int loopsLeft = maxEmptyLoops;
             do {
                 // Grab records from kafka
-                records = kafkaConsumer.poll(timeoutMs);
+                records = kafkaConsumer.poll(2000L);
                 logger.debug("Found {} records in kafka", records.count());
 
                 // Add to our array list
