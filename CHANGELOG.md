@@ -4,6 +4,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## UNRELEASED
 - Officially support Kafka 2.0.0
+- KafkaTestUtils.produceRecords() and its variants now set producer configuration "acks" to "all"
 - Update Kafka-JUnit5 junit dependency from 5.1.1 to JUnit 5.2.0
 
 ## 3.0.1 (06/20/2018)
