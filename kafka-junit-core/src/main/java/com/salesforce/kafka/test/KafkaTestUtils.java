@@ -99,6 +99,10 @@ public class KafkaTestUtils {
         final String topicName,
         final int partitionId
     ) {
+        // Defines customized producer properties.  Ensure data written to all ISRs.
+        final Properties producerProperties = new Properties();
+        producerProperties.put("acks", "all");
+
         // This holds the records we produced
         final List<ProducerRecord<byte[], byte[]>> producedRecords = new ArrayList<>();
 
@@ -108,7 +112,7 @@ public class KafkaTestUtils {
         try (final KafkaProducer<byte[], byte[]> producer = getKafkaProducer(
             ByteArraySerializer.class,
             ByteArraySerializer.class,
-            new Properties()
+            producerProperties
         )) {
             for (final Map.Entry<byte[], byte[]> entry: keysAndValues.entrySet()) {
                 // Construct filter
@@ -123,7 +127,7 @@ public class KafkaTestUtils {
 
             // Publish to the topic and close.
             producer.flush();
-            logger.info("Produce completed");
+            logger.debug("Produce completed");
         }
 
         // Loop thru the futures, and build KafkaRecord objects
@@ -250,15 +254,27 @@ public class KafkaTestUtils {
 
             // Pull records from kafka, keep polling until we get nothing back
             ConsumerRecords<K, V> records;
+            final int maxEmptyLoops = 2;
+            int loopsLeft = maxEmptyLoops;
             do {
                 // Grab records from kafka
                 records = kafkaConsumer.poll(2000L);
-                logger.info("Found {} records in kafka", records.count());
+                logger.debug("Found {} records in kafka", records.count());
 
                 // Add to our array list
                 records.forEach(allRecords::add);
+
+                // We want two full poll() calls that return empty results to break the loop.
+                if (!records.isEmpty()) {
+                    // If we found records, reset our loop control variable.
+                    loopsLeft = maxEmptyLoops;
+                } else {
+                    // Otherwise decrement the loop control variable.
+                    loopsLeft--;
+                }
+
             }
-            while (!records.isEmpty());
+            while (loopsLeft > 0);
         }
 
         // return all records

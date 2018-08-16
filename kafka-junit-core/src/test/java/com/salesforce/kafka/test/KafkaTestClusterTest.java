@@ -288,10 +288,20 @@ class KafkaTestClusterTest {
             // Validate it has 2 partitions
             Assertions.assertEquals(numberOfPartitions, topicDescription.partitions().size(), "Should have multiple partitions");
 
-            // Validate more than one broker owns the partitions.
+            // Validate each partition belongs to a different broker, and each partition has two ISRs.
             final Set<Integer> leaderIds = new HashSet<>();
-            topicDescription.partitions().forEach((topicPartitionInfo) -> leaderIds.add(topicPartitionInfo.leader().id()));
-            Assertions.assertEquals(numberOfBrokers, leaderIds.size(), "Should have multiple leaders");
+            for (final TopicPartitionInfo partitionInfo : topicDescription.partitions()) {
+                // Each partition should have 2 ISRs
+                Assertions.assertEquals(
+                    2,
+                    partitionInfo.isr().size(),
+                    "Partition " + partitionInfo.partition() + " missing ISR"
+                );
+
+                // Add leader Id to set.
+                leaderIds.add(partitionInfo.leader().id());
+            }
+            Assertions.assertEquals(2, leaderIds.size(), "Should have two leaders");
 
             // Attempt to publish into each partition in the topic.
             for (int partitionId = 0; partitionId < numberOfPartitions; partitionId++) {
@@ -307,7 +317,9 @@ class KafkaTestClusterTest {
             }
 
             // Stop brokerId 2.
-            kafkaTestCluster.getKafkaBrokerById(2).stop();
+            kafkaTestCluster
+                .getKafkaBrokerById(2)
+                .stop();
 
             // Consume all messages
             final List<ConsumerRecord<byte[], byte[]>> consumedRecords = testUtils.consumeAllRecordsFromTopic(topicName);
