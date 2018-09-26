@@ -1,13 +1,13 @@
 # Kafka-JUnit-Core
 
 This library wraps Apache Kafka's [KafkaServerStartable](https://github.com/apache/kafka/blob/1.1/core/src/main/scala/kafka/server/KafkaServerStartable.scala#L32) class and allows you to embed a single or multi-broker Kafka cluster within your application.  It's original
-purpose was to support the [Kafka-JUnit4](../kafka-junit4) and [Kafka-JUnit5](../kafka-junit5) use cases, but could be useful for other situations.    
+purpose was to support [Kafka-JUnit4](../kafka-junit4) and [Kafka-JUnit5](../kafka-junit5), but it could be useful for other situations.    
 
 The most obvious use case would be for starting an embedded Kafka cluster within your application.  In development environments
 for applications that depend on a multi-broker Kafka cluster, you could potentially avoid the need for a developer to manage and configure the service.  It should be noted 
 that other tools exist that may solve this problem better, such as Docker.
 
-## Example - Starting a test cluster as a command line application.
+## Example 1: Starting a 3-node test cluster as a command line application.
  
 ```java
 import com.salesforce.kafka.test.KafkaTestCluster;
@@ -73,7 +73,7 @@ public class TestClusterApplication {
 }
 ```
 
-### Example - Starting a test cluster when SpringBoot application starts
+### Example 2: Starting a 3-node test cluster when SpringBoot application starts.
 
 ```java
 import com.salesforce.kafka.test.KafkaTestCluster;
