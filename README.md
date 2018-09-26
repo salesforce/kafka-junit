@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/salesforce/kafka-junit.svg?branch=master)](https://travis-ci.org/salesforce/kafka-junit)
 
 This library wraps Apache Kafka's [KafkaServerStartable](https://github.com/apache/kafka/blob/1.1/core/src/main/scala/kafka/server/KafkaServerStartable.scala#L32) class and allows you to easily create and run tests against
-one or more "real" kafka brokers running within your tests. No longer do you need to setup and coordinate with an external kafka cluster for your tests! 
+one or more "real" kafka brokers. No longer do you need to setup and coordinate with an external kafka cluster for your tests! The library transparently supports running a single or multi-broker cluster.  Running a multi-broker cluster allows you to validate how your software reacts under various error scenarios, such as when one or more brokers become unavailable.
 
 Currently the library supports Kafka versions 2.0.x, 1.1.x, 1.0.x, and 0.11.0.x.
 
@@ -15,12 +15,10 @@ Please review [Kafka-JUnit4 Readme](kafka-junit4/) for usage instructions with J
 
 Please review [Kafka-JUnit5 Readme](kafka-junit5/) for usage instructions with JUnit5.
 
-## Changelog
+## Using Kafka-JUnit-Core.
 
-The format is based on [Keep a Changelog](http://keepachangelog.com/)
-and this project adheres to [Semantic Versioning](http://semver.org/).
+For use cases where you want to embed Kafka broker/cluster within your existing software, you can make use of the core package directly.  Please review [Kafka-JUnit-Core Readme](kafka-junit-core/) for usage instructions.
 
-[View Changelog](CHANGELOG.md)
 
 # Contributing
 
@@ -45,7 +43,6 @@ We love contributions, but it's important that your pull request adhere to some 
 - All tests must be passing!
 - All code changes require tests!
 - All code changes must be consistent with our checkstyle rules.
-- New configuration options should have proper annotations and README updates generated.
 - Great inline comments.
 
 # Other Notes
@@ -64,7 +61,14 @@ Steps for proper release:
 - Deploy to Maven Central: `mvn clean deploy -P release-kafka-junit`
 - Create release on Github project.
 
+## Changelog
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/)
+and this project adheres to [Semantic Versioning](http://semver.org/).
+
+[View Changelog](CHANGELOG.md)
+
 ## License
 
-[View License](LICENSE.txt)
+BSD 3-Clause [View License](LICENSE.txt).
  
