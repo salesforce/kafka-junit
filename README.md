@@ -17,7 +17,7 @@ Please review [Kafka-JUnit5 Readme](kafka-junit5/) for usage instructions with J
 
 ## Using Kafka-JUnit-Core.
 
-For use cases where you want to start an embed Kafka broker/cluster within your existing software, you can make use of the core package.  Please review [Kafka-JUnit-Core Readme](kafka-junit-core/) for usage instructions.
+For use cases where you want to embed Kafka broker/cluster within your existing software, you can make use of the core package directly.  Please review [Kafka-JUnit-Core Readme](kafka-junit-core/) for usage instructions.
 
 
 # Contributing
