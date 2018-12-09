@@ -28,8 +28,16 @@ package com.salesforce.kafka.test;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
 import org.apache.curator.test.InstanceSpec;
+import org.apache.kafka.common.config.SaslConfigs;
+import org.apache.kafka.common.config.internals.BrokerSecurityConfigs;
 
+import org.apache.kafka.common.security.JaasUtils;
+
+import javax.security.auth.login.AppConfigurationEntry;
+import javax.security.auth.login.Configuration;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -237,6 +245,49 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
             setPropertyIfNotSet(brokerProperties, "status.storage.replication.factor", "1");
             setPropertyIfNotSet(brokerProperties, "default.replication.factor", "1");
 
+            // If we want to enable SASL PLAIN
+            final String enableSasl = overrideBrokerProperties.getProperty("KAFKA-JUNIT.SASL.ENABLE", "false");
+            if (enableSasl.equalsIgnoreCase("true")) {
+
+                // Define sasl plain port
+                final int saslPlainPort = brokerPort + 1;
+
+                // Append PLAINTEXT SASL listeners
+                appendProperty(
+                    brokerProperties,
+                    "advertised.listeners",
+                    "SASL_PLAINTEXT://" + getConfiguredHostname() + ":" + saslPlainPort
+                );
+                appendProperty(
+                    brokerProperties,
+                    "listeners",
+                    "SASL_PLAINTEXT://" + getConfiguredHostname() + ":" + saslPlainPort
+                );
+
+                setPropertyIfNotSet(brokerProperties, "allow.everyone.if.no.acl.found", "true");
+                setPropertyIfNotSet(brokerProperties, "authorizer.class.name", "kafka.security.auth.SimpleAclAuthorizer");
+                appendProperty(brokerProperties, "sasl.enabled.mechanisms", "PLAIN");
+                setPropertyIfNotSet(brokerProperties, "super.users", "User:admin");
+
+                javax.security.auth.login.Configuration.setConfiguration(new Configuration() {
+                    @Override
+                    public AppConfigurationEntry[] getAppConfigurationEntry(final String name) {
+                        AppConfigurationEntry[] entries = new AppConfigurationEntry[2];
+                        final Map kafkaOptions = new HashMap<>();
+                        kafkaOptions.put("username", "admin");
+                        kafkaOptions.put("password", "admin-secret");
+                        kafkaOptions.put("user_kafkaclient", "client-secret");
+
+                        final Map zkOptions = new HashMap<>();
+                        zkOptions.put("username", "zooclient");
+                        zkOptions.put("password", "client-secret");
+                        entries[0] = new AppConfigurationEntry("org.apache.kafka.common.security.plain.PlainLoginModule", AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, kafkaOptions);
+                        entries[1] = new AppConfigurationEntry("org.apache.zookeeper.server.auth.DigestLoginModule", AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, zkOptions);
+                        return entries;
+                    }
+                });
+            }
+
             // Retain the brokerConfig.
             brokerConfig = new KafkaConfig(brokerProperties);
 
@@ -300,6 +351,24 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
         );
 
         // Return the value that is being used.
+        return properties.get(key);
+    }
+
+    private Object appendProperty(final Properties properties, final String key, final String appendValue) {
+        // Validate inputs
+        if (properties == null) {
+            throw new NullPointerException("properties argument cannot be null.");
+        }
+        if (key == null) {
+            throw new NullPointerException("key argument cannot be null.");
+        }
+
+        String originalValue = properties.getProperty(key);
+        if (originalValue != null && !originalValue.isEmpty()) {
+            originalValue = originalValue + ", ";
+        }
+        properties.setProperty(key, originalValue + appendValue);
+
         return properties.get(key);
     }
 

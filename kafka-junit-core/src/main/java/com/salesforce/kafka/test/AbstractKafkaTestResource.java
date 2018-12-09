@@ -108,6 +108,23 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
     }
 
     /**
+     * Enable SASL listeners.
+     * @return SharedKafkaTestResource instance for method chaining.
+     * @throws IllegalArgumentException if name argument is null.
+     * @throws IllegalStateException if method called after service has started.
+     */
+    @SuppressWarnings("unchecked")
+    public T configureSasl() {
+        // Validate state.
+        validateState(false, "Cannot enable after service has started.");
+
+        // Enable?
+        withBrokerProperty("KAFKA-JUNIT.SASL.ENABLE", "true");
+
+        return (T) this;
+    }
+
+    /**
      * KafkaTestUtils is a collection of re-usable/common access patterns for interacting with the Kafka cluster.
      * @return Instance of KafkaTestUtils configured to operate on the Kafka cluster.
      */
