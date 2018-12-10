@@ -25,6 +25,9 @@
 
 package com.salesforce.kafka.test;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -46,6 +49,11 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
      * How many brokers to put into the cluster.
      */
     private int numberOfBrokers = 1;
+
+    /**
+     * Contains registered listeners.
+     */
+    private final List<RegisterListener> registeredListeners = new ArrayList<>();
 
     /**
      * Default constructor.
@@ -108,19 +116,16 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
     }
 
     /**
-     * Enable SASL listeners.
-     * @return SharedKafkaTestResource instance for method chaining.
-     * @throws IllegalArgumentException if name argument is null.
-     * @throws IllegalStateException if method called after service has started.
+     * Register additional listeners on the kafka brokers.
+     * @param listener listener instance to register.
+     * @return SharedKafkaTestResource for method chaining.
      */
     @SuppressWarnings("unchecked")
-    public T configureSasl() {
-        // Validate state.
-        validateState(false, "Cannot enable after service has started.");
-
-        // Enable?
-        withBrokerProperty("KAFKA-JUNIT.SASL.ENABLE", "true");
-
+    public T registerListener(final RegisterListener listener) {
+        if (listener == null) {
+            throw new IllegalArgumentException("Listener argument may not be null.");
+        }
+        registeredListeners.add(listener);
         return (T) this;
     }
 
@@ -159,6 +164,15 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
     public KafkaBrokers getKafkaBrokers() {
         validateState(true, "Cannot access Kafka before service has been started.");
         return kafkaCluster.getKafkaBrokers();
+    }
+
+    /**
+     * @return List of all registered listeners.
+     */
+    protected List<RegisterListener> getRegisteredListeners() {
+        return Collections.unmodifiableList(
+            new ArrayList<>(registeredListeners)
+        );
     }
 
     protected KafkaCluster getKafkaCluster() {

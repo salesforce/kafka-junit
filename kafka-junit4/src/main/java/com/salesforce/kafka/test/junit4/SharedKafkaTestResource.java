@@ -74,7 +74,11 @@ public class SharedKafkaTestResource extends AbstractKafkaTestResource<SharedKaf
             throw new IllegalStateException("Unknown State!  Kafka Test Server already exists!");
         }
         // Setup kafka test server
-        setKafkaCluster(new KafkaTestCluster(getNumberOfBrokers(), getBrokerProperties()));
+        setKafkaCluster(new KafkaTestCluster(
+            getNumberOfBrokers(),
+            getBrokerProperties(),
+            getRegisteredListeners()
+        ));
         getKafkaCluster().start();
     }
 

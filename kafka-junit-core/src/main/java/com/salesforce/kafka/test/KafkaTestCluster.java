@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
@@ -66,6 +67,8 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      */
     private final Properties overrideBrokerProperties = new Properties();
 
+    private final List<RegisterListener> registeredListeners;
+
     /**
      * List containing all of the brokers in the cluster.  Since each broker is quickly accessible via it's 'brokerId' property
      * by simply removing 1 from it's id and using it as the index into the list.
@@ -79,7 +82,7 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      * @param numberOfBrokers How many brokers you want in your Kafka cluster.
      */
     public KafkaTestCluster(final int numberOfBrokers) {
-        this(numberOfBrokers, new Properties());
+        this(numberOfBrokers, new Properties(), new ArrayList<>());
     }
 
     /**
@@ -88,6 +91,16 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      * @param overrideBrokerProperties Define Kafka broker properties.
      */
     public KafkaTestCluster(final int numberOfBrokers, final Properties overrideBrokerProperties) {
+        this(numberOfBrokers, overrideBrokerProperties, new ArrayList<>());
+    }
+
+    /**
+     * Constructor.
+     * @param numberOfBrokers How many brokers you want in your Kafka cluster.
+     * @param overrideBrokerProperties Define Kafka broker properties.
+     * @param listeners List of listeners to register on each broker.
+     */
+    public KafkaTestCluster(final int numberOfBrokers, final Properties overrideBrokerProperties, final Collection<RegisterListener> listeners) {
         if (numberOfBrokers <= 0) {
             throw new IllegalArgumentException("numberOfBrokers argument must be 1 or larger.");
         }
@@ -95,9 +108,18 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
             throw new IllegalArgumentException("overrideBrokerProperties argument must not be null.");
         }
 
+        final List<RegisterListener> registerListeners = new ArrayList<>();
+        if (listeners == null || listeners.isEmpty()) {
+            // If we have no listeners defined, use default plain listener.
+            registerListeners.add(new PlainListener());
+        } else {
+            registerListeners.addAll(listeners);
+        }
+
         // Save references.
         this.numberOfBrokers = numberOfBrokers;
         this.overrideBrokerProperties.putAll(overrideBrokerProperties);
+        this.registeredListeners = Collections.unmodifiableList(registerListeners);
     }
 
     /**
@@ -124,7 +146,7 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
 
                 // Create new KafkaTestServer and add to our broker list
                 brokers.add(
-                    new KafkaTestServer(brokerProperties, zkTestServer)
+                    new KafkaTestServer(brokerProperties, zkTestServer, registeredListeners)
                 );
             }
         }

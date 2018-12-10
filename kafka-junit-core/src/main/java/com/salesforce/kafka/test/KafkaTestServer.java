@@ -28,16 +28,11 @@ package com.salesforce.kafka.test;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
 import org.apache.curator.test.InstanceSpec;
-import org.apache.kafka.common.config.SaslConfigs;
-import org.apache.kafka.common.config.internals.BrokerSecurityConfigs;
 
-import org.apache.kafka.common.security.JaasUtils;
-
-import javax.security.auth.login.AppConfigurationEntry;
-import javax.security.auth.login.Configuration;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -56,11 +51,6 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      * Internal Test Kafka service.
      */
     private KafkaServerStartable broker;
-
-    /**
-     * Random Generated Kafka Port to listen on.
-     */
-    private int brokerPort;
 
     /**
      * Holds the broker configuration.
@@ -82,6 +72,10 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      */
     private final Properties overrideBrokerProperties = new Properties();
 
+    private final List<RegisterListener> registeredListeners;
+
+    private final List<String> connectStrings = new ArrayList<>();
+
     /**
      * Default constructor, no overridden broker properties.
      */
@@ -90,17 +84,12 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     }
 
     /**
-     * Alternative constructor allowing override of advertised host.
-     * @param localHostname What IP or hostname to advertise services on.
-     * @deprecated Replaced with constructor: KafkaTestServer(final Properties overrideBrokerProperties)
-     *             Set "host.name" property to the hostname you want kafka to listen on.
+     * Alternative constructor allowing override of brokerProperties.
+     * @param overrideBrokerProperties Define Kafka broker properties.
+     * @throws IllegalArgumentException if overrideBrokerProperties argument is null.
      */
-    @Deprecated
-    public KafkaTestServer(final String localHostname) {
-        this(new Properties());
-
-        // Configure passed in hostname in broker properties.
-        overrideBrokerProperties.put("host.name", localHostname);
+    public KafkaTestServer(final Properties overrideBrokerProperties) throws IllegalArgumentException {
+        this(overrideBrokerProperties, new ArrayList<>());
     }
 
     /**
@@ -108,14 +97,22 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      * @param overrideBrokerProperties Define Kafka broker properties.
      * @throws IllegalArgumentException if overrideBrokerProperties argument is null.
      */
-    public KafkaTestServer(final Properties overrideBrokerProperties) throws IllegalArgumentException {
+    public KafkaTestServer(final Properties overrideBrokerProperties, final Collection<RegisterListener> listeners) throws IllegalArgumentException {
         // Validate argument.
         if (overrideBrokerProperties == null) {
             throw new IllegalArgumentException("Cannot pass null overrideBrokerProperties argument.");
         }
 
+        final List<RegisterListener> registerListeners = new ArrayList<>();
+        if (listeners == null || listeners.isEmpty()) {
+            registerListeners.add(new PlainListener());
+        } else {
+            registerListeners.addAll(listeners);
+        }
+
         // Add passed in properties.
         this.overrideBrokerProperties.putAll(overrideBrokerProperties);
+        this.registeredListeners = Collections.unmodifiableList(new ArrayList<>(registerListeners));
     }
 
     /**
@@ -123,8 +120,8 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      * @param overrideBrokerProperties Define Kafka broker properties.
      * @param zookeeperTestServer Zookeeper server instance to use.
      */
-    KafkaTestServer(final Properties overrideBrokerProperties, final ZookeeperTestServer zookeeperTestServer) {
-        this(overrideBrokerProperties);
+    KafkaTestServer(final Properties overrideBrokerProperties, final ZookeeperTestServer zookeeperTestServer, final Collection<RegisterListener> listeners) {
+        this(overrideBrokerProperties, listeners);
 
         // If instance is passed,
         if (zookeeperTestServer != null) {
@@ -142,7 +139,9 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     @Override
     public String getKafkaConnectString() {
         validateState(true, "Cannot get connect string prior to service being started.");
-        return getConfiguredHostname() + ":" + brokerPort;
+
+        // Return the list.
+        return String.join(",", connectStrings);
     }
 
     /**
@@ -206,23 +205,14 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
             // Put required zookeeper connection properties.
             setPropertyIfNotSet(brokerProperties, "zookeeper.connect", zookeeperTestServer.getConnectString());
 
-            // Conditionally generate a port for kafka to use if not already defined.
-            brokerPort = Integer.parseInt(
-                (String) setPropertyIfNotSet(brokerProperties, "port", String.valueOf(InstanceSpec.getRandomPort()))
-            );
-
             // If log.dir is not set.
             if (brokerProperties.getProperty("log.dir") == null) {
                 // Create temp path to store logs and set property.
                 brokerProperties.setProperty("log.dir", Utils.createTempDirectory().getAbsolutePath());
             }
 
-            // Ensure that we're advertising appropriately
+            // Ensure that we're advertising correct hostname appropriately
             setPropertyIfNotSet(brokerProperties, "host.name", getConfiguredHostname());
-            setPropertyIfNotSet(brokerProperties, "advertised.host.name", getConfiguredHostname());
-            setPropertyIfNotSet(brokerProperties, "advertised.port", String.valueOf(brokerPort));
-            setPropertyIfNotSet(brokerProperties, "advertised.listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + brokerPort);
-            setPropertyIfNotSet(brokerProperties, "listeners", "PLAINTEXT://" + getConfiguredHostname() + ":" + brokerPort);
 
             // Set other defaults if not defined.
             setPropertyIfNotSet(brokerProperties, "auto.create.topics.enable", "true");
@@ -245,47 +235,28 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
             setPropertyIfNotSet(brokerProperties, "status.storage.replication.factor", "1");
             setPropertyIfNotSet(brokerProperties, "default.replication.factor", "1");
 
-            // If we want to enable SASL PLAIN
-            final String enableSasl = overrideBrokerProperties.getProperty("KAFKA-JUNIT.SASL.ENABLE", "false");
-            if (enableSasl.equalsIgnoreCase("true")) {
+            // Loop over registered listeners and add each
+            for (final RegisterListener listener : registeredListeners) {
+                int port = listener.getAdvertisedPort();
+                if (port == 0) {
+                    port = InstanceSpec.getRandomPort();
+                }
 
-                // Define sasl plain port
-                final int saslPlainPort = brokerPort + 1;
+                connectStrings.add(getConfiguredHostname() + ":" + port);
 
-                // Append PLAINTEXT SASL listeners
                 appendProperty(
                     brokerProperties,
                     "advertised.listeners",
-                    "SASL_PLAINTEXT://" + getConfiguredHostname() + ":" + saslPlainPort
+                    listener.getAdvertisedListener() + "://" + getConfiguredHostname() + ":" + port
                 );
                 appendProperty(
                     brokerProperties,
                     "listeners",
-                    "SASL_PLAINTEXT://" + getConfiguredHostname() + ":" + saslPlainPort
+                    listener.getAdvertisedListener() + "://" + getConfiguredHostname() + ":" + port
                 );
 
-                setPropertyIfNotSet(brokerProperties, "allow.everyone.if.no.acl.found", "true");
-                setPropertyIfNotSet(brokerProperties, "authorizer.class.name", "kafka.security.auth.SimpleAclAuthorizer");
-                appendProperty(brokerProperties, "sasl.enabled.mechanisms", "PLAIN");
-                setPropertyIfNotSet(brokerProperties, "super.users", "User:admin");
-
-                javax.security.auth.login.Configuration.setConfiguration(new Configuration() {
-                    @Override
-                    public AppConfigurationEntry[] getAppConfigurationEntry(final String name) {
-                        AppConfigurationEntry[] entries = new AppConfigurationEntry[2];
-                        final Map kafkaOptions = new HashMap<>();
-                        kafkaOptions.put("username", "admin");
-                        kafkaOptions.put("password", "admin-secret");
-                        kafkaOptions.put("user_kafkaclient", "client-secret");
-
-                        final Map zkOptions = new HashMap<>();
-                        zkOptions.put("username", "zooclient");
-                        zkOptions.put("password", "client-secret");
-                        entries[0] = new AppConfigurationEntry("org.apache.kafka.common.security.plain.PlainLoginModule", AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, kafkaOptions);
-                        entries[1] = new AppConfigurationEntry("org.apache.zookeeper.server.auth.DigestLoginModule", AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, zkOptions);
-                        return entries;
-                    }
-                });
+                // Apply other options
+                brokerProperties.putAll(listener.getProperties());
             }
 
             // Retain the brokerConfig.
@@ -366,6 +337,8 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
         String originalValue = properties.getProperty(key);
         if (originalValue != null && !originalValue.isEmpty()) {
             originalValue = originalValue + ", ";
+        } else {
+            originalValue = "";
         }
         properties.setProperty(key, originalValue + appendValue);
 

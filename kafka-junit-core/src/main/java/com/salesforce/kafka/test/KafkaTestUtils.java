@@ -522,6 +522,7 @@ public class KafkaTestUtils {
         final Map<String, Object> defaultClientConfig = new HashMap<>();
         defaultClientConfig.put("bootstrap.servers", kafkaProvider.getKafkaConnectString());
         defaultClientConfig.put("client.id", "test-consumer-id");
+        defaultClientConfig.put("request.timeout.ms", 15000);
         return defaultClientConfig;
     }
 }

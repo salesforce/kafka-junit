@@ -2,6 +2,8 @@ package com.salesforce.kafka.test.junit4;
 
 import com.salesforce.kafka.test.KafkaBroker;
 import com.salesforce.kafka.test.KafkaTestUtils;
+import com.salesforce.kafka.test.PlainListener;
+import com.salesforce.kafka.test.SslListener;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -23,11 +25,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -46,10 +46,18 @@ public class SharedKafkaTestResourceWithSaslTest {
     @ClassRule
     public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
         // Start a cluster with 2 brokers.
-        .withBrokers(2)
+        .withBrokers(1)
         // Disable topic auto-creation.
         .withBrokerProperty("auto.create.topics.enable", "false")
-        .configureSasl();
+        .registerListener(new SslListener()
+            .useSslForInterBrokerProtocol()
+            .withAutoAssignedPort()
+            .withKeyStoreLocation(SharedKafkaTestResourceWithSaslTest.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
+            .withKeyStorePassword("password")
+            .withTrustStoreLocation(SharedKafkaTestResourceWithSaslTest.class.getClassLoader().getResource("kafka.truststore.jks").getFile())
+            .withTrustStorePassword("password")
+            .withKeyPassword("password")
+        );
 
     /**
      * Validate that we started 2 brokers.
