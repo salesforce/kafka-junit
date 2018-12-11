@@ -1,10 +1,9 @@
-package com.salesforce.kafka.test;
+package com.salesforce.kafka.test.listeners;
 
 import java.util.Properties;
 
-public class SslListener implements RegisterListener {
+public class SslListener implements BrokerListener {
 
-    private String advertisedHost = "127.0.0.1";
     private int advertisedPort = 0;
     private String trustStoreFile = "";
     private String trustStorePassword = "";
@@ -13,11 +12,6 @@ public class SslListener implements RegisterListener {
     private String keyPassword = "";
     private boolean useSslForInterBrokerCommunications = true;
     private String clientAuth = "requested";
-
-    public SslListener withAdvertisedHost(final String host) {
-        this.advertisedHost = host;
-        return this;
-    }
 
     public SslListener withAutoAssignedPort() {
         advertisedPort = 0;
@@ -74,9 +68,8 @@ public class SslListener implements RegisterListener {
         return this;
     }
 
-
     @Override
-    public String getAdvertisedListener() {
+    public String getProtocol() {
         return "SSL";
     }
 
@@ -86,7 +79,7 @@ public class SslListener implements RegisterListener {
     }
 
     @Override
-    public Properties getProperties() {
+    public Properties getBrokerProperties() {
         final Properties properties = new Properties();
         properties.put("ssl.truststore.location", trustStoreFile);
         properties.put("ssl.truststore.password", trustStorePassword);

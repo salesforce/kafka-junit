@@ -25,6 +25,8 @@
 
 package com.salesforce.kafka.test;
 
+import com.salesforce.kafka.test.listeners.BrokerListener;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -53,7 +55,7 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
     /**
      * Contains registered listeners.
      */
-    private final List<RegisterListener> registeredListeners = new ArrayList<>();
+    private final List<BrokerListener> registeredListeners = new ArrayList<>();
 
     /**
      * Default constructor.
@@ -121,7 +123,7 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
      * @return SharedKafkaTestResource for method chaining.
      */
     @SuppressWarnings("unchecked")
-    public T registerListener(final RegisterListener listener) {
+    public T registerListener(final BrokerListener listener) {
         if (listener == null) {
             throw new IllegalArgumentException("Listener argument may not be null.");
         }
@@ -169,7 +171,7 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
     /**
      * @return List of all registered listeners.
      */
-    protected List<RegisterListener> getRegisteredListeners() {
+    protected List<BrokerListener> getRegisteredListeners() {
         return Collections.unmodifiableList(
             new ArrayList<>(registeredListeners)
         );

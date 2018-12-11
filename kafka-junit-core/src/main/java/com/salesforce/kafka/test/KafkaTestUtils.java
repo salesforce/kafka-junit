@@ -526,25 +526,12 @@ public class KafkaTestUtils {
         defaultClientConfig.put("client.id", "test-consumer-id");
         defaultClientConfig.put("request.timeout.ms", 15000);
 
-        //// If connecting to SSL enabled cluster
+        // Apply client properties as defined by registered listeners.
         final Properties clientProperties = kafkaProvider.getConnectionProperties().getClientProperties();
         clientProperties.forEach((key, value) -> {
             defaultClientConfig.put((String) key, value);
         });
 
-//        if (kafkaConnectString.contains("SSL://")) {
-//            // Apply properties.
-//            defaultClientConfig.put("security.protocol", "SSL");
-//            defaultClientConfig.put("ssl.truststore.location", "");
-//            defaultClientConfig.put("ssl.truststore.password", "");
-//            defaultClientConfig.put("ssl.keystore.location", "");
-//            defaultClientConfig.put("ssl.keystore.password", "");
-//            defaultClientConfig.put("ssl.key.password", "");
-//        }
-
         return defaultClientConfig;
-
-
-
     }
 }

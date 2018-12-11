@@ -25,6 +25,8 @@
 
 package com.salesforce.kafka.test;
 
+import com.salesforce.kafka.test.listeners.PlainListener;
+import com.salesforce.kafka.test.listeners.BrokerListener;
 import org.apache.kafka.common.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +69,7 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      */
     private final Properties overrideBrokerProperties = new Properties();
 
-    private final List<RegisterListener> registeredListeners;
+    private final List<BrokerListener> registeredListeners;
 
     /**
      * List containing all of the brokers in the cluster.  Since each broker is quickly accessible via it's 'brokerId' property
@@ -100,7 +102,7 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      * @param overrideBrokerProperties Define Kafka broker properties.
      * @param listeners List of listeners to register on each broker.
      */
-    public KafkaTestCluster(final int numberOfBrokers, final Properties overrideBrokerProperties, final Collection<RegisterListener> listeners) {
+    public KafkaTestCluster(final int numberOfBrokers, final Properties overrideBrokerProperties, final Collection<BrokerListener> listeners) {
         if (numberOfBrokers <= 0) {
             throw new IllegalArgumentException("numberOfBrokers argument must be 1 or larger.");
         }
@@ -108,18 +110,18 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
             throw new IllegalArgumentException("overrideBrokerProperties argument must not be null.");
         }
 
-        final List<RegisterListener> registerListeners = new ArrayList<>();
+        final List<BrokerListener> brokerListeners = new ArrayList<>();
         if (listeners == null || listeners.isEmpty()) {
             // If we have no listeners defined, use default plain listener.
-            registerListeners.add(new PlainListener());
+            brokerListeners.add(new PlainListener());
         } else {
-            registerListeners.addAll(listeners);
+            brokerListeners.addAll(listeners);
         }
 
         // Save references.
         this.numberOfBrokers = numberOfBrokers;
         this.overrideBrokerProperties.putAll(overrideBrokerProperties);
-        this.registeredListeners = Collections.unmodifiableList(registerListeners);
+        this.registeredListeners = Collections.unmodifiableList(brokerListeners);
     }
 
     /**

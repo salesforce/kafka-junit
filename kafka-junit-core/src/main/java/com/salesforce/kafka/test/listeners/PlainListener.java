@@ -1,29 +1,30 @@
-package com.salesforce.kafka.test;
+package com.salesforce.kafka.test.listeners;
 
 import java.util.Properties;
 
-public class SaslListener implements RegisterListener {
+public class PlainListener implements BrokerListener {
+
     private String advertisedHost = "127.0.0.1";
     private int advertisedPort = 0;
 
-    public SaslListener withAdvertisedHost(final String host) {
+    public PlainListener withAdvertisedHost(final String host) {
         this.advertisedHost = host;
         return this;
     }
 
-    public SaslListener withAutoAssignedPort() {
+    public PlainListener withAutoAssignedPort() {
         advertisedPort = 0;
         return this;
     }
 
-    public SaslListener withAssignedPort(final int port) {
+    public PlainListener withAssignedPort(final int port) {
         advertisedPort = port;
         return this;
     }
 
     @Override
-    public String getAdvertisedListener() {
-        return "SASL_PLAIN";
+    public String getProtocol() {
+        return "PLAINTEXT";
     }
 
     @Override
@@ -32,10 +33,8 @@ public class SaslListener implements RegisterListener {
     }
 
     @Override
-    public Properties getProperties() {
-        final Properties properties = new Properties();
-        // TODO
-        return properties;
+    public Properties getBrokerProperties() {
+        return new Properties();
     }
 
     @Override

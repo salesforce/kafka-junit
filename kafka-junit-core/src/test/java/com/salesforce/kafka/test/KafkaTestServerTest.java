@@ -25,6 +25,10 @@
 
 package com.salesforce.kafka.test;
 
+import com.salesforce.kafka.test.listeners.BrokerListener;
+import com.salesforce.kafka.test.listeners.PlainListener;
+import com.salesforce.kafka.test.listeners.SaslPlainListener;
+import com.salesforce.kafka.test.listeners.SslListener;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -37,11 +41,15 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Future;
+import java.util.stream.Stream;
 
 /**
  * Validation tests against KafkaTestServer class.
@@ -315,4 +323,62 @@ class KafkaTestServerTest {
             Assertions.assertEquals(expectedMsgCount, records.size(), "Should have found 2 records.");
         }
     }
+
+    @ParameterizedTest
+    @MethodSource("provideListeners")
+    void testCustomizedListeners(final List<BrokerListener> listeners) throws Exception {
+        final String topicName = "testRestartingBroker-" + System.currentTimeMillis();
+        final int expectedMsgCount = 2;
+
+        final Properties overrideProperties = new Properties();
+
+        // Create our test server instance
+        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer(overrideProperties, listeners)) {
+            // Start broker
+            kafkaTestServer.start();
+
+            // Create KafkaTestUtils
+            final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestServer);
+
+            // Create topic
+            kafkaTestUtils.createTopic(topicName, 1, (short) 1);
+
+            // Publish 2 messages into topic
+            kafkaTestUtils.produceRecords(expectedMsgCount, topicName, 0);
+
+            // Sanity test - Consume the messages back out before shutting down broker.
+            final List<ConsumerRecord<byte[], byte[]>> records = kafkaTestUtils.consumeAllRecordsFromTopic(topicName);
+            Assertions.assertNotNull(records);
+            Assertions.assertEquals(expectedMsgCount, records.size(), "Should have found 2 records.");
+
+            // Call stop/close on the broker
+            kafkaTestServer.stop();
+        }
+    }
+
+    private static Stream<Arguments> provideListeners() {
+        // Create default plain listener
+        final BrokerListener plainListener = new PlainListener();
+
+        // Create SSL listener
+        final BrokerListener sslListener = new SslListener()
+                .useSslForInterBrokerProtocol()
+                .withAutoAssignedPort()
+                .withKeyStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
+                .withKeyStorePassword("password")
+                .withTrustStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.truststore.jks").getFile())
+                .withTrustStorePassword("password")
+                .withKeyPassword("password");
+
+        // Create sasl listener.
+        final BrokerListener saslListener = new SaslPlainListener();
+
+        return Stream.of(
+//            Arguments.of(Collections.singletonList(plainListener)),
+//            Arguments.of(Collections.singletonList(sslListener)),
+            Arguments.of(Collections.singletonList(saslListener))
+        );
+    }
+
+
 }

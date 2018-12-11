@@ -25,6 +25,8 @@
 
 package com.salesforce.kafka.test;
 
+import com.salesforce.kafka.test.listeners.PlainListener;
+import com.salesforce.kafka.test.listeners.BrokerListener;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
 import org.apache.curator.test.InstanceSpec;
@@ -73,7 +75,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      */
     private final Properties overrideBrokerProperties = new Properties();
 
-    private final List<RegisterListener> registeredListeners;
+    private final List<BrokerListener> registeredListeners;
 
     private final List<ConnectionProperties> connectionProperties = new ArrayList<>();
 
@@ -98,22 +100,22 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      * @param overrideBrokerProperties Define Kafka broker properties.
      * @throws IllegalArgumentException if overrideBrokerProperties argument is null.
      */
-    public KafkaTestServer(final Properties overrideBrokerProperties, final Collection<RegisterListener> listeners) throws IllegalArgumentException {
+    public KafkaTestServer(final Properties overrideBrokerProperties, final Collection<BrokerListener> listeners) throws IllegalArgumentException {
         // Validate argument.
         if (overrideBrokerProperties == null) {
             throw new IllegalArgumentException("Cannot pass null overrideBrokerProperties argument.");
         }
 
-        final List<RegisterListener> registerListeners = new ArrayList<>();
+        final List<BrokerListener> brokerListeners = new ArrayList<>();
         if (listeners == null || listeners.isEmpty()) {
-            registerListeners.add(new PlainListener());
+            brokerListeners.add(new PlainListener());
         } else {
-            registerListeners.addAll(listeners);
+            brokerListeners.addAll(listeners);
         }
 
         // Add passed in properties.
         this.overrideBrokerProperties.putAll(overrideBrokerProperties);
-        this.registeredListeners = Collections.unmodifiableList(new ArrayList<>(registerListeners));
+        this.registeredListeners = Collections.unmodifiableList(new ArrayList<>(brokerListeners));
     }
 
     /**
@@ -121,7 +123,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      * @param overrideBrokerProperties Define Kafka broker properties.
      * @param zookeeperTestServer Zookeeper server instance to use.
      */
-    KafkaTestServer(final Properties overrideBrokerProperties, final ZookeeperTestServer zookeeperTestServer, final Collection<RegisterListener> listeners) {
+    KafkaTestServer(final Properties overrideBrokerProperties, final ZookeeperTestServer zookeeperTestServer, final Collection<BrokerListener> listeners) {
         this(overrideBrokerProperties, listeners);
 
         // If instance is passed,
@@ -244,20 +246,20 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
             setPropertyIfNotSet(brokerProperties, "default.replication.factor", "1");
 
             // Loop over registered listeners and add each
-            for (final RegisterListener listener : registeredListeners) {
+            for (final BrokerListener listener : registeredListeners) {
                 int port = listener.getAdvertisedPort();
                 if (port == 0) {
                     port = InstanceSpec.getRandomPort();
                 }
 
-                final String listenerDefinition = listener.getAdvertisedListener() + "://" + getConfiguredHostname() + ":" + port;
+                final String listenerDefinition = listener.getProtocol() + "://" + getConfiguredHostname() + ":" + port;
                 connectionProperties.add(new ConnectionProperties(listenerDefinition, listener.getClientProperties()));
 
                 appendProperty(brokerProperties, "advertised.listeners", listenerDefinition);
                 appendProperty(brokerProperties,"listeners", listenerDefinition);
 
                 // Apply other options
-                brokerProperties.putAll(listener.getProperties());
+                brokerProperties.putAll(listener.getBrokerProperties());
             }
 
             // Retain the brokerConfig.
