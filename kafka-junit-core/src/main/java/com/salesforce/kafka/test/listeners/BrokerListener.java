@@ -30,20 +30,18 @@ import java.util.Properties;
 /**
  * This interface allows the caller to define and register a Listener on a Kafka Broker.
  * @see PlainListener for plaintext listeners (Default).
- * @see SaslPlainListener for SASL auth listeners.
  * @see SslListener for SSL auth listeners.
+ * @see SaslPlainListener for SASL auth listeners.
+ * @see SaslSslListener for SASL+SSL auth listeners.
  */
 public interface BrokerListener {
+
     /**
+     * Returns the protocol name for the listener.
+     * Examples being PLAINTEXT, SSL, SASL_PLAINTEXT, SASL_SSL
      * @return Protocol name.
      */
     String getProtocol();
-
-    /**
-     * TODO remove this?
-     * @return the port this listener is registered on.  If 0 is returned, a port will automatically be assigned.
-     */
-    int getAdvertisedPort();
 
     /**
      * Define the properties required on the broker for this listener implementation.

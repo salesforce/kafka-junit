@@ -102,7 +102,11 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      * @param overrideBrokerProperties Define Kafka broker properties.
      * @param listeners List of listeners to register on each broker.
      */
-    public KafkaTestCluster(final int numberOfBrokers, final Properties overrideBrokerProperties, final Collection<BrokerListener> listeners) {
+    public KafkaTestCluster(
+        final int numberOfBrokers,
+        final Properties overrideBrokerProperties,
+        final Collection<BrokerListener> listeners
+    ) {
         if (numberOfBrokers <= 0) {
             throw new IllegalArgumentException("numberOfBrokers argument must be 1 or larger.");
         }

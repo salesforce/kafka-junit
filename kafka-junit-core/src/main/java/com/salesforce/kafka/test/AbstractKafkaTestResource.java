@@ -169,6 +169,7 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
     }
 
     /**
+     * Returns all registered listeners.
      * @return List of all registered listeners.
      */
     protected List<BrokerListener> getRegisteredListeners() {

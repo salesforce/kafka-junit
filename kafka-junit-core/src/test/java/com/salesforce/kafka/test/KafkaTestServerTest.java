@@ -28,6 +28,7 @@ package com.salesforce.kafka.test;
 import com.salesforce.kafka.test.listeners.BrokerListener;
 import com.salesforce.kafka.test.listeners.PlainListener;
 import com.salesforce.kafka.test.listeners.SaslPlainListener;
+import com.salesforce.kafka.test.listeners.SaslSslListener;
 import com.salesforce.kafka.test.listeners.SslListener;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -362,23 +363,35 @@ class KafkaTestServerTest {
 
         // Create SSL listener
         final BrokerListener sslListener = new SslListener()
-                .useSslForInterBrokerProtocol()
-                .withAutoAssignedPort()
-                .withKeyStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
-                .withKeyStorePassword("password")
-                .withTrustStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.truststore.jks").getFile())
-                .withTrustStorePassword("password")
-                .withKeyPassword("password");
+            .useSslForInterBrokerProtocol()
+            .withAutoAssignedPort()
+            .withKeyStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
+            .withKeyStorePassword("password")
+            .withTrustStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.truststore.jks").getFile())
+            .withTrustStorePassword("password")
+            .withKeyPassword("password");
 
-        // Create sasl listener.
-        final BrokerListener saslListener = new SaslPlainListener();
+        // Create SASL_PLAIN listener.
+        final BrokerListener saslPlainListener = new SaslPlainListener()
+            .withUsername("kafkaclient")
+            .withPassword("client-secret");
+
+        // Create SASL_SSL listener
+        final BrokerListener saslSslListener = new SaslSslListener()
+            .withUsername("kafkaclient")
+            .withPassword("client-secret")
+            .withAutoAssignedPort()
+            .withKeyStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
+            .withKeyStorePassword("password")
+            .withTrustStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.truststore.jks").getFile())
+            .withTrustStorePassword("password")
+            .withKeyPassword("password");
 
         return Stream.of(
-//            Arguments.of(Collections.singletonList(plainListener)),
-//            Arguments.of(Collections.singletonList(sslListener)),
-            Arguments.of(Collections.singletonList(saslListener))
+            Arguments.of(Collections.singletonList(plainListener)),
+            Arguments.of(Collections.singletonList(sslListener)),
+            Arguments.of(Collections.singletonList(saslPlainListener)),
+            Arguments.of(Collections.singletonList(saslSslListener))
         );
     }
-
-
 }

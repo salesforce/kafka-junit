@@ -112,5 +112,12 @@
                 </configuration>
             </plugin>
         </plugins>
+
+        <!-- Include Kafka-JUnit-Core test resource directory -->
+        <testResources>
+            <testResource>
+                <directory>${project.basedir}/../kafka-junit-core/src/test/resources</directory>
+            </testResource>
+        </testResources>
     </build>
 </project>

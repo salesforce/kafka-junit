@@ -100,7 +100,10 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      * @param overrideBrokerProperties Define Kafka broker properties.
      * @throws IllegalArgumentException if overrideBrokerProperties argument is null.
      */
-    public KafkaTestServer(final Properties overrideBrokerProperties, final Collection<BrokerListener> listeners) throws IllegalArgumentException {
+    public KafkaTestServer(
+        final Properties overrideBrokerProperties,
+        final Collection<BrokerListener> listeners
+    ) throws IllegalArgumentException {
         // Validate argument.
         if (overrideBrokerProperties == null) {
             throw new IllegalArgumentException("Cannot pass null overrideBrokerProperties argument.");
@@ -123,7 +126,11 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      * @param overrideBrokerProperties Define Kafka broker properties.
      * @param zookeeperTestServer Zookeeper server instance to use.
      */
-    KafkaTestServer(final Properties overrideBrokerProperties, final ZookeeperTestServer zookeeperTestServer, final Collection<BrokerListener> listeners) {
+    KafkaTestServer(
+        final Properties overrideBrokerProperties,
+        final ZookeeperTestServer zookeeperTestServer,
+        final Collection<BrokerListener> listeners
+    ) {
         this(overrideBrokerProperties, listeners);
 
         // If instance is passed,
@@ -247,11 +254,8 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
 
             // Loop over registered listeners and add each
             for (final BrokerListener listener : registeredListeners) {
-                int port = listener.getAdvertisedPort();
-                if (port == 0) {
-                    port = InstanceSpec.getRandomPort();
-                }
-
+                // Generate port to listen on.
+                final int port = InstanceSpec.getRandomPort();
                 final String listenerDefinition = listener.getProtocol() + "://" + getConfiguredHostname() + ":" + port;
                 connectionProperties.add(new ConnectionProperties(listenerDefinition, listener.getClientProperties()));
 

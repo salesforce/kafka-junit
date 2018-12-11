@@ -28,24 +28,47 @@ package com.salesforce.kafka.test.listeners;
 import java.util.Properties;
 
 /**
- * Define and register an SSL listener on a Kafka broker.
+ * Define and register a SASL_SSL listener on a Kafka broker.
  */
-public class SslListener implements BrokerListener {
+public class SaslSslListener implements BrokerListener {
+    // SASL Settings.
+    private String username = "";
+    private String password = "";
 
+    // SSL Settings.
     private String trustStoreFile = "";
     private String trustStorePassword = "";
     private String keyStoreFile = "";
     private String keyStorePassword = "";
     private String keyPassword = "";
-    private boolean useSslForInterBrokerCommunications = true;
-    private String clientAuth = "required";
+    private String clientAuth = "requested";
+
+    /**
+     * Setter.
+     * @param username SASL username to authenticate with.
+     * @return SaslSslListener for method chaining.
+     */
+    public SaslSslListener withUsername(final String username) {
+        this.username = username;
+        return this;
+    }
+
+    /**
+     * Setter.
+     * @param password SASL password to authenticate with.
+     * @return SaslSslListener for method chaining.
+     */
+    public SaslSslListener withPassword(final String password) {
+        this.password = password;
+        return this;
+    }
 
     /**
      * Setter.
      * @param trustStoreLocation file path to TrustStore JKS file.
      * @return SslListener for method chaining.
      */
-    public SslListener withTrustStoreLocation(final String trustStoreLocation) {
+    public SaslSslListener withTrustStoreLocation(final String trustStoreLocation) {
         this.trustStoreFile = trustStoreLocation;
         return this;
     }
@@ -55,7 +78,7 @@ public class SslListener implements BrokerListener {
      * @param keyStoreLocation file path to KeyStore JKS file.
      * @return SslListener for method chaining.
      */
-    public SslListener withKeyStoreLocation(final String keyStoreLocation) {
+    public SaslSslListener withKeyStoreLocation(final String keyStoreLocation) {
         this.keyStoreFile = keyStoreLocation;
         return this;
     }
@@ -65,7 +88,7 @@ public class SslListener implements BrokerListener {
      * @param password Password for TrustStore.
      * @return SslListener for method chaining.
      */
-    public SslListener withTrustStorePassword(final String password) {
+    public SaslSslListener withTrustStorePassword(final String password) {
         this.trustStorePassword = password;
         return this;
     }
@@ -75,7 +98,7 @@ public class SslListener implements BrokerListener {
      * @param password Password for KeyStore.
      * @return SslListener for method chaining.
      */
-    public SslListener withKeyStorePassword(final String password) {
+    public SaslSslListener withKeyStorePassword(final String password) {
         this.keyStorePassword = password;
         return this;
     }
@@ -85,25 +108,8 @@ public class SslListener implements BrokerListener {
      * @param password Password for Key.
      * @return SslListener for method chaining.
      */
-    public SslListener withKeyPassword(final String password) {
+    public SaslSslListener withKeyPassword(final String password) {
         this.keyPassword = password;
-        return this;
-    }
-
-    /**
-     * Enable SSL communication between brokers.
-     * @return SslListener for method chaining.
-     */
-    public SslListener useSslForInterBrokerProtocol() {
-        return useSslForInterBrokerProtocol(true);
-    }
-
-    /**
-     * Enable/Disable SSL communication between brokers.
-     * @return SslListener for method chaining.
-     */
-    public SslListener useSslForInterBrokerProtocol(final boolean value) {
-        this.useSslForInterBrokerCommunications = value;
         return this;
     }
 
@@ -111,7 +117,7 @@ public class SslListener implements BrokerListener {
      * Set client auth as required.
      * @return SslListener for method chaining.
      */
-    public SslListener requireClientAuth() {
+    public SaslSslListener requireClientAuth() {
         this.clientAuth = "required";
         return this;
     }
@@ -120,19 +126,23 @@ public class SslListener implements BrokerListener {
      * Set client auth as requested, but not required.
      * @return SslListener for method chaining.
      */
-    public SslListener requestedClientAuth() {
+    public SaslSslListener requestedClientAuth() {
         this.clientAuth = "requested";
         return this;
     }
 
     @Override
     public String getProtocol() {
-        return "SSL";
+        return "SASL_SSL";
     }
 
     @Override
     public Properties getBrokerProperties() {
         final Properties properties = new Properties();
+        properties.put("sasl.enabled.mechanisms", "PLAIN");
+        properties.put("sasl.mechanism.inter.broker.protocol","PLAIN");
+        properties.put("inter.broker.listener.name", "SASL_SSL");
+
         properties.put("ssl.truststore.location", trustStoreFile);
         properties.put("ssl.truststore.password", trustStorePassword);
         properties.put("ssl.keystore.location", keyStoreFile);
@@ -140,11 +150,6 @@ public class SslListener implements BrokerListener {
 
         if (keyPassword != null && !keyPassword.isEmpty()) {
             properties.put("ssl.key.password", keyPassword);
-        }
-
-        if (useSslForInterBrokerCommunications) {
-            // Set brokers to communicate via SSL as well.
-            properties.put("security.inter.broker.protocol", "SSL");
         }
         properties.put("ssl.client.auth", clientAuth);
 
@@ -154,7 +159,15 @@ public class SslListener implements BrokerListener {
     @Override
     public Properties getClientProperties() {
         final Properties properties = new Properties();
-        properties.put("security.protocol", "SSL");
+        properties.put("sasl.mechanism", "PLAIN");
+        properties.put("security.protocol", "SASL_SSL");
+        properties.put(
+            "sasl.jaas.config",
+            "org.apache.kafka.common.security.plain.PlainLoginModule required\n"
+            + "username=\"" + username + "\"\n"
+            + "password=\"" + password + "\";"
+        );
+
         properties.put("ssl.truststore.location", trustStoreFile);
         properties.put("ssl.truststore.password", trustStorePassword);
         properties.put("ssl.keystore.location", keyStoreFile);
