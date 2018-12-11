@@ -37,13 +37,15 @@ import org.junit.ClassRule;
  */
 public class SharedKafkaTestResourceWithSaslPlainTest extends AbstractSharedKafkaTestResourceTest {
     /**
-     * We have a single embedded kafka server that gets started when this test class is initialized.
+     * We have a two node kafka cluster that gets started when this test class is initialized.
      *
      * It's automatically started before any methods are run via the @ClassRule annotation.
      * It's automatically stopped after all of the tests are completed via the @ClassRule annotation.
      *
-     * This example we start a cluster with 2 brokers (defaults to a single broker) and configure the brokers to
-     * disable topic auto-creation.
+     * This example we start a cluster with
+     *  - 2 brokers (defaults to a single broker)
+     *  - configure the brokers to disable topic auto-creation.
+     *  - Enable SASL_PLAIN authentication, using username 'kafkaclient' and password 'client-secret'
      */
     @ClassRule
     public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
