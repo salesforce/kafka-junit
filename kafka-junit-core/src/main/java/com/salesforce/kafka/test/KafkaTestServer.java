@@ -34,6 +34,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 /**
  * This will spin up a ZooKeeper and Kafka server for use in integration tests. Simply
@@ -74,7 +75,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
 
     private final List<RegisterListener> registeredListeners;
 
-    private final List<String> connectStrings = new ArrayList<>();
+    private final List<ConnectionProperties> connectionProperties = new ArrayList<>();
 
     /**
      * Default constructor, no overridden broker properties.
@@ -140,8 +141,15 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     public String getKafkaConnectString() {
         validateState(true, "Cannot get connect string prior to service being started.");
 
-        // Return the list.
-        return String.join(",", connectStrings);
+        // Return all of the connection properties.
+        return connectionProperties.stream()
+            .map(ConnectionProperties::getConnectionString)
+            .collect(Collectors.joining(","));
+    }
+
+    @Override
+    public ConnectionProperties getConnectionProperties() {
+        return connectionProperties.get(0);
     }
 
     /**
@@ -242,18 +250,11 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
                     port = InstanceSpec.getRandomPort();
                 }
 
-                connectStrings.add(getConfiguredHostname() + ":" + port);
+                final String listenerDefinition = listener.getAdvertisedListener() + "://" + getConfiguredHostname() + ":" + port;
+                connectionProperties.add(new ConnectionProperties(listenerDefinition, listener.getClientProperties()));
 
-                appendProperty(
-                    brokerProperties,
-                    "advertised.listeners",
-                    listener.getAdvertisedListener() + "://" + getConfiguredHostname() + ":" + port
-                );
-                appendProperty(
-                    brokerProperties,
-                    "listeners",
-                    listener.getAdvertisedListener() + "://" + getConfiguredHostname() + ":" + port
-                );
+                appendProperty(brokerProperties, "advertised.listeners", listenerDefinition);
+                appendProperty(brokerProperties,"listeners", listenerDefinition);
 
                 // Apply other options
                 brokerProperties.putAll(listener.getProperties());

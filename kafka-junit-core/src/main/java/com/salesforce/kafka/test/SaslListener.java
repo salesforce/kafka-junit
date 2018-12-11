@@ -37,4 +37,9 @@ public class SaslListener implements RegisterListener {
         // TODO
         return properties;
     }
+
+    @Override
+    public Properties getClientProperties() {
+        return new Properties();
+    }
 }

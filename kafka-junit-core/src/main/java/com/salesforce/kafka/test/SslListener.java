@@ -105,4 +105,21 @@ public class SslListener implements RegisterListener {
 
         return properties;
     }
+
+    @Override
+    public Properties getClientProperties() {
+        final Properties properties = new Properties();
+        properties.put("security.protocol", "SSL");
+        properties.put("ssl.truststore.location", trustStoreFile);
+        properties.put("ssl.truststore.password", trustStorePassword);
+        properties.put("ssl.keystore.location", keyStoreFile);
+        properties.put("ssl.keystore.password", keyStorePassword);
+
+        if (keyPassword != null && !keyPassword.isEmpty()) {
+            properties.put("ssl.key.password", keyPassword);
+        }
+
+
+        return properties;
+    }
 }

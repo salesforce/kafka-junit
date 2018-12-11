@@ -1,8 +1,6 @@
 package com.salesforce.kafka.test.junit4;
 
-import com.salesforce.kafka.test.KafkaBroker;
 import com.salesforce.kafka.test.KafkaTestUtils;
-import com.salesforce.kafka.test.PlainListener;
 import com.salesforce.kafka.test.SslListener;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -31,8 +29,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class SharedKafkaTestResourceWithSaslTest {
-    private static final Logger logger = LoggerFactory.getLogger(SharedKafkaTestResourceWithSaslTest.class);
+/**
+ * Run smoke tests against an SSL enabled cluster.
+ */
+public class SharedKafkaTestResourceWithSslTest {
+    private static final Logger logger = LoggerFactory.getLogger(SharedKafkaTestResourceWithSslTest.class);
 
     /**
      * We have a single embedded kafka server that gets started when this test class is initialized.
@@ -46,15 +47,15 @@ public class SharedKafkaTestResourceWithSaslTest {
     @ClassRule
     public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
         // Start a cluster with 2 brokers.
-        .withBrokers(1)
+        .withBrokers(2)
         // Disable topic auto-creation.
         .withBrokerProperty("auto.create.topics.enable", "false")
         .registerListener(new SslListener()
             .useSslForInterBrokerProtocol()
             .withAutoAssignedPort()
-            .withKeyStoreLocation(SharedKafkaTestResourceWithSaslTest.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
+            .withKeyStoreLocation(SharedKafkaTestResourceWithSslTest.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
             .withKeyStorePassword("password")
-            .withTrustStoreLocation(SharedKafkaTestResourceWithSaslTest.class.getClassLoader().getResource("kafka.truststore.jks").getFile())
+            .withTrustStoreLocation(SharedKafkaTestResourceWithSslTest.class.getClassLoader().getResource("kafka.truststore.jks").getFile())
             .withTrustStorePassword("password")
             .withKeyPassword("password")
         );

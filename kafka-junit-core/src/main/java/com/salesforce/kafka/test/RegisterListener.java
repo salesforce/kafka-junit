@@ -6,4 +6,5 @@ public interface RegisterListener {
     String getAdvertisedListener();
     int getAdvertisedPort();
     Properties getProperties();
+    Properties getClientProperties();
 }

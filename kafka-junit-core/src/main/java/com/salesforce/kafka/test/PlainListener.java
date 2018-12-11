@@ -34,7 +34,11 @@ public class PlainListener implements RegisterListener {
 
     @Override
     public Properties getProperties() {
-        final Properties properties = new Properties();
-        return properties;
+        return new Properties();
+    }
+
+    @Override
+    public Properties getClientProperties() {
+        return new Properties();
     }
 }

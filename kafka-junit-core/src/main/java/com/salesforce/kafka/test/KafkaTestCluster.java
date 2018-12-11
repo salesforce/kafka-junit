@@ -221,6 +221,15 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
             .collect(Collectors.joining(","));
     }
 
+    @Override
+    public ConnectionProperties getConnectionProperties() {
+        Optional<ConnectionProperties> properties = brokers.stream()
+            .map(KafkaTestServer::getConnectionProperties)
+            .findFirst();
+
+        return properties.get();
+    }
+
     /**
      * Returns connection string for zookeeper clients.
      * @return Connection string to connect to the Zookeeper instance.
