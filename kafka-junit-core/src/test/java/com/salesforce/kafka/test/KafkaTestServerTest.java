@@ -406,7 +406,7 @@ class KafkaTestServerTest {
             Arguments.of(Collections.singletonList(plainListener)),
 
             // Just SSL
-            Arguments.of(Collections.singletonList(sslListener)),
+            Arguments.of(Collections.singletonList(sslListener))
 
             // Just SASL_PLAIN
 //            Arguments.of(Collections.singletonList(saslPlainListener)),
