@@ -397,8 +397,8 @@ class KafkaTestClusterTest {
      * Test a multi-node cluster instance with various listeners.
      * @param listeners The listeners to register.
      */
-    @ParameterizedTest
-    @MethodSource("provideListeners")
+//    @ParameterizedTest
+//    @MethodSource("provideListeners")
     void testCustomizedListeners(final List<BrokerListener> listeners) throws Exception {
         final String topicName = "testRestartingBroker-" + System.currentTimeMillis();
         final int expectedMsgCount = 2;

@@ -409,16 +409,16 @@ class KafkaTestServerTest {
             Arguments.of(Collections.singletonList(sslListener)),
 
             // Just SASL_PLAIN
-            Arguments.of(Collections.singletonList(saslPlainListener)),
-
-            // Just SASL_SSL
-            Arguments.of(Collections.singletonList(saslSslListener)),
-
-            // Combination of plain and SSL
-            Arguments.of(listenersGroup1),
-
-            // Combination of SSL and SaslPlain
-            Arguments.of(listenersGroup2)
+//            Arguments.of(Collections.singletonList(saslPlainListener)),
+//
+//            // Just SASL_SSL
+//            Arguments.of(Collections.singletonList(saslSslListener)),
+//
+//            // Combination of plain and SSL
+//            Arguments.of(listenersGroup1),
+//
+//            // Combination of SSL and SaslPlain
+//            Arguments.of(listenersGroup2)
         );
     }
 }
