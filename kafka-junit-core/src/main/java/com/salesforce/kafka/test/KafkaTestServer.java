@@ -25,8 +25,8 @@
 
 package com.salesforce.kafka.test;
 
-import com.salesforce.kafka.test.listeners.PlainListener;
 import com.salesforce.kafka.test.listeners.BrokerListener;
+import com.salesforce.kafka.test.listeners.PlainListener;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
 import org.apache.curator.test.InstanceSpec;
@@ -75,8 +75,14 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
      */
     private final Properties overrideBrokerProperties = new Properties();
 
+    /**
+     * Definition of listeners defined on the broker.
+     */
     private final List<BrokerListener> registeredListeners;
 
+    /**
+     * Properties defining how to connect to each available/registered listener on the broker.
+     */
     private final List<ConnectionProperties> connectionProperties = new ArrayList<>();
 
     /**
@@ -152,7 +158,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
 
         // Return all of the connection properties.
         return connectionProperties.stream()
-            .map(ConnectionProperties::getConnectionString)
+            .map(ConnectionProperties::getConnectString)
             .collect(Collectors.joining(","));
     }
 
@@ -257,8 +263,9 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
                 // Generate port to listen on.
                 final int port = InstanceSpec.getRandomPort();
                 final String listenerDefinition = listener.getProtocol() + "://" + getConfiguredHostname() + ":" + port;
-                connectionProperties.add(new ConnectionProperties(listenerDefinition, listener.getClientProperties()));
-
+                connectionProperties.add(
+                    new ConnectionProperties(listener.getProtocol(), listenerDefinition, listener.getClientProperties())
+                );
                 appendProperty(brokerProperties, "advertised.listeners", listenerDefinition);
                 appendProperty(brokerProperties,"listeners", listenerDefinition);
 

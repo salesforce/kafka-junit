@@ -33,6 +33,7 @@ import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.Properties;
 
 /**
@@ -77,7 +78,7 @@ public class SharedKafkaTestResource extends AbstractKafkaTestResource<SharedKaf
         setKafkaCluster(new KafkaTestCluster(
             getNumberOfBrokers(),
             getBrokerProperties(),
-            getRegisteredListeners()
+            Collections.singletonList(getRegisteredListener())
         ));
         getKafkaCluster().start();
     }

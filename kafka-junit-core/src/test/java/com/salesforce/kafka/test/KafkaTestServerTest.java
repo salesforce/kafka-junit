@@ -357,6 +357,9 @@ class KafkaTestServerTest {
         }
     }
 
+    /**
+     * Define various listeners.
+     */
     private static Stream<Arguments> provideListeners() {
         // Create default plain listener
         final BrokerListener plainListener = new PlainListener();
@@ -364,7 +367,6 @@ class KafkaTestServerTest {
         // Create SSL listener
         final BrokerListener sslListener = new SslListener()
             .useSslForInterBrokerProtocol()
-            .withAutoAssignedPort()
             .withKeyStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
             .withKeyStorePassword("password")
             .withTrustStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.truststore.jks").getFile())
@@ -380,7 +382,6 @@ class KafkaTestServerTest {
         final BrokerListener saslSslListener = new SaslSslListener()
             .withUsername("kafkaclient")
             .withPassword("client-secret")
-            .withAutoAssignedPort()
             .withKeyStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
             .withKeyStorePassword("password")
             .withTrustStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.truststore.jks").getFile())

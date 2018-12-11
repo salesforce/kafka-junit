@@ -29,6 +29,12 @@ import java.util.Properties;
 
 /**
  * Define and register a SASL_SSL listener on a Kafka broker.
+ *
+ * NOTE: Kafka reads in the JAAS file as defined by an Environment variable at JVM start up.  This property
+ * can not be set at run time.
+ *
+ * In order to make use of this Listener, you **must** start the JVM with the following:
+ *  -Djava.security.auth.login.config=/path/to/your/jaas.conf
  */
 public class SaslSslListener implements BrokerListener {
     // SASL Settings.

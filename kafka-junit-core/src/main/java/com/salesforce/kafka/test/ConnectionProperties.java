@@ -31,20 +31,27 @@ import java.util.Properties;
  * Defines properties about a registered listener.
  */
 public class ConnectionProperties {
+    private final String protocol;
     private final String connectString;
     private final Properties clientProperties;
 
     /**
      * Constructor.
+     * @param protocol
      * @param connectString Connect string for listener.
      * @param clientProperties Any client properties required to connect.
      */
-    public ConnectionProperties(final String connectString, final Properties clientProperties) {
+    public ConnectionProperties(final String protocol, final String connectString, final Properties clientProperties) {
+        this.protocol = protocol;
         this.connectString = connectString;
         this.clientProperties = clientProperties;
     }
 
-    public String getConnectionString() {
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public String getConnectString() {
         return connectString;
     }
 

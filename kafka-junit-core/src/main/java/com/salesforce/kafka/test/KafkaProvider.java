@@ -25,8 +25,6 @@
 
 package com.salesforce.kafka.test;
 
-import java.util.Properties;
-
 /**
  * Provides a slimmed down view onto KafkaCluster to avoid circular references in code.
  */

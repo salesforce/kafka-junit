@@ -26,10 +26,8 @@
 package com.salesforce.kafka.test;
 
 import com.salesforce.kafka.test.listeners.BrokerListener;
+import com.salesforce.kafka.test.listeners.PlainListener;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Properties;
 
 /**
@@ -53,9 +51,9 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
     private int numberOfBrokers = 1;
 
     /**
-     * Contains registered listeners.
+     * Defines which listener has been set to be configured on the brokers.
      */
-    private final List<BrokerListener> registeredListeners = new ArrayList<>();
+    private BrokerListener registeredListener = new PlainListener();
 
     /**
      * Default constructor.
@@ -127,7 +125,7 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
         if (listener == null) {
             throw new IllegalArgumentException("Listener argument may not be null.");
         }
-        registeredListeners.add(listener);
+        registeredListener = listener;
         return (T) this;
     }
 
@@ -169,13 +167,11 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
     }
 
     /**
-     * Returns all registered listeners.
-     * @return List of all registered listeners.
+     * Returns all registered listener.
+     * @return The configured listener.
      */
-    protected List<BrokerListener> getRegisteredListeners() {
-        return Collections.unmodifiableList(
-            new ArrayList<>(registeredListeners)
-        );
+    protected BrokerListener getRegisteredListener() {
+        return registeredListener;
     }
 
     protected KafkaCluster getKafkaCluster() {

@@ -25,8 +25,8 @@
 
 package com.salesforce.kafka.test;
 
-import com.salesforce.kafka.test.listeners.PlainListener;
 import com.salesforce.kafka.test.listeners.BrokerListener;
+import com.salesforce.kafka.test.listeners.PlainListener;
 import org.apache.kafka.common.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
