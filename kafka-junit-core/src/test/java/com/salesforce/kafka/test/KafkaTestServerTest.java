@@ -46,6 +46,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -325,6 +326,10 @@ class KafkaTestServerTest {
         }
     }
 
+    /**
+     * Test a single server instance with various listeners.
+     * @param listeners The listeners to register.
+     */
     @ParameterizedTest
     @MethodSource("provideListeners")
     void testCustomizedListeners(final List<BrokerListener> listeners) throws Exception {
@@ -388,11 +393,32 @@ class KafkaTestServerTest {
             .withTrustStorePassword("password")
             .withKeyPassword("password");
 
+        final List<BrokerListener> listenersGroup1 = new ArrayList<>();
+        listenersGroup1.add(plainListener);
+        listenersGroup1.add(sslListener);
+
+        final List<BrokerListener> listenersGroup2 = new ArrayList<>();
+        listenersGroup2.add(sslListener);
+        listenersGroup2.add(saslPlainListener);
+
         return Stream.of(
+            // Just plain
             Arguments.of(Collections.singletonList(plainListener)),
+
+            // Just SSL
             Arguments.of(Collections.singletonList(sslListener)),
+
+            // Just SASL_PLAIN
             Arguments.of(Collections.singletonList(saslPlainListener)),
-            Arguments.of(Collections.singletonList(saslSslListener))
+
+            // Just SASL_SSL
+            Arguments.of(Collections.singletonList(saslSslListener)),
+
+            // Combination of plain and SSL
+            Arguments.of(listenersGroup1),
+
+            // Combination of SSL and SaslPlain
+            Arguments.of(listenersGroup2)
         );
     }
 }

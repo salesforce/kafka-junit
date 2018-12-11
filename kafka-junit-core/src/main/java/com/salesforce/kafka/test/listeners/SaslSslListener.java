@@ -153,12 +153,11 @@ public class SaslSslListener implements BrokerListener {
         properties.put("ssl.truststore.password", trustStorePassword);
         properties.put("ssl.keystore.location", keyStoreFile);
         properties.put("ssl.keystore.password", keyStorePassword);
+        properties.put("ssl.client.auth", clientAuth);
 
         if (keyPassword != null && !keyPassword.isEmpty()) {
             properties.put("ssl.key.password", keyPassword);
         }
-        properties.put("ssl.client.auth", clientAuth);
-
         return properties;
     }
 

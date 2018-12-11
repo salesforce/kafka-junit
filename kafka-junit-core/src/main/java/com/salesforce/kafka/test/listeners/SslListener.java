@@ -137,16 +137,12 @@ public class SslListener implements BrokerListener {
         properties.put("ssl.truststore.password", trustStorePassword);
         properties.put("ssl.keystore.location", keyStoreFile);
         properties.put("ssl.keystore.password", keyStorePassword);
+        properties.put("inter.broker.listener.name", "SSL");
+        properties.put("ssl.client.auth", clientAuth);
 
         if (keyPassword != null && !keyPassword.isEmpty()) {
             properties.put("ssl.key.password", keyPassword);
         }
-
-        if (useSslForInterBrokerCommunications) {
-            // Set brokers to communicate via SSL as well.
-            properties.put("security.inter.broker.protocol", "SSL");
-        }
-        properties.put("ssl.client.auth", clientAuth);
 
         return properties;
     }
@@ -163,7 +159,6 @@ public class SslListener implements BrokerListener {
         if (keyPassword != null && !keyPassword.isEmpty()) {
             properties.put("ssl.key.password", keyPassword);
         }
-
         return properties;
     }
 }
