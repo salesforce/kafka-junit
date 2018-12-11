@@ -212,7 +212,7 @@ class KafkaTestClusterTest {
 
             // Make sure each node is represented properly.
             for (final Node node: nodes) {
-                final String calculatedConnectString = node.host() + ":" + node.port();
+                final String calculatedConnectString = "PLAINTEXT://" + node.host() + ":" + node.port();
                 Assertions.assertTrue(hosts.contains(calculatedConnectString), "Should contain " + calculatedConnectString);
             }
         }
