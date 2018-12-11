@@ -37,7 +37,7 @@ public class ConnectionProperties {
 
     /**
      * Constructor.
-     * @param protocol
+     * @param protocol protocol of the listener.
      * @param connectString Connect string for listener.
      * @param clientProperties Any client properties required to connect.
      */

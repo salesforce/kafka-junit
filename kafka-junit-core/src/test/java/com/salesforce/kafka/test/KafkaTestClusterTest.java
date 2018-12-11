@@ -25,18 +25,30 @@
 
 package com.salesforce.kafka.test;
 
+import com.salesforce.kafka.test.listeners.BrokerListener;
+import com.salesforce.kafka.test.listeners.PlainListener;
+import com.salesforce.kafka.test.listeners.SaslPlainListener;
+import com.salesforce.kafka.test.listeners.SaslSslListener;
+import com.salesforce.kafka.test.listeners.SslListener;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Stream;
 
 class KafkaTestClusterTest {
 
@@ -379,5 +391,103 @@ class KafkaTestClusterTest {
     private void validateKafkaBroker(final KafkaBroker broker, final int expectedBrokerId) {
         Assertions.assertNotNull(broker);
         Assertions.assertEquals(expectedBrokerId, broker.getBrokerId());
+    }
+
+    /**
+     * Test a multi-node cluster instance with various listeners.
+     * @param listeners The listeners to register.
+     */
+    @ParameterizedTest
+    @MethodSource("provideListeners")
+    void testCustomizedListeners(final List<BrokerListener> listeners) throws Exception {
+        final String topicName = "testRestartingBroker-" + System.currentTimeMillis();
+        final int expectedMsgCount = 2;
+        final int numberOfBrokers = 2;
+
+        final Properties overrideProperties = new Properties();
+
+        // Create our test server instance
+        try (final KafkaTestCluster kafkaTestCluster =
+            new KafkaTestCluster(numberOfBrokers, overrideProperties, listeners)) {
+            // Start broker
+            kafkaTestCluster.start();
+
+            // Create KafkaTestUtils
+            final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestCluster);
+
+            // Create topic
+            kafkaTestUtils.createTopic(topicName, 1, (short) 1);
+
+            // Publish 2 messages into topic
+            kafkaTestUtils.produceRecords(expectedMsgCount, topicName, 0);
+
+            // Sanity test - Consume the messages back out before shutting down broker.
+            final List<ConsumerRecord<byte[], byte[]>> records = kafkaTestUtils.consumeAllRecordsFromTopic(topicName);
+            Assertions.assertNotNull(records);
+            Assertions.assertEquals(expectedMsgCount, records.size(), "Should have found 2 records.");
+
+            // Call stop/close on the broker
+            kafkaTestCluster.stop();
+        }
+    }
+
+    /**
+     * Define various listeners.
+     */
+    private static Stream<Arguments> provideListeners() {
+        // Create default plain listener
+        final BrokerListener plainListener = new PlainListener();
+
+        // Create SSL listener
+        final BrokerListener sslListener = new SslListener()
+            .useSslForInterBrokerProtocol()
+            .withKeyStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
+            .withKeyStorePassword("password")
+            .withTrustStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.truststore.jks").getFile())
+            .withTrustStorePassword("password")
+            .withKeyPassword("password");
+
+        // Create SASL_PLAIN listener.
+        final BrokerListener saslPlainListener = new SaslPlainListener()
+            .withUsername("kafkaclient")
+            .withPassword("client-secret");
+
+        // Create SASL_SSL listener
+        final BrokerListener saslSslListener = new SaslSslListener()
+            .withUsername("kafkaclient")
+            .withPassword("client-secret")
+            .withKeyStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
+            .withKeyStorePassword("password")
+            .withTrustStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.truststore.jks").getFile())
+            .withTrustStorePassword("password")
+            .withKeyPassword("password");
+
+        final List<BrokerListener> listenersGroup1 = new ArrayList<>();
+        listenersGroup1.add(plainListener);
+        listenersGroup1.add(sslListener);
+
+        final List<BrokerListener> listenersGroup2 = new ArrayList<>();
+        listenersGroup2.add(sslListener);
+        listenersGroup2.add(saslPlainListener);
+
+        return Stream.of(
+            // Just plain
+            Arguments.of(Collections.singletonList(plainListener)),
+
+            // Just SSL
+            Arguments.of(Collections.singletonList(sslListener)),
+
+            // Just SASL_PLAIN
+            Arguments.of(Collections.singletonList(saslPlainListener)),
+
+            // Just SASL_SSL
+            Arguments.of(Collections.singletonList(saslSslListener)),
+
+            // Combination of plain and SSL
+            Arguments.of(listenersGroup1),
+
+            // Combination of SSL and SaslPlain
+            Arguments.of(listenersGroup2)
+        );
     }
 }

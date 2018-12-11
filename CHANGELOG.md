@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - KafkaTestUtils.produceRecords() and its variants now set producer configuration "acks" to "all"
 - Update Kafka-JUnit5 junit dependency from 5.1.1 to JUnit 5.3.2
 - Add support for registering PLAINTEXT, SSL, SASL_PLAIN, and SASL_SSL listeners on internal kafka brokers.
+- Kafka Connection Strings now include the protocol prefix.
 
 ## 3.0.1 (06/20/2018)
 - [Issue-16](https://github.com/salesforce/kafka-junit/issues/16) Bugfix for re-using the same SharedKafkaTestResource instance multiple times, as might happen if you run a test multiple times.

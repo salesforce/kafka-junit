@@ -85,8 +85,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Define which kafka version -->
-        <!--<kafkaVersion>1.0.2</kafkaVersion>-->
-        <kafkaVersion>1.1.1</kafkaVersion>
+        <kafkaVersion>1.0.2</kafkaVersion>
 
         <!-- Define which Curator Test version -->
         <curatorTestVersion>2.12.0</curatorTestVersion>
@@ -110,7 +109,7 @@
         <surefire.version>2.22.0</surefire.version>
 
         <!-- excluded tests based on specific kafka versions -->
-        <!-- default to excluding 0.11.0.1 tests -->
+        <!-- default to excluding 0.11.0.x tests -->
         <tests.excluded>0_11_0_x</tests.excluded>
     </properties>
 

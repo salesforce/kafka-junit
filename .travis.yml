@@ -19,7 +19,7 @@ env:
   KAFKA_VERSION=1.1.1
   EXCLUDE_KAFKA_TESTS=NOT-USED
 -
-  KAFKA_VERSION=2.0.0
+  KAFKA_VERSION=2.0.1
   EXCLUDE_KAFKA_TESTS=0_11_0_x
 script:
   - mvn clean install -DskipTests=true -DskipCheckStyle=false -Dmaven.javadoc.skip=true -B -V -DkafkaVersion=$KAFKA_VERSION -Dtests.excluded=$EXCLUDE_KAFKA_TESTS
