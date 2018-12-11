@@ -440,7 +440,7 @@ class KafkaTestClusterTest {
 
         // Create SSL listener
         final BrokerListener sslListener = new SslListener()
-            .useSslForInterBrokerProtocol()
+            .withClientAuthRequested()
             .withKeyStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
             .withKeyStorePassword("password")
             .withTrustStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.truststore.jks").getFile())
@@ -454,6 +454,7 @@ class KafkaTestClusterTest {
 
         // Create SASL_SSL listener
         final BrokerListener saslSslListener = new SaslSslListener()
+            .withClientAuthRequested()
             .withUsername("kafkaclient")
             .withPassword("client-secret")
             .withKeyStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.keystore.jks").getFile())

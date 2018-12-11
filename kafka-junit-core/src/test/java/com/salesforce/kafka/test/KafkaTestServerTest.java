@@ -371,7 +371,7 @@ class KafkaTestServerTest {
 
         // Create SSL listener
         final BrokerListener sslListener = new SslListener()
-            .useSslForInterBrokerProtocol()
+            .withClientAuthRequested()
             .withKeyStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
             .withKeyStorePassword("password")
             .withTrustStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.truststore.jks").getFile())
@@ -385,6 +385,7 @@ class KafkaTestServerTest {
 
         // Create SASL_SSL listener
         final BrokerListener saslSslListener = new SaslSslListener()
+            .withClientAuthRequested()
             .withUsername("kafkaclient")
             .withPassword("client-secret")
             .withKeyStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
@@ -406,19 +407,19 @@ class KafkaTestServerTest {
             Arguments.of(Collections.singletonList(plainListener)),
 
             // Just SSL
-            Arguments.of(Collections.singletonList(sslListener))
+            Arguments.of(Collections.singletonList(sslListener)),
 
             // Just SASL_PLAIN
-//            Arguments.of(Collections.singletonList(saslPlainListener)),
-//
-//            // Just SASL_SSL
-//            Arguments.of(Collections.singletonList(saslSslListener)),
-//
-//            // Combination of plain and SSL
-//            Arguments.of(listenersGroup1),
-//
-//            // Combination of SSL and SaslPlain
-//            Arguments.of(listenersGroup2)
+            Arguments.of(Collections.singletonList(saslPlainListener)),
+
+            // Just SASL_SSL
+            Arguments.of(Collections.singletonList(saslSslListener)),
+
+            // Combination of plain and SSL
+            Arguments.of(listenersGroup1),
+
+            // Combination of SSL and SaslPlain
+            Arguments.of(listenersGroup2)
         );
     }
 }

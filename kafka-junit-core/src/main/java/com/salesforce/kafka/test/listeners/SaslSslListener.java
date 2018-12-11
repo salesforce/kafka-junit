@@ -123,7 +123,7 @@ public class SaslSslListener implements BrokerListener {
      * Set client auth as required.
      * @return SslListener for method chaining.
      */
-    public SaslSslListener requireClientAuth() {
+    public SaslSslListener withClientAuthRequired() {
         this.clientAuth = "required";
         return this;
     }
@@ -132,7 +132,7 @@ public class SaslSslListener implements BrokerListener {
      * Set client auth as requested, but not required.
      * @return SslListener for method chaining.
      */
-    public SaslSslListener requestedClientAuth() {
+    public SaslSslListener withClientAuthRequested() {
         this.clientAuth = "requested";
         return this;
     }

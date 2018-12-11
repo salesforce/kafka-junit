@@ -37,7 +37,6 @@ public class SslListener implements BrokerListener {
     private String keyStoreFile = "";
     private String keyStorePassword = "";
     private String keyPassword = "";
-    private boolean useSslForInterBrokerCommunications = true;
     private String clientAuth = "required";
 
     /**
@@ -91,27 +90,10 @@ public class SslListener implements BrokerListener {
     }
 
     /**
-     * Enable SSL communication between brokers.
-     * @return SslListener for method chaining.
-     */
-    public SslListener useSslForInterBrokerProtocol() {
-        return useSslForInterBrokerProtocol(true);
-    }
-
-    /**
-     * Enable/Disable SSL communication between brokers.
-     * @return SslListener for method chaining.
-     */
-    public SslListener useSslForInterBrokerProtocol(final boolean value) {
-        this.useSslForInterBrokerCommunications = value;
-        return this;
-    }
-
-    /**
      * Set client auth as required.
      * @return SslListener for method chaining.
      */
-    public SslListener requireClientAuth() {
+    public SslListener withClientAuthRequired() {
         this.clientAuth = "required";
         return this;
     }
@@ -120,7 +102,7 @@ public class SslListener implements BrokerListener {
      * Set client auth as requested, but not required.
      * @return SslListener for method chaining.
      */
-    public SslListener requestedClientAuth() {
+    public SslListener withClientAuthRequested() {
         this.clientAuth = "requested";
         return this;
     }
