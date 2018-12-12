@@ -291,8 +291,8 @@ class KafkaTestClusterTest {
             // Create test utils instance.
             final KafkaTestUtils testUtils = new KafkaTestUtils(kafkaTestCluster);
 
-            // Create the topic, 2 partitions, replica factor of 1 to avoid unclean shutdown
-            testUtils.createTopic(topicName, numberOfPartitions, (short) 1);
+            // Create the topic, 2 partitions, replica factor of 2
+            testUtils.createTopic(topicName, numberOfPartitions, (short) 2);
 
             // Describe the topic.
             final TopicDescription topicDescription = testUtils.describeTopic(topicName);
