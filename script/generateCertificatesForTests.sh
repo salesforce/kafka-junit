@@ -13,6 +13,7 @@ KEYSTORE_SIGN_REQUEST="cert-file"
 KEYSTORE_SIGN_REQUEST_SRL="ca-cert.srl"
 KEYSTORE_SIGNED_CERT="cert-signed"
 
+rm -rf generated
 mkdir -p $TRUSTSTORE_WORKING_DIRECTORY
 
 openssl req -new -x509 -keyout $TRUSTSTORE_WORKING_DIRECTORY/ca-key \
@@ -61,3 +62,4 @@ rm $trust_store_private_key_file
 
 mv $KEYSTORE_WORKING_DIRECTORY/$KEYSTORE_FILENAME ../kafka-junit-core/src/test/resources
 mv $trust_store_file ../kafka-junit-core/src/test/resources
+rm -rf generated
