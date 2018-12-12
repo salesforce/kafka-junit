@@ -338,6 +338,9 @@ class KafkaTestServerTest {
 
         final Properties overrideProperties = new Properties();
 
+        // Disable end point identification/verification for tests, so we can re-use test certificates.
+        overrideProperties.put("ssl.endpoint.identification.algorithm", "");
+
         // Create our test server instance
         try (final KafkaTestServer kafkaTestServer = new KafkaTestServer(overrideProperties, listeners)) {
             // Start broker
