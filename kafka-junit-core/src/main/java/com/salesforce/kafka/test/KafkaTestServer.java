@@ -339,6 +339,13 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
         return properties.get(key);
     }
 
+    /**
+     * If the key already exists on the properties, it will append the value to the existing value, comma delimited.
+     * @param properties Properties to update.
+     * @param key Key to update.
+     * @param appendValue Value to set or append.
+     * @return Updated value.
+     */
     private Object appendProperty(final Properties properties, final String key, final String appendValue) {
         // Validate inputs
         if (properties == null) {

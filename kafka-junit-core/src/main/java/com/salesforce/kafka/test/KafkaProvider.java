@@ -41,6 +41,11 @@ public interface KafkaProvider {
      */
     String getKafkaConnectString();
 
+    /**
+     * TODO - This should likely be a list.
+     * Connection details about each of the registered listeners on the kafka broker.
+     * @return details about each of the registered listeners on the kafka broker.
+     */
     ConnectionProperties getConnectionProperties();
 
     /**

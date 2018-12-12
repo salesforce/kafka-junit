@@ -25,6 +25,7 @@
 
 package com.salesforce.kafka.test;
 
+import com.google.common.collect.Lists;
 import com.salesforce.kafka.test.listeners.BrokerListener;
 import com.salesforce.kafka.test.listeners.PlainListener;
 import org.apache.kafka.common.Node;
@@ -69,6 +70,9 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      */
     private final Properties overrideBrokerProperties = new Properties();
 
+    /**
+     * Collection of listeners that get registered with the broker.
+     */
     private final List<BrokerListener> registeredListeners;
 
     /**
@@ -84,7 +88,7 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      * @param numberOfBrokers How many brokers you want in your Kafka cluster.
      */
     public KafkaTestCluster(final int numberOfBrokers) {
-        this(numberOfBrokers, new Properties(), new ArrayList<>());
+        this(numberOfBrokers, new Properties(), Collections.emptyList());
     }
 
     /**
@@ -93,7 +97,7 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      * @param overrideBrokerProperties Define Kafka broker properties.
      */
     public KafkaTestCluster(final int numberOfBrokers, final Properties overrideBrokerProperties) {
-        this(numberOfBrokers, overrideBrokerProperties, new ArrayList<>());
+        this(numberOfBrokers, overrideBrokerProperties, Collections.emptyList());
     }
 
     /**
