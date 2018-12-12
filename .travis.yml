@@ -22,5 +22,6 @@ env:
   KAFKA_VERSION=2.0.1
   EXCLUDE_KAFKA_TESTS=0_11_0_x
 script:
+  - script/generateCertificatesForTests.sh
   - mvn clean install -DskipTests=true -DskipCheckStyle=false -Dmaven.javadoc.skip=true -B -V -DkafkaVersion=$KAFKA_VERSION -Dtests.excluded=$EXCLUDE_KAFKA_TESTS
-  - mvn test -B -DkafkaVersion=$KAFKA_VERSION -Dtests.excluded=$EXCLUDE_KAFKA_TESTS -DskipCheckStyle=true -Djava.security.auth.login.config=${PWD}/kafka-junit-core/src/test/resources/jaas.conf
+  - mvn test -B -DkafkaVersion=$KAFKA_VERSION -Dtests.excluded=$EXCLUDE_KAFKA_TESTS -DskipCheckStyle=true -Djava.security.auth.login.config=${PWD}/kafka-junit-core/src/test/resources/jaas.conf -Djavax.net.debug=ssl:handshake:verbose
