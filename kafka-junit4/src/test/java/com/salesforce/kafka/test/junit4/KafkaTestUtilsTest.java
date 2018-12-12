@@ -143,9 +143,9 @@ public class KafkaTestUtilsTest {
         final KafkaTestUtils kafkaTestUtils = getKafkaTestUtils();
 
         // Get a producer
-        try (
-            final KafkaProducer<String, String> producer = kafkaTestUtils.getKafkaProducer(StringSerializer.class, StringSerializer.class)
-        ) {
+        try (final KafkaProducer<String, String> producer
+            = kafkaTestUtils.getKafkaProducer(StringSerializer.class, StringSerializer.class)) {
+            
             // Produce 12 records
             for (int recordCount = 0; recordCount < numberOfRecords; recordCount++) {
                 // Create a record.
