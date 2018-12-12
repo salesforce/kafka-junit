@@ -246,8 +246,8 @@ class KafkaTestClusterTest {
             // Create test utils instance.
             final KafkaTestUtils testUtils = new KafkaTestUtils(kafkaTestCluster);
 
-            // Define a new topic with 2 partitions, with replication factor of 1.
-            testUtils.createTopic(topicName, numberOfBrokers, (short) 1);
+            // Define a new topic with 2 partitions, with replication factor of 2.
+            testUtils.createTopic(topicName, numberOfBrokers, (short) numberOfBrokers);
 
             // Lets describe the topic.
             final TopicDescription topicDescription = testUtils.describeTopic(topicName);
@@ -291,7 +291,7 @@ class KafkaTestClusterTest {
             // Create test utils instance.
             final KafkaTestUtils testUtils = new KafkaTestUtils(kafkaTestCluster);
 
-            // Create the topic.
+            // Create the topic, 2 partitions, replica factor of 1 to avoid unclean shutdown
             testUtils.createTopic(topicName, numberOfPartitions, (short) 1);
 
             // Describe the topic.
@@ -361,7 +361,7 @@ class KafkaTestClusterTest {
             // Create kafka test utils
             final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestCluster);
 
-            // Create a topic with 2 partitions.
+            // Create a topic with 2 partitions, replica factor of 1 to avoid unclean shutdown
             kafkaTestUtils.createTopic(topicName, numberOfBrokers, (short) 1);
 
             // Produce data into each partition of the topic
@@ -416,7 +416,7 @@ class KafkaTestClusterTest {
             final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestCluster);
 
             // Create topic
-            kafkaTestUtils.createTopic(topicName, 1, (short) 1);
+            kafkaTestUtils.createTopic(topicName, 1, (short) numberOfBrokers);
 
             // Publish 2 messages into topic
             kafkaTestUtils.produceRecords(expectedMsgCount, topicName, 0);
