@@ -416,7 +416,7 @@ class KafkaTestClusterTest {
             final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestCluster);
 
             // Create topic
-            kafkaTestUtils.createTopic(topicName, 1, (short) 1);
+            kafkaTestUtils.createTopic(topicName, 1, (short) numberOfBrokers);
 
             // Publish 2 messages into topic
             kafkaTestUtils.produceRecords(expectedMsgCount, topicName, 0);
@@ -440,7 +440,7 @@ class KafkaTestClusterTest {
 
         // Create SSL listener
         final BrokerListener sslListener = new SslListener()
-            .withClientAuthRequested()
+            .withClientAuthRequired()
             .withKeyStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
             .withKeyStorePassword("password")
             .withTrustStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.truststore.jks").getFile())
@@ -454,7 +454,7 @@ class KafkaTestClusterTest {
 
         // Create SASL_SSL listener
         final BrokerListener saslSslListener = new SaslSslListener()
-            .withClientAuthRequested()
+            .withClientAuthRequired()
             .withUsername("kafkaclient")
             .withPassword("client-secret")
             .withKeyStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.keystore.jks").getFile())

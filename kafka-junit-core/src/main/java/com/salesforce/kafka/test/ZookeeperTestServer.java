@@ -47,7 +47,6 @@ public class ZookeeperTestServer implements AutoCloseable {
      * Starts the internal Test zookeeper server instance.
      */
     public void start() {
-        logger.info("Starting Zookeeper test server");
         try {
             if (zkServer == null) {
                 // Define configuration
@@ -63,9 +62,11 @@ public class ZookeeperTestServer implements AutoCloseable {
                 );
 
                 // Create instance
+                logger.info("Starting Zookeeper test server");
                 zkServer = new TestingServer(zkInstanceSpec, true);
             } else {
                 // Instance already exists, so 'start' by calling restart on instance.
+                logger.info("Restarting Zookeeper test server");
                 zkServer.restart();
             }
         } catch (final Exception exception) {
