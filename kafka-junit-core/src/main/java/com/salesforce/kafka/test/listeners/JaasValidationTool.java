@@ -36,6 +36,6 @@ class JaasValidationTool {
      * @return true if set, false if not.
      */
     public static boolean isJaasEnvironmentValueSet() {
-        return System.getProperty("java.security.auth.login.config") != null;
+        return System.getProperty(JAAS_VARIABLE_NAME) != null;
     }
 }

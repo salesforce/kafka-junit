@@ -336,10 +336,11 @@ class KafkaTestServerTest {
         final String topicName = "testRestartingBroker-" + System.currentTimeMillis();
         final int expectedMsgCount = 2;
 
+        // Disable end point identification/verification for tests, so we can use test/dummy certificates across
+        // multiple hosts / CI tools.
         final Properties overrideProperties = new Properties();
-
-        // Disable end point identification/verification for tests, so we can re-use test certificates.
         overrideProperties.put("ssl.endpoint.identification.algorithm", "");
+        overrideProperties.put("host.name", "localhost");
 
         // Create our test server instance
         try (final KafkaTestServer kafkaTestServer = new KafkaTestServer(overrideProperties, listeners)) {
