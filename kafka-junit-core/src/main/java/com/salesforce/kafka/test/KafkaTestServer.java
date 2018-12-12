@@ -84,7 +84,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     /**
      * Properties defining how to connect to each available/registered listener on the broker.
      */
-    private final List<ConnectionProperties> connectionProperties = new ArrayList<>();
+    private final List<ListenerProperties> listenerProperties = new ArrayList<>();
 
     /**
      * Default constructor, no overridden broker properties.
@@ -158,14 +158,14 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
         validateState(true, "Cannot get connect string prior to service being started.");
 
         // Return all of the connection properties.
-        return connectionProperties.stream()
-            .map(ConnectionProperties::getConnectString)
+        return listenerProperties.stream()
+            .map(ListenerProperties::getConnectString)
             .collect(Collectors.joining(","));
     }
 
     @Override
-    public ConnectionProperties getConnectionProperties() {
-        return connectionProperties.get(0);
+    public List<ListenerProperties> getListenerProperties() {
+        return Collections.unmodifiableList(listenerProperties);
     }
 
     /**
@@ -264,8 +264,8 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
                 // Generate port to listen on.
                 final int port = InstanceSpec.getRandomPort();
                 final String listenerDefinition = listener.getProtocol() + "://" + getConfiguredHostname() + ":" + port;
-                connectionProperties.add(
-                    new ConnectionProperties(listener.getProtocol(), listenerDefinition, listener.getClientProperties())
+                listenerProperties.add(
+                    new ListenerProperties(listener.getProtocol(), listenerDefinition, listener.getClientProperties())
                 );
                 appendProperty(brokerProperties, "advertised.listeners", listenerDefinition);
                 appendProperty(brokerProperties,"listeners", listenerDefinition);

@@ -27,7 +27,6 @@ package com.salesforce.kafka.test.junit4;
 
 import com.salesforce.kafka.test.KafkaTestUtils;
 import com.salesforce.kafka.test.listeners.SaslPlainListener;
-
 import org.junit.ClassRule;
 
 /**

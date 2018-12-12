@@ -25,6 +25,8 @@
 
 package com.salesforce.kafka.test;
 
+import java.util.List;
+
 /**
  * Provides a slimmed down view onto KafkaCluster to avoid circular references in code.
  */
@@ -42,11 +44,10 @@ public interface KafkaProvider {
     String getKafkaConnectString();
 
     /**
-     * TODO - This should likely be a list.
      * Connection details about each of the registered listeners on the kafka broker.
      * @return details about each of the registered listeners on the kafka broker.
      */
-    ConnectionProperties getConnectionProperties();
+    List<ListenerProperties> getListenerProperties();
 
     /**
      * Returns connection string for zookeeper clients.

@@ -526,11 +526,19 @@ public class KafkaTestUtils {
         defaultClientConfig.put("client.id", "test-consumer-id");
         defaultClientConfig.put("request.timeout.ms", 15000);
 
-        // Apply client properties as defined by registered listeners.
-        final Properties clientProperties = kafkaProvider.getConnectionProperties().getClientProperties();
-        clientProperties.forEach((key, value) -> {
-            defaultClientConfig.put((String) key, value);
-        });
+        // Apply client properties as defined by first returned connection properties.
+        final List<ListenerProperties> listenerProperties = kafkaProvider.getListenerProperties();
+        listenerProperties.stream()
+            // Find first entry
+            .findFirst()
+            // Get that entries clientProperties
+            .map(ListenerProperties::getClientProperties)
+            .ifPresent((clientProperties) -> {
+                // Add each to the default config.
+                clientProperties.forEach((key, value) -> {
+                    defaultClientConfig.put((String) key, value);
+                });
+            });
 
         return defaultClientConfig;
     }

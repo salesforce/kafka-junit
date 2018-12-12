@@ -30,7 +30,7 @@ import java.util.Properties;
 /**
  * Defines properties about a registered listener.
  */
-public class ConnectionProperties {
+public class ListenerProperties {
     private final String protocol;
     private final String connectString;
     private final Properties clientProperties;
@@ -41,7 +41,7 @@ public class ConnectionProperties {
      * @param connectString Connect string for listener.
      * @param clientProperties Any client properties required to connect.
      */
-    public ConnectionProperties(final String protocol, final String connectString, final Properties clientProperties) {
+    public ListenerProperties(final String protocol, final String connectString, final Properties clientProperties) {
         this.protocol = protocol;
         this.connectString = connectString;
         this.clientProperties = clientProperties;

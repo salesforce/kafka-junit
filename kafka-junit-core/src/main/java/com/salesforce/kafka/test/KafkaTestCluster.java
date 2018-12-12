@@ -25,7 +25,6 @@
 
 package com.salesforce.kafka.test;
 
-import com.google.common.collect.Lists;
 import com.salesforce.kafka.test.listeners.BrokerListener;
 import com.salesforce.kafka.test.listeners.PlainListener;
 import org.apache.kafka.common.Node;
@@ -232,12 +231,13 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
     }
 
     @Override
-    public ConnectionProperties getConnectionProperties() {
-        Optional<ConnectionProperties> properties = brokers.stream()
-            .map(KafkaTestServer::getConnectionProperties)
-            .findFirst();
-
-        return properties.get();
+    public List<ListenerProperties> getListenerProperties() {
+        // Collect all the properties from all brokers in the cluster.
+        final List<ListenerProperties> listenerProperties = new ArrayList<>();
+        brokers.forEach((broker) -> {
+            listenerProperties.addAll(broker.getListenerProperties());
+        });
+        return Collections.unmodifiableList(listenerProperties);
     }
 
     /**
