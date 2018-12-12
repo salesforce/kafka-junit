@@ -47,8 +47,9 @@ import java.util.stream.Collectors;
 public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseable {
     /**
      * This defines the hostname the kafka instance will listen on by default.
+     * To alter the value used, set broker override property 'host.name'
      */
-    private static final String DEFAULT_HOSTNAME = "127.0.0.1";
+    private static final String DEFAULT_HOSTNAME = "localhost";
 
     /**
      * Internal Test Kafka service.

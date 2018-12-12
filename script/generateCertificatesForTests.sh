@@ -1,3 +1,5 @@
+### This script generates a dummy self signed certificate used in the test suite.
+
 #!/bin/bash
 cd "$(dirname "$0")"
 
