@@ -143,7 +143,7 @@ public abstract class AbstractSharedKafkaTestResourceTest {
      * Simple smoke test to ensure broker running appropriate listeners.
      */
     @Test
-    void validateListener() throws ExecutionException, InterruptedException {
+    public void validateListener() throws ExecutionException, InterruptedException {
         try (final AdminClient adminClient  = getKafkaTestUtils().getAdminClient()) {
             final ConfigResource broker1Resource = new ConfigResource(ConfigResource.Type.BROKER, "1");
 

@@ -40,6 +40,7 @@ import org.junit.ClassRule;
  * @see AbstractSharedKafkaTestResourceTest for test case definitions.
  */
 public class SharedKafkaTestResourceWithSaslSslTest extends AbstractSharedKafkaTestResourceTest {
+
     /**
      * We have a two node kafka cluster that gets started when this test class is initialized.
      *
