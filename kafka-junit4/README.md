@@ -255,6 +255,8 @@ a cluster with 4 Kafka brokers. The Kafka brokers will have id's that start and 
         );
 ```
 
+##### Helpful methods on SharedKafkaTestResource
+
 [SharedKafkaTestResource](src/main/java/com/salesforce/kafka/test/junit4/SharedKafkaTestResource.java) instance has a few accessors that you can make use of in your tests to interact with the Kafka cluster.
 
 ```java
