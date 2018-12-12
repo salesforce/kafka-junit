@@ -246,8 +246,8 @@ class KafkaTestClusterTest {
             // Create test utils instance.
             final KafkaTestUtils testUtils = new KafkaTestUtils(kafkaTestCluster);
 
-            // Define a new topic with 2 partitions, with replication factor of 2.
-            testUtils.createTopic(topicName, numberOfBrokers, (short) numberOfBrokers);
+            // Define a new topic with 2 partitions, with replication factor of 1.
+            testUtils.createTopic(topicName, numberOfBrokers, (short) 1);
 
             // Lets describe the topic.
             final TopicDescription topicDescription = testUtils.describeTopic(topicName);
@@ -292,7 +292,7 @@ class KafkaTestClusterTest {
             final KafkaTestUtils testUtils = new KafkaTestUtils(kafkaTestCluster);
 
             // Create the topic.
-            testUtils.createTopic(topicName, numberOfPartitions, (short) numberOfBrokers);
+            testUtils.createTopic(topicName, numberOfPartitions, (short) 1);
 
             // Describe the topic.
             final TopicDescription topicDescription = testUtils.describeTopic(topicName);
@@ -362,7 +362,7 @@ class KafkaTestClusterTest {
             final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestCluster);
 
             // Create a topic with 2 partitions.
-            kafkaTestUtils.createTopic(topicName, numberOfBrokers, (short) numberOfBrokers);
+            kafkaTestUtils.createTopic(topicName, numberOfBrokers, (short) 1);
 
             // Produce data into each partition of the topic
             for (int partitionId = 0; partitionId < numberOfBrokers; partitionId++) {
@@ -416,7 +416,7 @@ class KafkaTestClusterTest {
             final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestCluster);
 
             // Create topic
-            kafkaTestUtils.createTopic(topicName, 1, (short) numberOfBrokers);
+            kafkaTestUtils.createTopic(topicName, 1, (short) 1);
 
             // Publish 2 messages into topic
             kafkaTestUtils.produceRecords(expectedMsgCount, topicName, 0);

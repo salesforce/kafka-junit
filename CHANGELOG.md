@@ -3,7 +3,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 3.1.0 (UNRELEASED)
-- Officially support Kafka 2.0.0
+- Officially support Kafka 2.0.x
 - KafkaTestUtils.produceRecords() and its variants now set producer configuration "acks" to "all"
 - Update Kafka-JUnit5 junit dependency from 5.1.1 to JUnit 5.3.2
 - Add support for registering PLAINTEXT, SSL, SASL_PLAIN, and SASL_SSL listeners on internal kafka brokers.
