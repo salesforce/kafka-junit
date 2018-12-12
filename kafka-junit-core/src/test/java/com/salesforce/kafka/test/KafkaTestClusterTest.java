@@ -503,7 +503,7 @@ class KafkaTestClusterTest {
         // Speed up shutdown in our tests
         final Properties overrideProperties = new Properties();
         overrideProperties.setProperty("controlled.shutdown.max.retries", "0");
-        overrideProperties.setProperty("controlled.shutdown.enable", "false");
+        overrideProperties.setProperty("controlled.shutdown.enable", "true");
         overrideProperties.setProperty("controlled.shutdown.retry.backoff.ms", "100");
         return overrideProperties;
     }
