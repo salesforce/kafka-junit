@@ -23,7 +23,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.kafka.test.junit4;
+package com.salesforce.kafka.test.junit5;
 
 import com.salesforce.kafka.test.KafkaTestUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -37,7 +37,8 @@ import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,10 +48,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Abstract base test class.  This defines shared test cases used by other Concrete tests.
@@ -62,26 +59,26 @@ public abstract class AbstractSharedKafkaTestResourceTest {
      * Validate that we started 2 brokers.
      */
     @Test
-    public void testTwoBrokersStarted() {
+    void testTwoBrokersStarted() {
         final Collection<Node> nodes = getKafkaTestUtils().describeClusterNodes();
-        assertNotNull("Sanity test, should not be null", nodes);
-        assertEquals("Should have two entries", 2, nodes.size());
+        Assertions.assertNotNull(nodes, "Sanity test, should not be null");
+        Assertions.assertEquals(2, nodes.size(), "Should have two entries");
 
         // Grab id for each node found.
         final Set<Integer> foundBrokerIds = nodes.stream()
             .map(Node::id)
             .collect(Collectors.toSet());
 
-        assertEquals("Found 2 brokers.", 2, foundBrokerIds.size());
-        assertTrue("Found brokerId 1", foundBrokerIds.contains(1));
-        assertTrue("Found brokerId 2", foundBrokerIds.contains(2));
+        Assertions.assertEquals(2, foundBrokerIds.size(), "Found 2 brokers.");
+        Assertions.assertTrue(foundBrokerIds.contains(1), "Found brokerId 1");
+        Assertions.assertTrue(foundBrokerIds.contains(2), "Found brokerId 2");
     }
 
     /**
      * Test consuming and producing via KafkaProducer and KafkaConsumer instances.
      */
     @Test
-    public void testProducerAndConsumer() throws Exception {
+    void testProducerAndConsumer() throws Exception {
         // Create a topic
         final String topicName = "ProducerAndConsumerTest" + System.currentTimeMillis();
         getKafkaTestUtils().createTopic(topicName, 1, (short) 1);
@@ -126,8 +123,8 @@ public abstract class AbstractSharedKafkaTestResourceTest {
                 logger.info("Found {} records in kafka", records.count());
                 for (ConsumerRecord<String, String> record: records) {
                     // Validate
-                    assertEquals("Key matches expected", expectedKey, record.key());
-                    assertEquals("value matches expected", expectedValue, record.value());
+                    Assertions.assertEquals(expectedKey, record.key(), "Key matches expected");
+                    Assertions.assertEquals(expectedValue, record.value(), "value matches expected");
                 }
             }
             while (!records.isEmpty());

@@ -23,11 +23,11 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.kafka.test.junit4;
+package com.salesforce.kafka.test.junit5;
 
 import com.salesforce.kafka.test.KafkaTestUtils;
 import com.salesforce.kafka.test.listeners.SaslSslListener;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 /**
  * NOTE: This test case assumes you've started the JVM with the argument.
@@ -39,7 +39,7 @@ import org.junit.ClassRule;
  * Runs smoke tests against an SASL+SSL enabled cluster.
  * @see AbstractSharedKafkaTestResourceTest for test case definitions.
  */
-public class SharedKafkaTestResourceWithSaslSslTest extends AbstractSharedKafkaTestResourceTest {
+class SharedKafkaTestResourceWithSaslSslTest extends AbstractSharedKafkaTestResourceTest {
     /**
      * We have a two node kafka cluster that gets started when this test class is initialized.
      *
@@ -51,8 +51,8 @@ public class SharedKafkaTestResourceWithSaslSslTest extends AbstractSharedKafkaT
      *  - configure the brokers to disable topic auto-creation.
      *  - Enable SASL_SSL authentication, using username 'kafkaclient' and password 'client-secret'
      */
-    @ClassRule
-    public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
+    @RegisterExtension
+    static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
         // Start a cluster with 2 brokers.
         .withBrokers(2)
         // Disable topic auto-creation.

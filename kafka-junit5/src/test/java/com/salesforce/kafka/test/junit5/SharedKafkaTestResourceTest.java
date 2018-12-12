@@ -27,38 +27,21 @@ package com.salesforce.kafka.test.junit5;
 
 import com.salesforce.kafka.test.KafkaBroker;
 import com.salesforce.kafka.test.KafkaTestUtils;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.Node;
-import org.apache.kafka.common.PartitionInfo;
-import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * Test of SharedKafkaTestResource.
- *
- * This also serves as an example of how to use this library!
+ * Runs smoke tests against a PLAINTEXT enabled cluster.
+ * @see AbstractSharedKafkaTestResourceTest for additional test case definitions.
  */
-class SharedKafkaTestResourceTest {
-    private static final Logger logger = LoggerFactory.getLogger(SharedKafkaTestResourceTest.class);
+class SharedKafkaTestResourceTest extends AbstractSharedKafkaTestResourceTest {
 
     /**
      * We have a single embedded kafka server that gets started when this test class is initialized.
@@ -72,31 +55,11 @@ class SharedKafkaTestResourceTest {
      * It must be scoped as 'public static' in order for the appropriate startup/shutdown hooks to be called on the extension.
      */
     @RegisterExtension
-    public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
+    static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
         // Start a cluster with 2 brokers.
         .withBrokers(2)
         // Disable topic auto-creation.
         .withBrokerProperty("auto.create.topics.enable", "false");
-
-
-    /**
-     * Validate that we started 2 brokers.
-     */
-    @Test
-    void testTwoBrokersStarted() {
-        final Collection<Node> nodes = getKafkaTestUtils().describeClusterNodes();
-        Assertions.assertNotNull(nodes, "Sanity test, should not be null");
-        Assertions.assertEquals(2, nodes.size(), "Should have two entries");
-
-        // Grab id for each node found.
-        final Set<Integer> foundBrokerIds = nodes.stream()
-            .map(Node::id)
-            .collect(Collectors.toSet());
-
-        Assertions.assertEquals(2, foundBrokerIds.size(), "Found 2 brokers.");
-        Assertions.assertTrue(foundBrokerIds.contains(1), "Found brokerId 1");
-        Assertions.assertTrue(foundBrokerIds.contains(2), "Found brokerId 2");
-    }
 
     /**
      * Example in a multi-broker cluster, how to stop an individual broker and bring it back on-line.
@@ -142,66 +105,9 @@ class SharedKafkaTestResourceTest {
     }
 
     /**
-     * Test consuming and producing via KafkaProducer and KafkaConsumer instances.
-     */
-    @Test
-    void testProducerAndConsumer() throws Exception {
-        // Create a topic
-        final String topicName = "ProducerAndConsumerTest" + System.currentTimeMillis();
-        getKafkaTestUtils().createTopic(topicName, 1, (short) 1);
-
-        final int partitionId = 0;
-
-        // Define our message
-        final String expectedKey = "my-key";
-        final String expectedValue = "my test message";
-
-        // Define the record we want to produce
-        final ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topicName, partitionId, expectedKey, expectedValue);
-
-        // Create a new producer
-        try (final KafkaProducer<String, String> producer =
-            getKafkaTestUtils().getKafkaProducer(StringSerializer.class, StringSerializer.class)) {
-
-            // Produce it & wait for it to complete.
-            final Future<RecordMetadata> future = producer.send(producerRecord);
-            producer.flush();
-            while (!future.isDone()) {
-                Thread.sleep(500L);
-            }
-            logger.info("Produce completed");
-        }
-
-        // Create consumer
-        try (final KafkaConsumer<String, String> kafkaConsumer =
-            getKafkaTestUtils().getKafkaConsumer(StringDeserializer.class, StringDeserializer.class)) {
-
-            final List<TopicPartition> topicPartitionList = new ArrayList<>();
-            for (final PartitionInfo partitionInfo: kafkaConsumer.partitionsFor(topicName)) {
-                topicPartitionList.add(new TopicPartition(partitionInfo.topic(), partitionInfo.partition()));
-            }
-            kafkaConsumer.assign(topicPartitionList);
-            kafkaConsumer.seekToBeginning(topicPartitionList);
-
-            // Pull records from kafka, keep polling until we get nothing back
-            ConsumerRecords<String, String> records;
-            do {
-                records = kafkaConsumer.poll(2000L);
-                logger.info("Found {} records in kafka", records.count());
-                for (ConsumerRecord<String, String> record: records) {
-                    // Validate
-                    Assertions.assertEquals(expectedKey, record.key(), "Key matches expected");
-                    Assertions.assertEquals(expectedValue, record.value(), "value matches expected");
-                }
-            }
-            while (!records.isEmpty());
-        }
-    }
-
-    /**
      * Simple accessor.
      */
-    private KafkaTestUtils getKafkaTestUtils() {
+    protected KafkaTestUtils getKafkaTestUtils() {
         return sharedKafkaTestResource.getKafkaTestUtils();
     }
 }
