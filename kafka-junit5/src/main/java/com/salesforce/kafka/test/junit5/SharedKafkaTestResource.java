@@ -33,6 +33,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.Properties;
 
 /**
@@ -78,7 +79,11 @@ public class SharedKafkaTestResource
         validateState(false, "Unknown State! Kafka Test Server already exists!");
 
         // Setup kafka test server
-        setKafkaCluster(new KafkaTestCluster(getNumberOfBrokers(), getBrokerProperties()));
+        setKafkaCluster(new KafkaTestCluster(
+            getNumberOfBrokers(),
+            getBrokerProperties(),
+            Collections.singletonList(getRegisteredListener())
+        ));
         getKafkaCluster().start();
     }
 

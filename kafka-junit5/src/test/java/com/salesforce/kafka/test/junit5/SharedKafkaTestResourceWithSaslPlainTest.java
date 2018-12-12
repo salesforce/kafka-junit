@@ -68,4 +68,9 @@ public class SharedKafkaTestResourceWithSaslPlainTest extends AbstractSharedKafk
     protected KafkaTestUtils getKafkaTestUtils() {
         return sharedKafkaTestResource.getKafkaTestUtils();
     }
+
+    @Override
+    protected String getExpectedListenerProtocol() {
+        return "SASL_PLAINTEXT";
+    }
 }

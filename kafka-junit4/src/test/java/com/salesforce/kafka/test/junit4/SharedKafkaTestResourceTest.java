@@ -111,4 +111,9 @@ public class SharedKafkaTestResourceTest extends AbstractSharedKafkaTestResource
     protected KafkaTestUtils getKafkaTestUtils() {
         return sharedKafkaTestResource.getKafkaTestUtils();
     }
+
+    @Override
+    protected String getExpectedListenerProtocol() {
+        return "PLAINTEXT";
+    }
 }

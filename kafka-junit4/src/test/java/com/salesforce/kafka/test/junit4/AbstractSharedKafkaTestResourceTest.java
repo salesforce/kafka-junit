@@ -26,6 +26,8 @@
 package com.salesforce.kafka.test.junit4;
 
 import com.salesforce.kafka.test.KafkaTestUtils;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -35,16 +37,20 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.config.ConfigResource;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.graalvm.compiler.debug.Assertions;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
@@ -135,7 +141,45 @@ public abstract class AbstractSharedKafkaTestResourceTest {
     }
 
     /**
+     * Simple smoke test to ensure broker running appropriate listeners.
+     */
+    @Test
+    void validateListener() throws ExecutionException, InterruptedException {
+        try (final AdminClient adminClient  = getKafkaTestUtils().getAdminClient()) {
+            final ConfigResource broker1Resource = new ConfigResource(ConfigResource.Type.BROKER, "1");
+
+            // Pull broker configs
+            final Config configResult = adminClient
+                .describeConfigs(Collections.singletonList(broker1Resource))
+                .values()
+                .get(broker1Resource)
+                .get();
+
+            // Check listener
+            final String actualListener = configResult.get("listeners").value();
+            assertTrue(
+                "Expected " + getExpectedListenerProtocol() + ":// and found: " + actualListener,
+                actualListener.contains(getExpectedListenerProtocol() + "://")
+            );
+
+            // Check inter broker protocol
+            final String actualBrokerProtocol = configResult.get("security.inter.broker.protocol").value();
+            assertEquals(
+                "Unexpected inter-broker protocol",
+                getExpectedListenerProtocol(),
+                actualBrokerProtocol
+            );
+        }
+    }
+
+    /**
      * Simple accessor.
      */
     protected abstract KafkaTestUtils getKafkaTestUtils();
+
+    /**
+     * The listener protocol the test is running over.
+     * @return Expected listener protocol
+     */
+    protected abstract String getExpectedListenerProtocol();
 }

@@ -75,4 +75,9 @@ public class SharedKafkaTestResourceWithSaslSslTest extends AbstractSharedKafkaT
     protected KafkaTestUtils getKafkaTestUtils() {
         return sharedKafkaTestResource.getKafkaTestUtils();
     }
+
+    @Override
+    protected String getExpectedListenerProtocol() {
+        return "SASL_SSL";
+    }
 }
