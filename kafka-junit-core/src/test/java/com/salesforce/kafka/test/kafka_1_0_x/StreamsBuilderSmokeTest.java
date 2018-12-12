@@ -84,9 +84,6 @@ class StreamsBuilderSmokeTest {
             config.put("group.id", "test-stream-group");
             config.put("auto.offset.reset", "earliest");
 
-            // Serialization definition.
-            final Serde<String> stringSerde = Serdes.String();
-
             // Build the stream
             final StreamsBuilder streamsBuilder = new StreamsBuilder();
             streamsBuilder

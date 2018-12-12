@@ -79,6 +79,35 @@ class KafkaTestClusterTest {
             Assertions.assertEquals(2, foundBrokerIds.size(), "Found 2 brokers.");
             Assertions.assertTrue(foundBrokerIds.contains(1), "Found brokerId 1");
             Assertions.assertTrue(foundBrokerIds.contains(2), "Found brokerId 2");
+
+            // Call getKafkaBrokers()
+            final KafkaBrokers brokers = kafkaTestCluster.getKafkaBrokers();
+
+            // Validate
+            Assertions.assertNotNull(brokers, "Should have non-null result.");
+            Assertions.assertEquals(numberOfBrokers, brokers.size(), "Should have 3 brokers.");
+
+            validateKafkaBroker(brokers.getBrokerById(1), 1);
+            validateKafkaBroker(brokers.getBrokerById(2), 2);
+
+            // Now ask for an invalid broker.
+            Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                brokers.getBrokerById(0);
+            });
+
+            // Now ask for an invalid broker.
+            Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                brokers.getBrokerById(3);
+            });
+
+            // Validate getKafkaBrokerById
+            validateKafkaBroker(kafkaTestCluster.getKafkaBrokerById(1), 1);
+            validateKafkaBroker(kafkaTestCluster.getKafkaBrokerById(2), 2);
+
+            // Now ask for an invalid broker.
+            Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                kafkaTestCluster.getKafkaBrokerById(0);
+            });
         }
     }
 
@@ -99,41 +128,6 @@ class KafkaTestClusterTest {
     }
 
     /**
-     * This test calls getKafkaBrokers() after the cluster has been properly started. It is expected
-     * to return all of the brokers within the cluster.
-     */
-    @Test
-    void testGetKafkaBrokers() throws Exception {
-        final int numberOfBrokers = 3;
-
-        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
-            // Start cluster
-            kafkaTestCluster.start();
-
-            // Call getKafkaBrokers()
-            final KafkaBrokers brokers = kafkaTestCluster.getKafkaBrokers();
-
-            // Validate
-            Assertions.assertNotNull(brokers, "Should have non-null result.");
-            Assertions.assertEquals(numberOfBrokers, brokers.size(), "Should have 3 brokers.");
-
-            validateKafkaBroker(brokers.getBrokerById(1), 1);
-            validateKafkaBroker(brokers.getBrokerById(2), 2);
-            validateKafkaBroker(brokers.getBrokerById(3), 3);
-
-            // Now ask for an invalid broker.
-            Assertions.assertThrows(IllegalArgumentException.class, () -> {
-                brokers.getBrokerById(0);
-            });
-
-            // Now ask for an invalid broker.
-            Assertions.assertThrows(IllegalArgumentException.class, () -> {
-                brokers.getBrokerById(4);
-            });
-        }
-    }
-
-    /**
      * This test calls getKafkaBrokerId() before the cluster has been properly started. It is expected to throw an IllegalStateException
      * in this scenario.
      */
@@ -147,34 +141,6 @@ class KafkaTestClusterTest {
             Assertions.assertThrows(IllegalStateException.class, () -> kafkaTestCluster.getKafkaBrokerById(0));
             Assertions.assertThrows(IllegalStateException.class, () -> kafkaTestCluster.getKafkaBrokerById(1));
             Assertions.assertThrows(IllegalStateException.class, () -> kafkaTestCluster.getKafkaBrokerById(2));
-        }
-    }
-
-    /**
-     * This test calls getKafkaBrokers() after the cluster has been properly started. It is expected
-     * to return all of the brokers within the cluster.
-     */
-    @Test
-    void testGetKafkaBrokerById() throws Exception {
-        final int numberOfBrokers = 3;
-
-        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
-            // Start cluster
-            kafkaTestCluster.start();
-
-            validateKafkaBroker(kafkaTestCluster.getKafkaBrokerById(1), 1);
-            validateKafkaBroker(kafkaTestCluster.getKafkaBrokerById(2), 2);
-            validateKafkaBroker(kafkaTestCluster.getKafkaBrokerById(3), 3);
-
-            // Now ask for an invalid broker.
-            Assertions.assertThrows(IllegalArgumentException.class, () -> {
-                kafkaTestCluster.getKafkaBrokerById(0);
-            });
-
-            // Now ask for an invalid broker.
-            Assertions.assertThrows(IllegalArgumentException.class, () -> {
-                kafkaTestCluster.getKafkaBrokerById(4);
-            });
         }
     }
 
@@ -284,10 +250,11 @@ class KafkaTestClusterTest {
         final int numberOfBrokers = 2;
         final int numberOfPartitions = 2;
         final int numberOfMessagesPerPartition = 2;
+        final int replicaFactor = 2;
         final String topicName = "MultiBrokerTest3-" + System.currentTimeMillis();
 
         try (final KafkaTestCluster kafkaTestCluster
-            = new KafkaTestCluster(numberOfBrokers, getDefaultBrokerOverrideProperties())) {
+            = new KafkaTestCluster(numberOfBrokers)) {
 
             // Start the cluster
             kafkaTestCluster.start();
@@ -296,7 +263,7 @@ class KafkaTestClusterTest {
             final KafkaTestUtils testUtils = new KafkaTestUtils(kafkaTestCluster);
 
             // Create the topic, 2 partitions, replica factor of 2
-            testUtils.createTopic(topicName, numberOfPartitions, (short) 2);
+            testUtils.createTopic(topicName, numberOfPartitions, (short) replicaFactor);
 
             // Describe the topic.
             final TopicDescription topicDescription = testUtils.describeTopic(topicName);
@@ -304,12 +271,12 @@ class KafkaTestClusterTest {
             // Validate it has 2 partitions
             Assertions.assertEquals(numberOfPartitions, topicDescription.partitions().size(), "Should have multiple partitions");
 
-            // Validate each partition belongs to a different broker, and each partition has two ISRs.
+            // Validate each partition belongs to a different broker, and each partition has 1 ISRs.
             final Set<Integer> leaderIds = new HashSet<>();
             for (final TopicPartitionInfo partitionInfo : topicDescription.partitions()) {
                 // Each partition should have 2 ISRs
                 Assertions.assertEquals(
-                    2,
+                    replicaFactor,
                     partitionInfo.isr().size(),
                     "Partition " + partitionInfo.partition() + " missing ISR"
                 );
@@ -336,6 +303,17 @@ class KafkaTestClusterTest {
             kafkaTestCluster
                 .getKafkaBrokerById(2)
                 .stop();
+
+            // It may take a moment for the broker to cleanly shut down.
+            List<Node> nodes;
+            for (int attempts = 0; attempts <= 5; attempts++) {
+                // Describe the cluster and wait for it to go to 1 broker.
+                nodes = testUtils.describeClusterNodes();
+                if (nodes.size() == 1) {
+                    break;
+                }
+                Thread.sleep(1000L);
+            }
 
             // Consume all messages
             final List<ConsumerRecord<byte[], byte[]>> consumedRecords = testUtils.consumeAllRecordsFromTopic(topicName);
