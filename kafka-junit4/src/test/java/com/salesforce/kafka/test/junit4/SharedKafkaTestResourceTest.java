@@ -41,9 +41,8 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test of SharedKafkaTestResource.
- *
- * This also serves as an example of how to use this library!
+ * Runs smoke tests against a PLAINTEXT enabled cluster.
+ * @see AbstractSharedKafkaTestResourceTest for additional test case definitions.
  */
 public class SharedKafkaTestResourceTest extends AbstractSharedKafkaTestResourceTest {
 

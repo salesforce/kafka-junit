@@ -55,7 +55,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Run smoke tests against an SSL enabled cluster.
+ * NOTE: This test assumes you've run the script/generateCertificatesForTest.sh script.
+ *
+ * Runs smoke tests against an SSL enabled cluster.
  * @see AbstractSharedKafkaTestResourceTest for test case definitions.
  */
 public class SharedKafkaTestResourceWithSslTest extends AbstractSharedKafkaTestResourceTest {

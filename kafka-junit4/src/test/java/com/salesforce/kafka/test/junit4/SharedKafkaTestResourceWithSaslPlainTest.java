@@ -34,6 +34,9 @@ import org.junit.ClassRule;
  * NOTE: This test case assumes you've started the JVM with the argument.
  *
  * -Djava.security.auth.login.config=kafka-junit-core/src/test/resources/jaas.conf
+ *
+ * Runs smoke tests against an SASL enabled cluster.
+ * @see AbstractSharedKafkaTestResourceTest for test case definitions.
  */
 public class SharedKafkaTestResourceWithSaslPlainTest extends AbstractSharedKafkaTestResourceTest {
     /**
