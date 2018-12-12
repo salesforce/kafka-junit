@@ -78,7 +78,7 @@ public class SharedKafkaTestResourceWithSslTest extends AbstractSharedKafkaTestR
         .withBrokerProperty("auto.create.topics.enable", "false")
         // Register and configure SSL authentication on cluster.
         .registerListener(new SslListener()
-        .useSslForInterBrokerProtocol()
+        .withClientAuthRequested()
         .withKeyStoreLocation(SharedKafkaTestResourceWithSslTest.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
         .withKeyStorePassword("password")
         .withTrustStoreLocation(SharedKafkaTestResourceWithSslTest.class.getClassLoader().getResource("kafka.truststore.jks").getFile())
