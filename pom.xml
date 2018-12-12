@@ -111,6 +111,7 @@
         <!-- excluded tests based on specific kafka versions -->
         <!-- default to excluding 0.11.0.x tests -->
         <tests.excluded>0_11_0_x</tests.excluded>
+        <tests.heapSize>5120M</tests.heapSize>
     </properties>
 
     <!-- Module Scoped Dependencies -->
