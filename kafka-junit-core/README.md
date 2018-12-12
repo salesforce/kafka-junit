@@ -174,10 +174,6 @@ public final class KafkaTestClusterRunner implements ApplicationRunner {
         // Start the cluster.
         kafkaTestCluster.start();
         
-        // Create default data
-        createDefaultTopic("TestTopicA", clusterSize, (short) clusterSize);
-        createDefaultTopic("TestTopicB", clusterSize, (short) clusterSize);
-        
         // Log details about the cluster
         logger.info("Cluster started at: {}", kafkaTestCluster.getKafkaConnectString());
     }
@@ -215,10 +211,6 @@ In order to make use of this Listener, you **must** start the JVM with the follo
         
         // Start the cluster.
         kafkaTestCluster.start();
-        
-        // Create default data
-        createDefaultTopic("TestTopicA", clusterSize, (short) clusterSize);
-        createDefaultTopic("TestTopicB", clusterSize, (short) clusterSize);
         
         // Log details about the cluster
         logger.info("Cluster started at: {}", kafkaTestCluster.getKafkaConnectString());
@@ -262,10 +254,6 @@ In order to make use of this Listener, you **must** start the JVM with the follo
         
         // Start the cluster.
         kafkaTestCluster.start();
-        
-        // Create default data
-        createDefaultTopic("TestTopicA", clusterSize, (short) clusterSize);
-        createDefaultTopic("TestTopicB", clusterSize, (short) clusterSize);
         
         // Log details about the cluster
         logger.info("Cluster started at: {}", kafkaTestCluster.getKafkaConnectString());
