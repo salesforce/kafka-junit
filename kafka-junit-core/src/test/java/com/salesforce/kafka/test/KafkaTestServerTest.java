@@ -67,7 +67,7 @@ class KafkaTestServerTest {
         final String theTopic = "transactional-topic" + System.currentTimeMillis();
 
         // Create our test server instance.
-        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer()) {
+        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer(getDefaultBrokerOverrideProperties())) {
             // Start it and create our topic.
             kafkaTestServer.start();
 
@@ -137,7 +137,7 @@ class KafkaTestServerTest {
         final String expectedValue = "my test message";
 
         // Create our test server instance.
-        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer()) {
+        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer(getDefaultBrokerOverrideProperties())) {
             // Start it and create our topic.
             kafkaTestServer.start();
 
@@ -210,7 +210,7 @@ class KafkaTestServerTest {
         final int expectedBrokerId = 22;
 
         // Define our override property
-        final Properties overrideProperties = new Properties();
+        final Properties overrideProperties = getDefaultBrokerOverrideProperties();
         overrideProperties.put("broker.id", String.valueOf(expectedBrokerId));
         
         // Create our test server instance passing override properties.
@@ -262,7 +262,7 @@ class KafkaTestServerTest {
     void testGetKafkaBrokers() throws Exception {
         final int expectedBrokerId = 1;
         // Create our test server instance
-        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer()) {
+        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer(getDefaultBrokerOverrideProperties())) {
             // Start broker
             kafkaTestServer.start();
 
@@ -295,7 +295,7 @@ class KafkaTestServerTest {
         final int expectedMsgCount = 2;
 
         // Create our test server instance
-        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer()) {
+        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer(getDefaultBrokerOverrideProperties())) {
             // Start broker
             kafkaTestServer.start();
 
@@ -336,7 +336,7 @@ class KafkaTestServerTest {
         final String topicName = "testRestartingBroker-" + System.currentTimeMillis();
         final int expectedMsgCount = 2;
 
-        final Properties overrideProperties = new Properties();
+        final Properties overrideProperties = getDefaultBrokerOverrideProperties();
 
         // Create our test server instance
         try (final KafkaTestServer kafkaTestServer = new KafkaTestServer(overrideProperties, listeners)) {
@@ -421,5 +421,14 @@ class KafkaTestServerTest {
             // Combination of SSL and SaslPlain
             Arguments.of(listenersGroup2)
         );
+    }
+
+    private Properties getDefaultBrokerOverrideProperties() {
+        // Speed up shutdown in our tests
+        final Properties overrideProperties = new Properties();
+        overrideProperties.setProperty("controlled.shutdown.max.retries", "0");
+        overrideProperties.setProperty("controlled.shutdown.enable", "false");
+        overrideProperties.setProperty("controlled.shutdown.retry.backoff.ms", "100");
+        return overrideProperties;
     }
 }

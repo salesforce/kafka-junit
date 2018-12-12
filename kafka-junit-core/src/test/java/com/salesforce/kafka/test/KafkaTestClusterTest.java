@@ -239,7 +239,9 @@ class KafkaTestClusterTest {
         final int numberOfBrokers = 2;
         final String topicName = "MultiBrokerTest2-" + System.currentTimeMillis();
 
-        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
+        try (final KafkaTestCluster kafkaTestCluster
+            = new KafkaTestCluster(numberOfBrokers, getDefaultBrokerOverrideProperties())) {
+
             // Start the cluster
             kafkaTestCluster.start();
 
@@ -284,7 +286,9 @@ class KafkaTestClusterTest {
         final int numberOfMessagesPerPartition = 2;
         final String topicName = "MultiBrokerTest3-" + System.currentTimeMillis();
 
-        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
+        try (final KafkaTestCluster kafkaTestCluster
+            = new KafkaTestCluster(numberOfBrokers, getDefaultBrokerOverrideProperties())) {
+
             // Start the cluster
             kafkaTestCluster.start();
 
@@ -354,7 +358,9 @@ class KafkaTestClusterTest {
         final int numberOfBrokers = 2;
         final String topicName = "RestartClusterTest-" + System.currentTimeMillis();
 
-        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
+        try (final KafkaTestCluster kafkaTestCluster
+            = new KafkaTestCluster(numberOfBrokers, getDefaultBrokerOverrideProperties())) {
+
             // Start the cluster
             kafkaTestCluster.start();
 
@@ -404,7 +410,8 @@ class KafkaTestClusterTest {
         final int expectedMsgCount = 2;
         final int numberOfBrokers = 2;
 
-        final Properties overrideProperties = new Properties();
+        // Speed up shutdown in our tests
+        final Properties overrideProperties = getDefaultBrokerOverrideProperties();
 
         // Create our test server instance
         try (final KafkaTestCluster kafkaTestCluster =
@@ -490,5 +497,14 @@ class KafkaTestClusterTest {
             // Combination of SSL and SaslPlain
             Arguments.of(listenersGroup2)
         );
+    }
+
+    private Properties getDefaultBrokerOverrideProperties() {
+        // Speed up shutdown in our tests
+        final Properties overrideProperties = new Properties();
+        overrideProperties.setProperty("controlled.shutdown.max.retries", "0");
+        overrideProperties.setProperty("controlled.shutdown.enable", "false");
+        overrideProperties.setProperty("controlled.shutdown.retry.backoff.ms", "100");
+        return overrideProperties;
     }
 }
