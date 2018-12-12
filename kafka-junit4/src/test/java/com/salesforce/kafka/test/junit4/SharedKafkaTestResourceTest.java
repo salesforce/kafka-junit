@@ -31,6 +31,7 @@ import org.apache.kafka.common.Node;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -75,8 +76,16 @@ public class SharedKafkaTestResourceTest extends AbstractSharedKafkaTestResource
         // Shutdown broker Id 2.
         broker2.stop();
 
-        // Describe the cluster
-        List<Node> nodes = getKafkaTestUtils().describeClusterNodes();
+        // It may take a moment for the broker to cleanly shut down.
+        List<Node> nodes = Collections.emptyList();
+        for (int attempts = 0; attempts <= 5; attempts++) {
+            // Describe the cluster and wait for it to go to 1 broker.
+            nodes = getKafkaTestUtils().describeClusterNodes();
+            if (nodes.size() == 1) {
+                break;
+            }
+            Thread.sleep(1000L);
+        }
 
         // We should only have 1 node now, and it should not include broker Id 2.
         assertEquals(1, nodes.size());

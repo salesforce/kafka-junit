@@ -32,6 +32,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -74,8 +75,16 @@ class SharedKafkaTestResourceTest extends AbstractSharedKafkaTestResourceTest {
         // Shutdown broker Id 2.
         broker2.stop();
 
-        // Describe the cluster
-        List<Node> nodes = getKafkaTestUtils().describeClusterNodes();
+        // It may take a moment for the broker to cleanly shut down.
+        List<Node> nodes = Collections.emptyList();
+        for (int attempts = 0; attempts <= 5; attempts++) {
+            // Describe the cluster and wait for it to go to 1 broker.
+            nodes = getKafkaTestUtils().describeClusterNodes();
+            if (nodes.size() == 1) {
+                break;
+            }
+            Thread.sleep(1000L);
+        }
 
         // We should only have 1 node now, and it should not include broker Id 2.
         Assertions.assertEquals(1, nodes.size());
