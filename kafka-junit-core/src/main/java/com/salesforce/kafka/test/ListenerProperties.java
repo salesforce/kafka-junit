@@ -47,15 +47,30 @@ public class ListenerProperties {
         this.clientProperties = clientProperties;
     }
 
+    /**
+     * Getter.
+     * @return Name of protocol the listener is registered on.
+     */
     public String getProtocol() {
         return protocol;
     }
 
+    /**
+     * Getter.
+     * @return Connect string for talking to this listenre.
+     */
     public String getConnectString() {
         return connectString;
     }
 
+    /**
+     * Getter.
+     * @return Any Kafka client properties that need to be set to talk to this listener.
+     */
     public Properties getClientProperties() {
-        return clientProperties;
+        // Return a copy of the properties.
+        final Properties copy = new Properties();
+        copy.putAll(clientProperties);
+        return copy;
     }
 }
