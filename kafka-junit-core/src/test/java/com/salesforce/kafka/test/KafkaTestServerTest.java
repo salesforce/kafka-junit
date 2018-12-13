@@ -25,6 +25,11 @@
 
 package com.salesforce.kafka.test;
 
+import com.salesforce.kafka.test.listeners.BrokerListener;
+import com.salesforce.kafka.test.listeners.PlainListener;
+import com.salesforce.kafka.test.listeners.SaslPlainListener;
+import com.salesforce.kafka.test.listeners.SaslSslListener;
+import com.salesforce.kafka.test.listeners.SslListener;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -37,11 +42,15 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Future;
+import java.util.stream.Stream;
 
 /**
  * Validation tests against KafkaTestServer class.
@@ -57,7 +66,7 @@ class KafkaTestServerTest {
         final String theTopic = "transactional-topic" + System.currentTimeMillis();
 
         // Create our test server instance.
-        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer()) {
+        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer(getDefaultBrokerOverrideProperties())) {
             // Start it and create our topic.
             kafkaTestServer.start();
 
@@ -127,7 +136,7 @@ class KafkaTestServerTest {
         final String expectedValue = "my test message";
 
         // Create our test server instance.
-        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer()) {
+        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer(getDefaultBrokerOverrideProperties())) {
             // Start it and create our topic.
             kafkaTestServer.start();
 
@@ -200,7 +209,7 @@ class KafkaTestServerTest {
         final int expectedBrokerId = 22;
 
         // Define our override property
-        final Properties overrideProperties = new Properties();
+        final Properties overrideProperties = getDefaultBrokerOverrideProperties();
         overrideProperties.put("broker.id", String.valueOf(expectedBrokerId));
         
         // Create our test server instance passing override properties.
@@ -252,7 +261,7 @@ class KafkaTestServerTest {
     void testGetKafkaBrokers() throws Exception {
         final int expectedBrokerId = 1;
         // Create our test server instance
-        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer()) {
+        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer(getDefaultBrokerOverrideProperties())) {
             // Start broker
             kafkaTestServer.start();
 
@@ -285,7 +294,7 @@ class KafkaTestServerTest {
         final int expectedMsgCount = 2;
 
         // Create our test server instance
-        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer()) {
+        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer(getDefaultBrokerOverrideProperties())) {
             // Start broker
             kafkaTestServer.start();
 
@@ -314,5 +323,97 @@ class KafkaTestServerTest {
             Assertions.assertNotNull(records);
             Assertions.assertEquals(expectedMsgCount, records.size(), "Should have found 2 records.");
         }
+    }
+
+    /**
+     * Test a single server instance with various listeners.
+     * @param listeners The listeners to register.
+     */
+    @ParameterizedTest
+    @MethodSource("provideListeners")
+    void testCustomizedListeners(final List<BrokerListener> listeners) throws Exception {
+        final String topicName = "testRestartingBroker-" + System.currentTimeMillis();
+        final int expectedMsgCount = 2;
+
+        final Properties overrideProperties = getDefaultBrokerOverrideProperties();
+
+        // Create our test server instance
+        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer(overrideProperties, listeners)) {
+            // Start broker
+            kafkaTestServer.start();
+
+            // Create KafkaTestUtils
+            final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestServer);
+
+            // Create topic
+            kafkaTestUtils.createTopic(topicName, 1, (short) 1);
+
+            // Publish 2 messages into topic
+            kafkaTestUtils.produceRecords(expectedMsgCount, topicName, 0);
+
+            // Sanity test - Consume the messages back out before shutting down broker.
+            final List<ConsumerRecord<byte[], byte[]>> records = kafkaTestUtils.consumeAllRecordsFromTopic(topicName);
+            Assertions.assertNotNull(records);
+            Assertions.assertEquals(expectedMsgCount, records.size(), "Should have found 2 records.");
+
+            // Call stop/close on the broker
+            kafkaTestServer.stop();
+        }
+    }
+
+    /**
+     * Define various listeners.
+     */
+    private static Stream<Arguments> provideListeners() {
+        // Create default plain listener
+        final BrokerListener plainListener = new PlainListener();
+
+        // Create SSL listener
+        final BrokerListener sslListener = new SslListener()
+            .withClientAuthRequired()
+            .withKeyStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
+            .withKeyStorePassword("password")
+            .withTrustStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.truststore.jks").getFile())
+            .withTrustStorePassword("password")
+            .withKeyPassword("password");
+
+        // Create SASL_PLAIN listener.
+        final BrokerListener saslPlainListener = new SaslPlainListener()
+            .withUsername("kafkaclient")
+            .withPassword("client-secret");
+
+        // Create SASL_SSL listener
+        final BrokerListener saslSslListener = new SaslSslListener()
+            .withClientAuthRequired()
+            .withUsername("kafkaclient")
+            .withPassword("client-secret")
+            .withKeyStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
+            .withKeyStorePassword("password")
+            .withTrustStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.truststore.jks").getFile())
+            .withTrustStorePassword("password")
+            .withKeyPassword("password");
+
+        return Stream.of(
+            // Just plain
+            Arguments.of(Collections.singletonList(plainListener)),
+
+            // Just SSL
+            Arguments.of(Collections.singletonList(sslListener)),
+
+            // Just SASL_PLAIN
+            Arguments.of(Collections.singletonList(saslPlainListener)),
+
+            // Just SASL_SSL
+            Arguments.of(Collections.singletonList(saslSslListener))
+        );
+    }
+
+    private Properties getDefaultBrokerOverrideProperties() {
+        // Speed up shutdown in our tests
+        final Properties overrideProperties = new Properties();
+        overrideProperties.setProperty("controlled.shutdown.max.retries", "0");
+        overrideProperties.setProperty("controlled.shutdown.enable", "true");
+        overrideProperties.setProperty("controlled.shutdown.retry.backoff.ms", "100");
+        return overrideProperties;
     }
 }

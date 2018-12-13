@@ -102,7 +102,7 @@ public final class KafkaTestClusterRunner implements ApplicationRunner {
     }
 
     /**
-     * Creates default admin user if none exists.
+     * Starts multi-broker kafka cluster.
      */
     private void startKafkaService(final int clusterSize) {
         kafkaTestCluster = new KafkaTestCluster(clusterSize);
@@ -143,4 +143,119 @@ public final class KafkaTestClusterRunner implements ApplicationRunner {
         return this.kafkaTestCluster;
     }
 }
+```
+
+### Example starting a cluster with SSL support
+
+```java
+    /**
+     * Starts multi-broker kafka cluster with SSL support.
+     */
+    private void startKafkaService(final int clusterSize) {
+        // Create SSL listener
+        final BrokerListener listener = new SslListener()
+            .withClientAuthRequired()
+            .withKeyStoreLocation("/path/to/your/kafka.keystore.jks")
+            .withKeyStorePassword("YourKeyStorePassword")
+            .withTrustStoreLocation("/path/to/your/kafka.truststore.jks")
+            .withTrustStorePassword("YourTrustStorePassword")
+            .withKeyPassword("YourKeyPassword");
+        
+        // Define any other broker properties you may need.
+        final Properties brokerProperties = new Properties();
+
+        // Create cluster
+        kafkaTestCluster = new KafkaTestCluster(
+            clusterSize,
+            brokerProperties,
+            Collections.singletonList(listener)
+        );
+        
+        // Start the cluster.
+        kafkaTestCluster.start();
+        
+        // Log details about the cluster
+        logger.info("Cluster started at: {}", kafkaTestCluster.getKafkaConnectString());
+    }
+```
+
+### Example starting a cluster with SASL_PLAIN support
+
+**NOTE:** Kafka reads in the JAAS file as defined by an Environment variable at JVM start up.  This property
+can not be set at run time.
+ 
+In order to make use of this Listener, you **must** start the JVM with the following argument:
+
+ `-Djava.security.auth.login.config=/path/to/your/jaas.conf`
+
+```java
+    /**
+     * Starts multi-broker kafka cluster with SASL_PLAIN support.
+     */
+    private void startKafkaService(final int clusterSize) {
+        // Create SSL_PLAIN listener
+        final BrokerListener listener = new SaslPlainListener()
+            // Define your username and password
+            .withUsername("kafkaclient")
+            .withPassword("client-secret");
+        
+        // Define any other broker properties you may need.
+        final Properties brokerProperties = new Properties();
+
+        // Create cluster
+        kafkaTestCluster = new KafkaTestCluster(
+            clusterSize,
+            brokerProperties,
+            Collections.singletonList(listener)
+        );
+        
+        // Start the cluster.
+        kafkaTestCluster.start();
+        
+        // Log details about the cluster
+        logger.info("Cluster started at: {}", kafkaTestCluster.getKafkaConnectString());
+    }
+```
+
+### Example starting a cluster with SASL_SSL support
+
+**NOTE:** Kafka reads in the JAAS file as defined by an Environment variable at JVM start up.  This property
+can not be set at run time.
+ 
+In order to make use of this Listener, you **must** start the JVM with the following argument:
+
+ `-Djava.security.auth.login.config=/path/to/your/jaas.conf`
+
+```java
+    /**
+     * Starts multi-broker kafka cluster with SASL_SSL support.
+     */
+    private void startKafkaService(final int clusterSize) {
+        // Create SASL_SSL listener
+        final BrokerListener listener = new SaslSslListener()
+            .withKeyStoreLocation("/path/to/your/kafka.keystore.jks")
+            .withKeyStorePassword("YourKeyStorePassword")
+            .withTrustStoreLocation("/path/to/your/kafka.truststore.jks")
+            .withTrustStorePassword("YourTrustStorePassword")
+            .withKeyPassword("YourKeyPassword")
+            // Define your username and password
+            .withUsername("kafkaclient")
+            .withPassword("client-secret");
+        
+        // Define any other broker properties you may need.
+        final Properties brokerProperties = new Properties();
+
+        // Create cluster
+        kafkaTestCluster = new KafkaTestCluster(
+            clusterSize,
+            brokerProperties,
+            Collections.singletonList(listener)
+        );
+        
+        // Start the cluster.
+        kafkaTestCluster.start();
+        
+        // Log details about the cluster
+        logger.info("Cluster started at: {}", kafkaTestCluster.getKafkaConnectString());
+    }
 ```

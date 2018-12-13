@@ -25,6 +25,9 @@
 
 package com.salesforce.kafka.test;
 
+import com.salesforce.kafka.test.listeners.BrokerListener;
+import com.salesforce.kafka.test.listeners.PlainListener;
+
 import java.util.Properties;
 
 /**
@@ -46,6 +49,11 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
      * How many brokers to put into the cluster.
      */
     private int numberOfBrokers = 1;
+
+    /**
+     * Defines which listener has been set to be configured on the brokers.
+     */
+    private BrokerListener registeredListener = new PlainListener();
 
     /**
      * Default constructor.
@@ -108,6 +116,20 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
     }
 
     /**
+     * Register additional listeners on the kafka brokers.
+     * @param listener listener instance to register.
+     * @return SharedKafkaTestResource for method chaining.
+     */
+    @SuppressWarnings("unchecked")
+    public T registerListener(final BrokerListener listener) {
+        if (listener == null) {
+            throw new IllegalArgumentException("Listener argument may not be null.");
+        }
+        registeredListener = listener;
+        return (T) this;
+    }
+
+    /**
      * KafkaTestUtils is a collection of re-usable/common access patterns for interacting with the Kafka cluster.
      * @return Instance of KafkaTestUtils configured to operate on the Kafka cluster.
      */
@@ -142,6 +164,14 @@ public abstract class AbstractKafkaTestResource<T extends AbstractKafkaTestResou
     public KafkaBrokers getKafkaBrokers() {
         validateState(true, "Cannot access Kafka before service has been started.");
         return kafkaCluster.getKafkaBrokers();
+    }
+
+    /**
+     * Returns all registered listener.
+     * @return The configured listener.
+     */
+    protected BrokerListener getRegisteredListener() {
+        return registeredListener;
     }
 
     protected KafkaCluster getKafkaCluster() {

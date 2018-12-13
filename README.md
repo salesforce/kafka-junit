@@ -5,7 +5,11 @@
 This library wraps Apache Kafka's [KafkaServerStartable](https://github.com/apache/kafka/blob/1.1/core/src/main/scala/kafka/server/KafkaServerStartable.scala#L32) class and allows you to easily create and run tests against
 one or more "real" kafka brokers. No longer do you need to setup and coordinate with an external kafka cluster for your tests! The library transparently supports running a single or multi-broker cluster.  Running a multi-broker cluster allows you to validate how your software reacts under various error scenarios, such as when one or more brokers become unavailable.
 
-Currently the library supports Kafka versions 2.0.x, 1.1.x, 1.0.x, and 0.11.0.x.
+## Features
+- Support for JUnit 4 and JUnit 5.
+- Support for Kafka versions 2.0.x, 1.1.x, 1.0.x, and 0.11.0.x.
+- Support for running either single broker cluster, or multi-broker clusters.
+- Support for PLAINTEXT, SASL_PLAINTEXT, SASL_SSL, and SSL listeners.
 
 ## Using Kafka-JUnit with JUnit 4.
 

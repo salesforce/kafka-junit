@@ -5,12 +5,12 @@
     <parent>
         <artifactId>kafka-junit</artifactId>
         <groupId>com.salesforce.kafka.test</groupId>
-        <version>3.0.1</version>
+        <version>3.1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kafka-junit-core</artifactId>
-    <version>3.0.1</version>
+    <version>3.1.0</version>
 
     <!-- defined properties -->
     <properties>
@@ -23,6 +23,12 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit5.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
             <version>${junit5.version}</version>
             <scope>test</scope>
         </dependency>
@@ -99,7 +105,7 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <argLine>-Xmx2048M</argLine>
+                    <argLine>-Xmx${tests.heapSize}</argLine>
                     <skipTests>${skipTests}</skipTests>
                     <reportFormat>plain</reportFormat>
                 </configuration>

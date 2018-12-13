@@ -40,7 +40,7 @@ class KafkaBrokerTest {
     @Test
     void testStart() throws Exception {
         // Create mock.
-        final KafkaTestServer mockServer = createMockServer(1, "localhost:1234");
+        final KafkaTestServer mockServer = createMockServer(1, "PLAINTEXT://localhost:1234");
 
         // Build brokers
         final KafkaBroker kafkaBroker = new KafkaBroker(mockServer);
@@ -58,7 +58,7 @@ class KafkaBrokerTest {
     @Test
     void testStop() throws Exception {
         // Create mock.
-        final KafkaTestServer mockServer = createMockServer(1, "localhost:1234");
+        final KafkaTestServer mockServer = createMockServer(1, "PLAINTEXT://localhost:1234");
 
         // Build brokers
         final KafkaBroker kafkaBroker = new KafkaBroker(mockServer);
@@ -76,7 +76,7 @@ class KafkaBrokerTest {
     @Test
     void testGetBrokerId() {
         final int brokerId = 1;
-        final String connectString = "localhost:12345";
+        final String connectString = "PLAINTEXT://localhost:12345";
 
         // Create mock.
         final KafkaTestServer mockServer = createMockServer(brokerId, connectString);
@@ -96,7 +96,7 @@ class KafkaBrokerTest {
     @Test
     void testGetConnectString() {
         final int brokerId = 1;
-        final String connectString = "localhost:12345";
+        final String connectString = "PLAINTEXT://localhost:12345";
 
         // Create mock.
         final KafkaTestServer mockServer = createMockServer(brokerId, connectString);

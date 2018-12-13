@@ -23,35 +23,19 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.kafka.test;
-
-import java.util.List;
+package com.salesforce.kafka.test.listeners;
 
 /**
- * Provides a slimmed down view onto KafkaCluster to avoid circular references in code.
+ * Simple utility class to determine if the JAAS system environment variable has been set.
  */
-public interface KafkaProvider {
-    /**
-     * Returns an immutable list of broker hosts for the kafka cluster.
-     * @return immutable list of hosts for brokers within the cluster.
-     */
-    KafkaBrokers getKafkaBrokers();
+class JaasValidationTool {
+    public static final String JAAS_VARIABLE_NAME = "java.security.auth.login.config";
 
     /**
-     * bootstrap.servers string to configure Kafka consumers or producers to access the Kafka cluster.
-     * @return Connect string to use for Kafka clients.
+     * Is the JAAS environment variable set.
+     * @return true if set, false if not.
      */
-    String getKafkaConnectString();
-
-    /**
-     * Connection details about each of the registered listeners on the kafka broker.
-     * @return details about each of the registered listeners on the kafka broker.
-     */
-    List<ListenerProperties> getListenerProperties();
-
-    /**
-     * Returns connection string for zookeeper clients.
-     * @return Connection string to connect to the Zookeeper instance.
-     */
-    String getZookeeperConnectString();
+    public static boolean isJaasEnvironmentValueSet() {
+        return System.getProperty(JAAS_VARIABLE_NAME) != null;
+    }
 }

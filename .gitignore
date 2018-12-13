@@ -7,3 +7,6 @@
 target/
 README.md.bak
 *.versionsBackup
+script/generated/
+kafka-junit-core/src/test/resources/kafka.keystore.jks
+kafka-junit-core/src/test/resources/kafka.truststore.jks

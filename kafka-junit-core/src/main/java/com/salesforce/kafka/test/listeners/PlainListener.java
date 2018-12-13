@@ -23,35 +23,27 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.kafka.test;
+package com.salesforce.kafka.test.listeners;
 
-import java.util.List;
+import java.util.Properties;
 
 /**
- * Provides a slimmed down view onto KafkaCluster to avoid circular references in code.
+ * Default implementation.  Defines a PLAINTEXT listener.
  */
-public interface KafkaProvider {
-    /**
-     * Returns an immutable list of broker hosts for the kafka cluster.
-     * @return immutable list of hosts for brokers within the cluster.
-     */
-    KafkaBrokers getKafkaBrokers();
+public class PlainListener implements BrokerListener {
 
-    /**
-     * bootstrap.servers string to configure Kafka consumers or producers to access the Kafka cluster.
-     * @return Connect string to use for Kafka clients.
-     */
-    String getKafkaConnectString();
+    @Override
+    public String getProtocol() {
+        return "PLAINTEXT";
+    }
 
-    /**
-     * Connection details about each of the registered listeners on the kafka broker.
-     * @return details about each of the registered listeners on the kafka broker.
-     */
-    List<ListenerProperties> getListenerProperties();
+    @Override
+    public Properties getBrokerProperties() {
+        return new Properties();
+    }
 
-    /**
-     * Returns connection string for zookeeper clients.
-     * @return Connection string to connect to the Zookeeper instance.
-     */
-    String getZookeeperConnectString();
+    @Override
+    public Properties getClientProperties() {
+        return new Properties();
+    }
 }

@@ -401,8 +401,7 @@ public class KafkaTestUtils {
     ) {
 
         // Build config
-        final Map<String, Object> kafkaProducerConfig = new HashMap<>();
-        kafkaProducerConfig.put("bootstrap.servers", kafkaProvider.getKafkaConnectString());
+        final Map<String, Object> kafkaProducerConfig = buildDefaultClientConfig();
         kafkaProducerConfig.put("max.in.flight.requests.per.connection", 1);
         kafkaProducerConfig.put("retries", 5);
         kafkaProducerConfig.put("client.id", getClass().getSimpleName() + " Producer");
@@ -519,9 +518,28 @@ public class KafkaTestUtils {
      * Internal helper method to build a default configuration.
      */
     private Map<String, Object> buildDefaultClientConfig() {
+        final String kafkaConnectString = kafkaProvider.getKafkaConnectString();
+
+        // Build default client configuration.
         final Map<String, Object> defaultClientConfig = new HashMap<>();
-        defaultClientConfig.put("bootstrap.servers", kafkaProvider.getKafkaConnectString());
+        defaultClientConfig.put("bootstrap.servers", kafkaConnectString);
         defaultClientConfig.put("client.id", "test-consumer-id");
+        defaultClientConfig.put("request.timeout.ms", 15000);
+
+        // Apply client properties as defined by first returned connection properties.
+        final List<ListenerProperties> listenerProperties = kafkaProvider.getListenerProperties();
+        listenerProperties.stream()
+            // Find first entry
+            .findFirst()
+            // Get that entries clientProperties
+            .map(ListenerProperties::getClientProperties)
+            .ifPresent((clientProperties) -> {
+                // Add each to the default config.
+                clientProperties.forEach((key, value) -> {
+                    defaultClientConfig.put((String) key, value);
+                });
+            });
+
         return defaultClientConfig;
     }
 }

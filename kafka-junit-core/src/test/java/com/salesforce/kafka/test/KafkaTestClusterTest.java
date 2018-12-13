@@ -25,18 +25,29 @@
 
 package com.salesforce.kafka.test;
 
+import com.salesforce.kafka.test.listeners.BrokerListener;
+import com.salesforce.kafka.test.listeners.PlainListener;
+import com.salesforce.kafka.test.listeners.SaslPlainListener;
+import com.salesforce.kafka.test.listeners.SaslSslListener;
+import com.salesforce.kafka.test.listeners.SslListener;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Stream;
 
 class KafkaTestClusterTest {
 
@@ -67,6 +78,35 @@ class KafkaTestClusterTest {
             Assertions.assertEquals(2, foundBrokerIds.size(), "Found 2 brokers.");
             Assertions.assertTrue(foundBrokerIds.contains(1), "Found brokerId 1");
             Assertions.assertTrue(foundBrokerIds.contains(2), "Found brokerId 2");
+
+            // Call getKafkaBrokers()
+            final KafkaBrokers brokers = kafkaTestCluster.getKafkaBrokers();
+
+            // Validate
+            Assertions.assertNotNull(brokers, "Should have non-null result.");
+            Assertions.assertEquals(numberOfBrokers, brokers.size(), "Should have 3 brokers.");
+
+            validateKafkaBroker(brokers.getBrokerById(1), 1);
+            validateKafkaBroker(brokers.getBrokerById(2), 2);
+
+            // Now ask for an invalid broker.
+            Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                brokers.getBrokerById(0);
+            });
+
+            // Now ask for an invalid broker.
+            Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                brokers.getBrokerById(3);
+            });
+
+            // Validate getKafkaBrokerById
+            validateKafkaBroker(kafkaTestCluster.getKafkaBrokerById(1), 1);
+            validateKafkaBroker(kafkaTestCluster.getKafkaBrokerById(2), 2);
+
+            // Now ask for an invalid broker.
+            Assertions.assertThrows(IllegalArgumentException.class, () -> {
+                kafkaTestCluster.getKafkaBrokerById(0);
+            });
         }
     }
 
@@ -82,41 +122,6 @@ class KafkaTestClusterTest {
             // Call getKafkaBrokers() before the cluster has started.
             Assertions.assertThrows(IllegalStateException.class, () -> {
                 kafkaTestCluster.getKafkaBrokers();
-            });
-        }
-    }
-
-    /**
-     * This test calls getKafkaBrokers() after the cluster has been properly started. It is expected
-     * to return all of the brokers within the cluster.
-     */
-    @Test
-    void testGetKafkaBrokers() throws Exception {
-        final int numberOfBrokers = 3;
-
-        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
-            // Start cluster
-            kafkaTestCluster.start();
-
-            // Call getKafkaBrokers()
-            final KafkaBrokers brokers = kafkaTestCluster.getKafkaBrokers();
-
-            // Validate
-            Assertions.assertNotNull(brokers, "Should have non-null result.");
-            Assertions.assertEquals(numberOfBrokers, brokers.size(), "Should have 3 brokers.");
-
-            validateKafkaBroker(brokers.getBrokerById(1), 1);
-            validateKafkaBroker(brokers.getBrokerById(2), 2);
-            validateKafkaBroker(brokers.getBrokerById(3), 3);
-
-            // Now ask for an invalid broker.
-            Assertions.assertThrows(IllegalArgumentException.class, () -> {
-                brokers.getBrokerById(0);
-            });
-
-            // Now ask for an invalid broker.
-            Assertions.assertThrows(IllegalArgumentException.class, () -> {
-                brokers.getBrokerById(4);
             });
         }
     }
@@ -139,34 +144,6 @@ class KafkaTestClusterTest {
     }
 
     /**
-     * This test calls getKafkaBrokers() after the cluster has been properly started. It is expected
-     * to return all of the brokers within the cluster.
-     */
-    @Test
-    void testGetKafkaBrokerById() throws Exception {
-        final int numberOfBrokers = 3;
-
-        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
-            // Start cluster
-            kafkaTestCluster.start();
-
-            validateKafkaBroker(kafkaTestCluster.getKafkaBrokerById(1), 1);
-            validateKafkaBroker(kafkaTestCluster.getKafkaBrokerById(2), 2);
-            validateKafkaBroker(kafkaTestCluster.getKafkaBrokerById(3), 3);
-
-            // Now ask for an invalid broker.
-            Assertions.assertThrows(IllegalArgumentException.class, () -> {
-                kafkaTestCluster.getKafkaBrokerById(0);
-            });
-
-            // Now ask for an invalid broker.
-            Assertions.assertThrows(IllegalArgumentException.class, () -> {
-                kafkaTestCluster.getKafkaBrokerById(4);
-            });
-        }
-    }
-
-    /**
      * This test calls getKafkaConnectString() before the cluster has been properly started.
      * It is expected to throw an IllegalStateException in this scenario.
      */
@@ -177,7 +154,7 @@ class KafkaTestClusterTest {
         // Create cluster
         try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
             // Call getKafkaBrokerById() before the cluster is started, it should throw exceptions.
-            Assertions.assertThrows(IllegalStateException.class, () -> kafkaTestCluster.getKafkaConnectString());
+            Assertions.assertThrows(IllegalStateException.class, kafkaTestCluster::getKafkaConnectString);
         }
     }
 
@@ -212,7 +189,7 @@ class KafkaTestClusterTest {
 
             // Make sure each node is represented properly.
             for (final Node node: nodes) {
-                final String calculatedConnectString = node.host() + ":" + node.port();
+                final String calculatedConnectString = "PLAINTEXT://" + node.host() + ":" + node.port();
                 Assertions.assertTrue(hosts.contains(calculatedConnectString), "Should contain " + calculatedConnectString);
             }
         }
@@ -227,7 +204,9 @@ class KafkaTestClusterTest {
         final int numberOfBrokers = 2;
         final String topicName = "MultiBrokerTest2-" + System.currentTimeMillis();
 
-        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
+        try (final KafkaTestCluster kafkaTestCluster
+            = new KafkaTestCluster(numberOfBrokers, getDefaultBrokerOverrideProperties())) {
+
             // Start the cluster
             kafkaTestCluster.start();
 
@@ -270,17 +249,20 @@ class KafkaTestClusterTest {
         final int numberOfBrokers = 2;
         final int numberOfPartitions = 2;
         final int numberOfMessagesPerPartition = 2;
+        final int replicaFactor = 2;
         final String topicName = "MultiBrokerTest3-" + System.currentTimeMillis();
 
-        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
+        try (final KafkaTestCluster kafkaTestCluster
+            = new KafkaTestCluster(numberOfBrokers)) {
+
             // Start the cluster
             kafkaTestCluster.start();
 
             // Create test utils instance.
             final KafkaTestUtils testUtils = new KafkaTestUtils(kafkaTestCluster);
 
-            // Create the topic.
-            testUtils.createTopic(topicName, numberOfPartitions, (short) numberOfBrokers);
+            // Create the topic, 2 partitions, replica factor of 2
+            testUtils.createTopic(topicName, numberOfPartitions, (short) replicaFactor);
 
             // Describe the topic.
             final TopicDescription topicDescription = testUtils.describeTopic(topicName);
@@ -288,12 +270,12 @@ class KafkaTestClusterTest {
             // Validate it has 2 partitions
             Assertions.assertEquals(numberOfPartitions, topicDescription.partitions().size(), "Should have multiple partitions");
 
-            // Validate each partition belongs to a different broker, and each partition has two ISRs.
+            // Validate each partition belongs to a different broker, and each partition has 1 ISRs.
             final Set<Integer> leaderIds = new HashSet<>();
             for (final TopicPartitionInfo partitionInfo : topicDescription.partitions()) {
                 // Each partition should have 2 ISRs
                 Assertions.assertEquals(
-                    2,
+                    replicaFactor,
                     partitionInfo.isr().size(),
                     "Partition " + partitionInfo.partition() + " missing ISR"
                 );
@@ -321,6 +303,17 @@ class KafkaTestClusterTest {
                 .getKafkaBrokerById(2)
                 .stop();
 
+            // It may take a moment for the broker to cleanly shut down.
+            List<Node> nodes;
+            for (int attempts = 0; attempts <= 5; attempts++) {
+                // Describe the cluster and wait for it to go to 1 broker.
+                nodes = testUtils.describeClusterNodes();
+                if (nodes.size() == 1) {
+                    break;
+                }
+                Thread.sleep(1000L);
+            }
+
             // Consume all messages
             final List<ConsumerRecord<byte[], byte[]>> consumedRecords = testUtils.consumeAllRecordsFromTopic(topicName);
 
@@ -342,15 +335,17 @@ class KafkaTestClusterTest {
         final int numberOfBrokers = 2;
         final String topicName = "RestartClusterTest-" + System.currentTimeMillis();
 
-        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
+        try (final KafkaTestCluster kafkaTestCluster
+            = new KafkaTestCluster(numberOfBrokers, getDefaultBrokerOverrideProperties())) {
+
             // Start the cluster
             kafkaTestCluster.start();
 
             // Create kafka test utils
             final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestCluster);
 
-            // Create a topic with 2 partitions.
-            kafkaTestUtils.createTopic(topicName, numberOfBrokers, (short) numberOfBrokers);
+            // Create a topic with 2 partitions, replica factor of 1 to avoid unclean shutdown
+            kafkaTestUtils.createTopic(topicName, numberOfBrokers, (short) 1);
 
             // Produce data into each partition of the topic
             for (int partitionId = 0; partitionId < numberOfBrokers; partitionId++) {
@@ -379,5 +374,97 @@ class KafkaTestClusterTest {
     private void validateKafkaBroker(final KafkaBroker broker, final int expectedBrokerId) {
         Assertions.assertNotNull(broker);
         Assertions.assertEquals(expectedBrokerId, broker.getBrokerId());
+    }
+
+    /**
+     * Test a multi-node cluster instance with various listeners.
+     * @param listeners The listeners to register.
+     */
+    @ParameterizedTest
+    @MethodSource("provideListeners")
+    void testCustomizedListeners(final List<BrokerListener> listeners) throws Exception {
+        final String topicName = "testRestartingBroker-" + System.currentTimeMillis();
+        final int expectedMsgCount = 2;
+        final int numberOfBrokers = 2;
+
+        // Speed up shutdown in our tests
+        final Properties overrideProperties = getDefaultBrokerOverrideProperties();
+
+        // Create our test server instance
+        try (final KafkaTestCluster kafkaTestCluster =
+            new KafkaTestCluster(numberOfBrokers, overrideProperties, listeners)) {
+            // Start broker
+            kafkaTestCluster.start();
+
+            // Create KafkaTestUtils
+            final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestCluster);
+
+            // Create topic
+            kafkaTestUtils.createTopic(topicName, 1, (short) numberOfBrokers);
+
+            // Publish 2 messages into topic
+            kafkaTestUtils.produceRecords(expectedMsgCount, topicName, 0);
+
+            // Sanity test - Consume the messages back out before shutting down broker.
+            final List<ConsumerRecord<byte[], byte[]>> records = kafkaTestUtils.consumeAllRecordsFromTopic(topicName);
+            Assertions.assertNotNull(records);
+            Assertions.assertEquals(expectedMsgCount, records.size(), "Should have found 2 records.");
+        }
+    }
+
+    /**
+     * Define various listeners.
+     */
+    private static Stream<Arguments> provideListeners() {
+        // Create default plain listener
+        final BrokerListener plainListener = new PlainListener();
+
+        // Create SSL listener
+        final BrokerListener sslListener = new SslListener()
+            .withClientAuthRequired()
+            .withKeyStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
+            .withKeyStorePassword("password")
+            .withTrustStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.truststore.jks").getFile())
+            .withTrustStorePassword("password")
+            .withKeyPassword("password");
+
+        // Create SASL_PLAIN listener.
+        final BrokerListener saslPlainListener = new SaslPlainListener()
+            .withUsername("kafkaclient")
+            .withPassword("client-secret");
+
+        // Create SASL_SSL listener
+        final BrokerListener saslSslListener = new SaslSslListener()
+            .withClientAuthRequired()
+            .withUsername("kafkaclient")
+            .withPassword("client-secret")
+            .withKeyStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.keystore.jks").getFile())
+            .withKeyStorePassword("password")
+            .withTrustStoreLocation(KafkaTestServer.class.getClassLoader().getResource("kafka.truststore.jks").getFile())
+            .withTrustStorePassword("password")
+            .withKeyPassword("password");
+
+        return Stream.of(
+            // Just plain
+            Arguments.of(Collections.singletonList(plainListener)),
+
+            // Just SSL
+            Arguments.of(Collections.singletonList(sslListener)),
+
+            // Just SASL_PLAIN
+            Arguments.of(Collections.singletonList(saslPlainListener)),
+
+            // Just SASL_SSL
+            Arguments.of(Collections.singletonList(saslSslListener))
+        );
+    }
+
+    private Properties getDefaultBrokerOverrideProperties() {
+        // Speed up shutdown in our tests
+        final Properties overrideProperties = new Properties();
+        overrideProperties.setProperty("controlled.shutdown.max.retries", "0");
+        overrideProperties.setProperty("controlled.shutdown.enable", "true");
+        overrideProperties.setProperty("controlled.shutdown.retry.backoff.ms", "100");
+        return overrideProperties;
     }
 }

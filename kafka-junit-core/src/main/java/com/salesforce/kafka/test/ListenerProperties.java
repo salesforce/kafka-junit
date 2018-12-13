@@ -25,33 +25,52 @@
 
 package com.salesforce.kafka.test;
 
-import java.util.List;
+import java.util.Properties;
 
 /**
- * Provides a slimmed down view onto KafkaCluster to avoid circular references in code.
+ * Defines properties about a registered listener.
  */
-public interface KafkaProvider {
-    /**
-     * Returns an immutable list of broker hosts for the kafka cluster.
-     * @return immutable list of hosts for brokers within the cluster.
-     */
-    KafkaBrokers getKafkaBrokers();
+public class ListenerProperties {
+    private final String protocol;
+    private final String connectString;
+    private final Properties clientProperties;
 
     /**
-     * bootstrap.servers string to configure Kafka consumers or producers to access the Kafka cluster.
-     * @return Connect string to use for Kafka clients.
+     * Constructor.
+     * @param protocol protocol of the listener.
+     * @param connectString Connect string for listener.
+     * @param clientProperties Any client properties required to connect.
      */
-    String getKafkaConnectString();
+    public ListenerProperties(final String protocol, final String connectString, final Properties clientProperties) {
+        this.protocol = protocol;
+        this.connectString = connectString;
+        this.clientProperties = clientProperties;
+    }
 
     /**
-     * Connection details about each of the registered listeners on the kafka broker.
-     * @return details about each of the registered listeners on the kafka broker.
+     * Getter.
+     * @return Name of protocol the listener is registered on.
      */
-    List<ListenerProperties> getListenerProperties();
+    public String getProtocol() {
+        return protocol;
+    }
 
     /**
-     * Returns connection string for zookeeper clients.
-     * @return Connection string to connect to the Zookeeper instance.
+     * Getter.
+     * @return Connect string for talking to this listenre.
      */
-    String getZookeeperConnectString();
+    public String getConnectString() {
+        return connectString;
+    }
+
+    /**
+     * Getter.
+     * @return Any Kafka client properties that need to be set to talk to this listener.
+     */
+    public Properties getClientProperties() {
+        // Return a copy of the properties.
+        final Properties copy = new Properties();
+        copy.putAll(clientProperties);
+        return copy;
+    }
 }

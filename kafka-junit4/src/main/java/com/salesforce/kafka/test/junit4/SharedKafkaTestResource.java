@@ -33,6 +33,7 @@ import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.Properties;
 
 /**
@@ -74,7 +75,11 @@ public class SharedKafkaTestResource extends AbstractKafkaTestResource<SharedKaf
             throw new IllegalStateException("Unknown State!  Kafka Test Server already exists!");
         }
         // Setup kafka test server
-        setKafkaCluster(new KafkaTestCluster(getNumberOfBrokers(), getBrokerProperties()));
+        setKafkaCluster(new KafkaTestCluster(
+            getNumberOfBrokers(),
+            getBrokerProperties(),
+            Collections.singletonList(getRegisteredListener())
+        ));
         getKafkaCluster().start();
     }
 

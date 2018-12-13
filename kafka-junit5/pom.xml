@@ -31,12 +31,12 @@
     <parent>
         <artifactId>kafka-junit</artifactId>
         <groupId>com.salesforce.kafka.test</groupId>
-        <version>3.0.1</version>
+        <version>3.1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kafka-junit5</artifactId>
-    <version>3.0.1</version>
+    <version>3.1.0</version>
 
     <!-- defined properties -->
     <properties>
@@ -48,7 +48,7 @@
         <dependency>
             <groupId>com.salesforce.kafka.test</groupId>
             <artifactId>kafka-junit-core</artifactId>
-            <version>3.0.1</version>
+            <version>3.1.0</version>
         </dependency>
 
         <!-- JUnit is Required -->
@@ -106,11 +106,18 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <argLine>-Xmx1024M</argLine>
+                    <argLine>-Xmx${tests.heapSize}</argLine>
                     <skipTests>${skipTests}</skipTests>
                     <reportFormat>plain</reportFormat>
                 </configuration>
             </plugin>
         </plugins>
+
+        <!-- Include Kafka-JUnit-Core test resource directory -->
+        <testResources>
+            <testResource>
+                <directory>${project.basedir}/../kafka-junit-core/src/test/resources</directory>
+            </testResource>
+        </testResources>
     </build>
 </project>

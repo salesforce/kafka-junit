@@ -25,6 +25,8 @@
 
 package com.salesforce.kafka.test;
 
+import com.salesforce.kafka.test.listeners.BrokerListener;
+import com.salesforce.kafka.test.listeners.PlainListener;
 import org.apache.kafka.common.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
@@ -67,6 +70,11 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
     private final Properties overrideBrokerProperties = new Properties();
 
     /**
+     * Collection of listeners that get registered with the broker.
+     */
+    private final List<BrokerListener> registeredListeners;
+
+    /**
      * List containing all of the brokers in the cluster.  Since each broker is quickly accessible via it's 'brokerId' property
      * by simply removing 1 from it's id and using it as the index into the list.
      *
@@ -79,7 +87,7 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      * @param numberOfBrokers How many brokers you want in your Kafka cluster.
      */
     public KafkaTestCluster(final int numberOfBrokers) {
-        this(numberOfBrokers, new Properties());
+        this(numberOfBrokers, new Properties(), Collections.emptyList());
     }
 
     /**
@@ -88,6 +96,20 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
      * @param overrideBrokerProperties Define Kafka broker properties.
      */
     public KafkaTestCluster(final int numberOfBrokers, final Properties overrideBrokerProperties) {
+        this(numberOfBrokers, overrideBrokerProperties, Collections.emptyList());
+    }
+
+    /**
+     * Constructor.
+     * @param numberOfBrokers How many brokers you want in your Kafka cluster.
+     * @param overrideBrokerProperties Define Kafka broker properties.
+     * @param listeners List of listeners to register on each broker.
+     */
+    public KafkaTestCluster(
+        final int numberOfBrokers,
+        final Properties overrideBrokerProperties,
+        final Collection<BrokerListener> listeners
+    ) {
         if (numberOfBrokers <= 0) {
             throw new IllegalArgumentException("numberOfBrokers argument must be 1 or larger.");
         }
@@ -95,9 +117,18 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
             throw new IllegalArgumentException("overrideBrokerProperties argument must not be null.");
         }
 
+        final List<BrokerListener> brokerListeners = new ArrayList<>();
+        if (listeners == null || listeners.isEmpty()) {
+            // If we have no listeners defined, use default plain listener.
+            brokerListeners.add(new PlainListener());
+        } else {
+            brokerListeners.addAll(listeners);
+        }
+
         // Save references.
         this.numberOfBrokers = numberOfBrokers;
         this.overrideBrokerProperties.putAll(overrideBrokerProperties);
+        this.registeredListeners = Collections.unmodifiableList(brokerListeners);
     }
 
     /**
@@ -124,7 +155,7 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
 
                 // Create new KafkaTestServer and add to our broker list
                 brokers.add(
-                    new KafkaTestServer(brokerProperties, zkTestServer)
+                    new KafkaTestServer(brokerProperties, zkTestServer, registeredListeners)
                 );
             }
         }
@@ -197,6 +228,16 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
             .stream()
             .map((KafkaTestServer::getKafkaConnectString))
             .collect(Collectors.joining(","));
+    }
+
+    @Override
+    public List<ListenerProperties> getListenerProperties() {
+        // Collect all the properties from all brokers in the cluster.
+        final List<ListenerProperties> listenerProperties = new ArrayList<>();
+        brokers.forEach((broker) -> {
+            listenerProperties.addAll(broker.getListenerProperties());
+        });
+        return Collections.unmodifiableList(listenerProperties);
     }
 
     /**

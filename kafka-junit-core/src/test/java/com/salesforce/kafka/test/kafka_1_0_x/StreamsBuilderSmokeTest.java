@@ -28,8 +28,6 @@ package com.salesforce.kafka.test.kafka_1_0_x;
 import com.salesforce.kafka.test.KafkaTestServer;
 import com.salesforce.kafka.test.KafkaTestUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.common.serialization.Serde;
-import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
@@ -83,9 +81,6 @@ class StreamsBuilderSmokeTest {
             config.setProperty(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaTestServer.getKafkaConnectString());
             config.put("group.id", "test-stream-group");
             config.put("auto.offset.reset", "earliest");
-
-            // Serialization definition.
-            final Serde<String> stringSerde = Serdes.String();
 
             // Build the stream
             final StreamsBuilder streamsBuilder = new StreamsBuilder();

@@ -133,6 +133,8 @@ Include this library in your project's POM with test scope.  **You'll also need 
 
 A great example of how to use this can be found within our tests!  Check out [SharedKafkaTestResourceTest.java](src/test/java/com/salesforce/kafka/test/junit4/SharedKafkaTestResourceTest.java).
 
+##### Simple Example
+
 Add the following to your JUnit test class and it will handle automatically starting and stopping a single embedded Kafka broker for you.
 
 ```java
@@ -145,6 +147,8 @@ Add the following to your JUnit test class and it will handle automatically star
     @ClassRule
     public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource();
 ```
+
+##### Overriding broker properties
 
 SharedKafkaTestResource exposes the ability to override properties set on the Kafka broker instances.
 
@@ -160,6 +164,8 @@ SharedKafkaTestResource exposes the ability to override properties set on the Ka
         .withBrokerProperty("message.max.bytes", "512000");
 ```
 
+##### Multi-broker clusters
+
 By default SharedKafkaTestResource will start only a single broker within the cluster. The following example will start
 a cluster with 4 Kafka brokers. The Kafka brokers will have id's that start and increase from 1.
 
@@ -174,6 +180,82 @@ a cluster with 4 Kafka brokers. The Kafka brokers will have id's that start and 
     public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
         .withBrokers(4);
 ```
+
+##### SSL Support
+
+```java
+    /**
+     * This is an example of how start a SSL enabled cluster in your tests. 
+     */
+    @ClassRule
+    public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
+        // Register and configure SSL authentication on cluster.
+        .registerListener(new SslListener()
+            .withClientAuthRequested()
+            .withKeyStoreLocation("/path/to/your/kafka.keystore.jks")
+            .withKeyStorePassword("YourKeyStorePassword")
+            .withTrustStoreLocation("/path/to/your/kafka.truststore.jks")
+            .withTrustStorePassword("YourTrustStorePassword")
+            .withKeyPassword("YourKeyPassword")
+        );
+```
+
+##### SASL_PLAINTEXT Support
+
+```java
+    /**
+     * This is an example of how start a SASL_PLAINTEXT enabled cluster in your tests.
+     * 
+     * NOTE: Kafka reads in the JAAS file as defined by an Environment variable at JVM start up.  This property
+     * can not be set at run time.
+     *
+     * In order to make use of this Listener, you **must** start the JVM with the following:
+     *  -Djava.security.auth.login.config=/path/to/your/jaas.conf
+     */
+    @ClassRule
+    public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
+        // Register and configure SASL PLAIN authentication on cluster.
+        .registerListener(new SaslPlainListener()
+            // SSL Options
+            .withClientAuthRequested()
+            .withKeyStoreLocation("/path/to/your/kafka.keystore.jks")
+            .withKeyStorePassword("YourKeyStorePassword")
+            .withTrustStoreLocation("/path/to/your/kafka.truststore.jks")
+            .withTrustStorePassword("YourTrustStorePassword")
+            .withKeyPassword("YourKeyPassword")
+        );
+```
+
+##### SASL_SSL Support
+
+```java
+    /**
+     * This is an example of how start a SASL_SSL enabled cluster in your tests.
+     * 
+     * NOTE: Kafka reads in the JAAS file as defined by an Environment variable at JVM start up.  This property
+     * can not be set at run time.
+     *
+     * In order to make use of this Listener, you **must** start the JVM with the following:
+     *  -Djava.security.auth.login.config=/path/to/your/jaas.conf
+     */
+    @ClassRule
+    public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
+        // Register and configure SASL SSL authentication on cluster.
+        .registerListener(new SaslSslListener()
+            // SSL Options
+            .withClientAuthRequested()
+            .withKeyStoreLocation("/path/to/your/kafka.keystore.jks")
+            .withKeyStorePassword("YourKeyStorePassword")
+            .withTrustStoreLocation("/path/to/your/kafka.truststore.jks")
+            .withTrustStorePassword("YourTrustStorePassword")
+            .withKeyPassword("YourKeyPassword")
+            // SASL Options
+            .withUsername("YourUsername")
+            .withPassword("YourPassword")
+        );
+```
+
+##### Helpful methods on SharedKafkaTestResource
 
 [SharedKafkaTestResource](src/main/java/com/salesforce/kafka/test/junit4/SharedKafkaTestResource.java) instance has a few accessors that you can make use of in your tests to interact with the Kafka cluster.
 

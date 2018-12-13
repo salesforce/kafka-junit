@@ -23,35 +23,35 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.kafka.test;
+package com.salesforce.kafka.test.listeners;
 
-import java.util.List;
+import java.util.Properties;
 
 /**
- * Provides a slimmed down view onto KafkaCluster to avoid circular references in code.
+ * This interface allows the caller to define and register a Listener on a Kafka Broker.
+ * @see PlainListener for plaintext listeners (Default).
+ * @see SslListener for SSL auth listeners.
+ * @see SaslPlainListener for SASL auth listeners.
+ * @see SaslSslListener for SASL+SSL auth listeners.
  */
-public interface KafkaProvider {
-    /**
-     * Returns an immutable list of broker hosts for the kafka cluster.
-     * @return immutable list of hosts for brokers within the cluster.
-     */
-    KafkaBrokers getKafkaBrokers();
+public interface BrokerListener {
 
     /**
-     * bootstrap.servers string to configure Kafka consumers or producers to access the Kafka cluster.
-     * @return Connect string to use for Kafka clients.
+     * Returns the protocol name for the listener.
+     * Examples being PLAINTEXT, SSL, SASL_PLAINTEXT, SASL_SSL
+     * @return Protocol name.
      */
-    String getKafkaConnectString();
+    String getProtocol();
 
     /**
-     * Connection details about each of the registered listeners on the kafka broker.
-     * @return details about each of the registered listeners on the kafka broker.
+     * Define the properties required on the broker for this listener implementation.
+     * @return Properties to be registered on broker.
      */
-    List<ListenerProperties> getListenerProperties();
+    Properties getBrokerProperties();
 
     /**
-     * Returns connection string for zookeeper clients.
-     * @return Connection string to connect to the Zookeeper instance.
+     * Define the properties required on the client to connect to the broker.
+     * @return Properties to be registered on connecting client.
      */
-    String getZookeeperConnectString();
+    Properties getClientProperties();
 }
