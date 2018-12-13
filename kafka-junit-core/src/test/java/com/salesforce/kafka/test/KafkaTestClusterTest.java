@@ -61,7 +61,7 @@ class KafkaTestClusterTest {
      */
     @Test
     void testMultipleNodesInBroker() throws Exception {
-        logger.warn("Starting test testMultipleNodesInBroker");
+        logger.warn("Starting test testMultipleNodesInBroker, Active Thread Count: {}", Thread.activeCount());
         final int numberOfBrokers = 2;
 
         try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
@@ -113,6 +113,8 @@ class KafkaTestClusterTest {
                 kafkaTestCluster.getKafkaBrokerById(0);
             });
         }
+
+        logger.warn("Ending test testMultipleNodesInBroker, Active Thread Count: {}", Thread.activeCount());
     }
 
     /**
@@ -121,7 +123,7 @@ class KafkaTestClusterTest {
      */
     @Test
     void testGetKafkaBrokersBeforeClusterHasStarted() throws Exception {
-        logger.warn("Starting test testGetKafkaBrokersBeforeClusterHasStarted");
+        logger.warn("Starting test testGetKafkaBrokersBeforeClusterHasStarted, Active Thread Count: {}", Thread.activeCount());
         final int numberOfBrokers = 2;
 
         try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
@@ -130,6 +132,7 @@ class KafkaTestClusterTest {
                 kafkaTestCluster.getKafkaBrokers();
             });
         }
+        logger.warn("Ending test testGetKafkaBrokersBeforeClusterHasStarted, Active Thread Count: {}", Thread.activeCount());
     }
 
     /**
@@ -138,7 +141,7 @@ class KafkaTestClusterTest {
      */
     @Test
     void testGetKafkaBrokerByIdBeforeClusterStarted() throws Exception {
-        logger.warn("Starting test testGetKafkaBrokerByIdBeforeClusterStarted");
+        logger.warn("Starting test testGetKafkaBrokerByIdBeforeClusterStarted, Active Thread Count: {}", Thread.activeCount());
         final int numberOfBrokers = 2;
 
         // Create cluster
@@ -148,6 +151,7 @@ class KafkaTestClusterTest {
             Assertions.assertThrows(IllegalStateException.class, () -> kafkaTestCluster.getKafkaBrokerById(1));
             Assertions.assertThrows(IllegalStateException.class, () -> kafkaTestCluster.getKafkaBrokerById(2));
         }
+        logger.warn("Ending test testGetKafkaBrokerByIdBeforeClusterStarted, Active Thread Count: {}", Thread.activeCount());
     }
 
     /**
@@ -156,7 +160,7 @@ class KafkaTestClusterTest {
      */
     @Test
     void testGetKafkaConnectStringBeforeClusterIsStarted() throws Exception {
-        logger.warn("Starting test testGetKafkaConnectStringBeforeClusterIsStarted");
+        logger.warn("Starting test testGetKafkaConnectStringBeforeClusterIsStarted, Active Thread Count: {}", Thread.activeCount());
         final int numberOfBrokers = 2;
 
         // Create cluster
@@ -164,6 +168,7 @@ class KafkaTestClusterTest {
             // Call getKafkaBrokerById() before the cluster is started, it should throw exceptions.
             Assertions.assertThrows(IllegalStateException.class, kafkaTestCluster::getKafkaConnectString);
         }
+        logger.warn("Ending test testGetKafkaConnectStringBeforeClusterIsStarted, Active Thread Count: {}", Thread.activeCount());
     }
 
     /**
@@ -172,7 +177,7 @@ class KafkaTestClusterTest {
      */
     @Test
     void testGetKafkaConnectString() throws Exception {
-        logger.warn("Starting test testGetKafkaConnectString");
+        logger.warn("Starting test testGetKafkaConnectString, Active Thread Count: {}", Thread.activeCount());
         final int numberOfBrokers = 3;
 
         try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
@@ -202,6 +207,7 @@ class KafkaTestClusterTest {
                 Assertions.assertTrue(hosts.contains(calculatedConnectString), "Should contain " + calculatedConnectString);
             }
         }
+        logger.warn("Ending test testGetKafkaConnectString, Active Thread Count: {}", Thread.activeCount());
     }
 
     /**
@@ -210,7 +216,7 @@ class KafkaTestClusterTest {
      */
     @Test
     void testCreateTopicAcrossMultipleBrokers() throws Exception {
-        logger.warn("Starting test testCreateTopicAcrossMultipleBrokers");
+        logger.warn("Starting test testCreateTopicAcrossMultipleBrokers, Active Thread Count: {}", Thread.activeCount());
         final int numberOfBrokers = 2;
         final String topicName = "MultiBrokerTest2-" + System.currentTimeMillis();
 
@@ -238,6 +244,7 @@ class KafkaTestClusterTest {
                 Assertions.assertEquals(numberOfBrokers, topicPartitionInfo.isr().size(), "Should have 2 In-Sync-Replicas");
             }
         }
+        logger.warn("Ending test testCreateTopicAcrossMultipleBrokers, Active Thread Count: {}", Thread.activeCount());
     }
 
     /**
@@ -256,7 +263,7 @@ class KafkaTestClusterTest {
      */
     @Test
     void testConsumingFromMultiBrokerClusterWhenBrokerIsStopped() throws Exception {
-        logger.warn("Starting test testConsumingFromMultiBrokerClusterWhenBrokerIsStopped");
+        logger.warn("Starting test testConsumingFromMultiBrokerClusterWhenBrokerIsStopped, Active Thread Count: {}", Thread.activeCount());
         final int numberOfBrokers = 2;
         final int numberOfPartitions = 2;
         final int numberOfMessagesPerPartition = 2;
@@ -335,6 +342,7 @@ class KafkaTestClusterTest {
                 "Found all records in kafka."
             );
         }
+        logger.warn("Ending test testConsumingFromMultiBrokerClusterWhenBrokerIsStopped, Active Thread Count: {}", Thread.activeCount());
     }
 
     /**
@@ -343,7 +351,7 @@ class KafkaTestClusterTest {
      */
     @Test
     void testRestartingCluster() throws Exception {
-        logger.warn("Starting test testRestartingCluster");
+        logger.warn("Starting test testRestartingCluster, Active Thread Count: {}", Thread.activeCount());
         final int numberOfBrokers = 2;
         final String topicName = "RestartClusterTest-" + System.currentTimeMillis();
 
@@ -376,6 +384,8 @@ class KafkaTestClusterTest {
             // Validate
             Assertions.assertEquals((numberOfBrokers * 2), records.size());
         }
+
+        logger.warn("Ending test testRestartingCluster, Active Thread Count: {}", Thread.activeCount());
     }
 
     /**
@@ -395,7 +405,7 @@ class KafkaTestClusterTest {
     @ParameterizedTest
     @MethodSource("provideListeners")
     void testCustomizedListeners(final List<BrokerListener> listeners) throws Exception {
-        logger.warn("Starting test testCustomizedListeners with {}", listeners);
+        logger.warn("Starting test testCustomizedListeners, Active Thread Count: {} with test case {}", Thread.activeCount(), listeners);
         final String topicName = "testRestartingBroker-" + System.currentTimeMillis();
         final int expectedMsgCount = 2;
         final int numberOfBrokers = 2;
@@ -426,6 +436,7 @@ class KafkaTestClusterTest {
             // Call stop/close on the broker
             kafkaTestCluster.stop();
         }
+        logger.warn("Ending test testCustomizedListeners, Active Thread Count: {} with test case {}", Thread.activeCount(), listeners);
     }
 
     /**
