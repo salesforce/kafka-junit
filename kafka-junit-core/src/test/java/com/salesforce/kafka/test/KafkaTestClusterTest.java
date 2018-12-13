@@ -436,19 +436,29 @@ class KafkaTestClusterTest {
             // Start broker
             kafkaTestCluster.start();
 
+            printHeap("After started kafka cluster");
+
             // Create KafkaTestUtils
             final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestCluster);
+
+            printHeap("After created test utils");
 
             // Create topic
             kafkaTestUtils.createTopic(topicName, 1, (short) numberOfBrokers);
 
+            printHeap("After created topic");
+
             // Publish 2 messages into topic
             kafkaTestUtils.produceRecords(expectedMsgCount, topicName, 0);
+
+            printHeap("After producing records");
 
             // Sanity test - Consume the messages back out before shutting down broker.
             final List<ConsumerRecord<byte[], byte[]>> records = kafkaTestUtils.consumeAllRecordsFromTopic(topicName);
             Assertions.assertNotNull(records);
             Assertions.assertEquals(expectedMsgCount, records.size(), "Should have found 2 records.");
+
+            printHeap("After consuming topic");
         }
         logger.warn("Ending test testCustomizedListeners, Active Thread Count: {} with test case {}", Thread.activeCount(), listeners);
         printHeap("Ending testCustomizedListeners");
@@ -525,13 +535,9 @@ class KafkaTestClusterTest {
     }
 
     private void printHeap(final String str) {
-        long heapSize = Runtime.getRuntime().totalMemory();
-
-        // Get maximum size of heap in bytes. The heap cannot grow beyond this size.// Any attempt will result in an OutOfMemoryException.
-        long heapMaxSize = Runtime.getRuntime().maxMemory();
-
-        // Get amount of free memory within the heap in bytes. This size will increase // after garbage collection and decrease as new objects are created.
-        long heapFreeSize = Runtime.getRuntime().freeMemory();
+        final long heapSize = Runtime.getRuntime().totalMemory();
+        final long heapMaxSize = Runtime.getRuntime().maxMemory();
+        final long heapFreeSize = Runtime.getRuntime().freeMemory();
 
         logger.warn(
             "{} Free {} of Size {} out of max {}",
@@ -539,9 +545,11 @@ class KafkaTestClusterTest {
         );
     }
 
-    private String formatSize(long v) {
-        if (v < 1024) return v + " B";
-        int z = (63 - Long.numberOfLeadingZeros(v)) / 10;
-        return String.format("%.1f %sB", (double)v / (1L << (z*10)), " KMGTPE".charAt(z));
+    private String formatSize(long input) {
+        if (input < 1024) {
+            return input + " B";
+        }
+        int output = (63 - Long.numberOfLeadingZeros(input)) / 10;
+        return String.format("%.1f %sB", (double)input / (1L << (output * 10)), " KMGTPE".charAt(output));
     }
 }
