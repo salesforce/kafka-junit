@@ -62,6 +62,7 @@ class KafkaTestClusterTest {
     @Test
     void testMultipleNodesInBroker() throws Exception {
         logger.warn("Starting test testMultipleNodesInBroker, Active Thread Count: {}", Thread.activeCount());
+        printHeap("Starting testMultipleNodesInBroker");
         final int numberOfBrokers = 2;
 
         try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
@@ -115,6 +116,7 @@ class KafkaTestClusterTest {
         }
 
         logger.warn("Ending test testMultipleNodesInBroker, Active Thread Count: {}", Thread.activeCount());
+        printHeap("Ending testMultipleNodesInBroker");
     }
 
     /**
@@ -124,6 +126,7 @@ class KafkaTestClusterTest {
     @Test
     void testGetKafkaBrokersBeforeClusterHasStarted() throws Exception {
         logger.warn("Starting test testGetKafkaBrokersBeforeClusterHasStarted, Active Thread Count: {}", Thread.activeCount());
+        printHeap("Starting testGetKafkaBrokersBeforeClusterHasStarted");
         final int numberOfBrokers = 2;
 
         try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
@@ -133,6 +136,7 @@ class KafkaTestClusterTest {
             });
         }
         logger.warn("Ending test testGetKafkaBrokersBeforeClusterHasStarted, Active Thread Count: {}", Thread.activeCount());
+        printHeap("Ending testGetKafkaBrokersBeforeClusterHasStarted");
     }
 
     /**
@@ -142,6 +146,7 @@ class KafkaTestClusterTest {
     @Test
     void testGetKafkaBrokerByIdBeforeClusterStarted() throws Exception {
         logger.warn("Starting test testGetKafkaBrokerByIdBeforeClusterStarted, Active Thread Count: {}", Thread.activeCount());
+        printHeap("Starting testGetKafkaBrokerByIdBeforeClusterStarted");
         final int numberOfBrokers = 2;
 
         // Create cluster
@@ -152,6 +157,7 @@ class KafkaTestClusterTest {
             Assertions.assertThrows(IllegalStateException.class, () -> kafkaTestCluster.getKafkaBrokerById(2));
         }
         logger.warn("Ending test testGetKafkaBrokerByIdBeforeClusterStarted, Active Thread Count: {}", Thread.activeCount());
+        printHeap("Ending testGetKafkaBrokerByIdBeforeClusterStarted");
     }
 
     /**
@@ -161,6 +167,7 @@ class KafkaTestClusterTest {
     @Test
     void testGetKafkaConnectStringBeforeClusterIsStarted() throws Exception {
         logger.warn("Starting test testGetKafkaConnectStringBeforeClusterIsStarted, Active Thread Count: {}", Thread.activeCount());
+        printHeap("Starting testGetKafkaConnectStringBeforeClusterIsStarted");
         final int numberOfBrokers = 2;
 
         // Create cluster
@@ -169,6 +176,7 @@ class KafkaTestClusterTest {
             Assertions.assertThrows(IllegalStateException.class, kafkaTestCluster::getKafkaConnectString);
         }
         logger.warn("Ending test testGetKafkaConnectStringBeforeClusterIsStarted, Active Thread Count: {}", Thread.activeCount());
+        printHeap("Ending testGetKafkaConnectStringBeforeClusterIsStarted");
     }
 
     /**
@@ -178,6 +186,7 @@ class KafkaTestClusterTest {
     @Test
     void testGetKafkaConnectString() throws Exception {
         logger.warn("Starting test testGetKafkaConnectString, Active Thread Count: {}", Thread.activeCount());
+        printHeap("Starting testGetKafkaConnectString");
         final int numberOfBrokers = 3;
 
         try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
@@ -208,6 +217,7 @@ class KafkaTestClusterTest {
             }
         }
         logger.warn("Ending test testGetKafkaConnectString, Active Thread Count: {}", Thread.activeCount());
+        printHeap("Ending testGetKafkaConnectString");
     }
 
     /**
@@ -217,6 +227,7 @@ class KafkaTestClusterTest {
     @Test
     void testCreateTopicAcrossMultipleBrokers() throws Exception {
         logger.warn("Starting test testCreateTopicAcrossMultipleBrokers, Active Thread Count: {}", Thread.activeCount());
+        printHeap("Starting testCreateTopicAcrossMultipleBrokers");
         final int numberOfBrokers = 2;
         final String topicName = "MultiBrokerTest2-" + System.currentTimeMillis();
 
@@ -245,6 +256,7 @@ class KafkaTestClusterTest {
             }
         }
         logger.warn("Ending test testCreateTopicAcrossMultipleBrokers, Active Thread Count: {}", Thread.activeCount());
+        printHeap("Ending testCreateTopicAcrossMultipleBrokers");
     }
 
     /**
@@ -264,6 +276,7 @@ class KafkaTestClusterTest {
     @Test
     void testConsumingFromMultiBrokerClusterWhenBrokerIsStopped() throws Exception {
         logger.warn("Starting test testConsumingFromMultiBrokerClusterWhenBrokerIsStopped, Active Thread Count: {}", Thread.activeCount());
+        printHeap("Starting testConsumingFromMultiBrokerClusterWhenBrokerIsStopped");
         final int numberOfBrokers = 2;
         final int numberOfPartitions = 2;
         final int numberOfMessagesPerPartition = 2;
@@ -343,6 +356,7 @@ class KafkaTestClusterTest {
             );
         }
         logger.warn("Ending test testConsumingFromMultiBrokerClusterWhenBrokerIsStopped, Active Thread Count: {}", Thread.activeCount());
+        printHeap("Ending testConsumingFromMultiBrokerClusterWhenBrokerIsStopped");
     }
 
     /**
@@ -352,6 +366,7 @@ class KafkaTestClusterTest {
     @Test
     void testRestartingCluster() throws Exception {
         logger.warn("Starting test testRestartingCluster, Active Thread Count: {}", Thread.activeCount());
+        printHeap("Starting testRestartingCluster");
         final int numberOfBrokers = 2;
         final String topicName = "RestartClusterTest-" + System.currentTimeMillis();
 
@@ -386,6 +401,7 @@ class KafkaTestClusterTest {
         }
 
         logger.warn("Ending test testRestartingCluster, Active Thread Count: {}", Thread.activeCount());
+        printHeap("Ending testRestartingCluster");
     }
 
     /**
@@ -406,6 +422,7 @@ class KafkaTestClusterTest {
     @MethodSource("provideListeners")
     void testCustomizedListeners(final List<BrokerListener> listeners) throws Exception {
         logger.warn("Starting test testCustomizedListeners, Active Thread Count: {} with test case {}", Thread.activeCount(), listeners);
+        printHeap("Starting testCustomizedListeners");
         final String topicName = "testRestartingBroker-" + System.currentTimeMillis();
         final int expectedMsgCount = 2;
         final int numberOfBrokers = 2;
@@ -432,11 +449,9 @@ class KafkaTestClusterTest {
             final List<ConsumerRecord<byte[], byte[]>> records = kafkaTestUtils.consumeAllRecordsFromTopic(topicName);
             Assertions.assertNotNull(records);
             Assertions.assertEquals(expectedMsgCount, records.size(), "Should have found 2 records.");
-
-            // Call stop/close on the broker
-            kafkaTestCluster.stop();
         }
         logger.warn("Ending test testCustomizedListeners, Active Thread Count: {} with test case {}", Thread.activeCount(), listeners);
+        printHeap("Ending testCustomizedListeners");
     }
 
     /**
@@ -507,5 +522,26 @@ class KafkaTestClusterTest {
         overrideProperties.setProperty("controlled.shutdown.enable", "true");
         overrideProperties.setProperty("controlled.shutdown.retry.backoff.ms", "100");
         return overrideProperties;
+    }
+
+    private void printHeap(final String str) {
+        long heapSize = Runtime.getRuntime().totalMemory();
+
+        // Get maximum size of heap in bytes. The heap cannot grow beyond this size.// Any attempt will result in an OutOfMemoryException.
+        long heapMaxSize = Runtime.getRuntime().maxMemory();
+
+        // Get amount of free memory within the heap in bytes. This size will increase // after garbage collection and decrease as new objects are created.
+        long heapFreeSize = Runtime.getRuntime().freeMemory();
+
+        logger.warn(
+            "{} Free {} of Size {} out of max {}",
+            str, formatSize(heapFreeSize), formatSize(heapSize), formatSize(heapMaxSize)
+        );
+    }
+
+    private String formatSize(long v) {
+        if (v < 1024) return v + " B";
+        int z = (63 - Long.numberOfLeadingZeros(v)) / 10;
+        return String.format("%.1f %sB", (double)v / (1L << (z*10)), " KMGTPE".charAt(z));
     }
 }
