@@ -39,6 +39,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +53,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 class KafkaTestClusterTest {
+    private static final Logger logger = LoggerFactory.getLogger(KafkaTestClusterTest.class);
 
     /**
      * This test attempts to start a cluster with 2 brokers. It then validates that when the cluster
@@ -58,6 +61,7 @@ class KafkaTestClusterTest {
      */
     @Test
     void testMultipleNodesInBroker() throws Exception {
+        logger.warn("Starting test testMultipleNodesInBroker");
         final int numberOfBrokers = 2;
 
         try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
@@ -117,6 +121,7 @@ class KafkaTestClusterTest {
      */
     @Test
     void testGetKafkaBrokersBeforeClusterHasStarted() throws Exception {
+        logger.warn("Starting test testGetKafkaBrokersBeforeClusterHasStarted");
         final int numberOfBrokers = 2;
 
         try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
@@ -133,6 +138,7 @@ class KafkaTestClusterTest {
      */
     @Test
     void testGetKafkaBrokerByIdBeforeClusterStarted() throws Exception {
+        logger.warn("Starting test testGetKafkaBrokerByIdBeforeClusterStarted");
         final int numberOfBrokers = 2;
 
         // Create cluster
@@ -150,12 +156,13 @@ class KafkaTestClusterTest {
      */
     @Test
     void testGetKafkaConnectStringBeforeClusterIsStarted() throws Exception {
+        logger.warn("Starting test testGetKafkaConnectStringBeforeClusterIsStarted");
         final int numberOfBrokers = 2;
 
         // Create cluster
         try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
             // Call getKafkaBrokerById() before the cluster is started, it should throw exceptions.
-            Assertions.assertThrows(IllegalStateException.class, () -> kafkaTestCluster.getKafkaConnectString());
+            Assertions.assertThrows(IllegalStateException.class, kafkaTestCluster::getKafkaConnectString);
         }
     }
 
@@ -165,6 +172,7 @@ class KafkaTestClusterTest {
      */
     @Test
     void testGetKafkaConnectString() throws Exception {
+        logger.warn("Starting test testGetKafkaConnectString");
         final int numberOfBrokers = 3;
 
         try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers)) {
@@ -202,6 +210,7 @@ class KafkaTestClusterTest {
      */
     @Test
     void testCreateTopicAcrossMultipleBrokers() throws Exception {
+        logger.warn("Starting test testCreateTopicAcrossMultipleBrokers");
         final int numberOfBrokers = 2;
         final String topicName = "MultiBrokerTest2-" + System.currentTimeMillis();
 
@@ -247,6 +256,7 @@ class KafkaTestClusterTest {
      */
     @Test
     void testConsumingFromMultiBrokerClusterWhenBrokerIsStopped() throws Exception {
+        logger.warn("Starting test testConsumingFromMultiBrokerClusterWhenBrokerIsStopped");
         final int numberOfBrokers = 2;
         final int numberOfPartitions = 2;
         final int numberOfMessagesPerPartition = 2;
@@ -333,6 +343,7 @@ class KafkaTestClusterTest {
      */
     @Test
     void testRestartingCluster() throws Exception {
+        logger.warn("Starting test testRestartingCluster");
         final int numberOfBrokers = 2;
         final String topicName = "RestartClusterTest-" + System.currentTimeMillis();
 
@@ -384,6 +395,7 @@ class KafkaTestClusterTest {
     @ParameterizedTest
     @MethodSource("provideListeners")
     void testCustomizedListeners(final List<BrokerListener> listeners) throws Exception {
+        logger.warn("Starting test testCustomizedListeners with {}", listeners);
         final String topicName = "testRestartingBroker-" + System.currentTimeMillis();
         final int expectedMsgCount = 2;
         final int numberOfBrokers = 2;
