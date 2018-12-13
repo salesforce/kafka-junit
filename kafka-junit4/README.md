@@ -20,7 +20,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit4</artifactId>
-    <version>3.0.1</version>
+    <version>3.1.0</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -32,7 +32,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit4</artifactId>
-    <version>3.0.1</version>
+    <version>3.1.0</version>
     <scope>test</scope>
 </dependency>
 
@@ -40,13 +40,13 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>org.apache.kafka</groupId>
     <artifactId>kafka_2.11</artifactId>
-    <version>2.0.0</version>
+    <version>2.0.1</version>
     <scope>test</scope>
 </dependency>
 <dependency>
     <groupId>org.apache.kafka</groupId>
     <artifactId>kafka-clients</artifactId>
-    <version>2.0.0</version>
+    <version>2.0.1</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -58,7 +58,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit4</artifactId>
-    <version>3.0.1</version>
+    <version>3.1.0</version>
     <scope>test</scope>
 </dependency>
 
@@ -84,7 +84,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit4</artifactId>
-    <version>3.0.1</version>
+    <version>3.1.0</version>
     <scope>test</scope>
 </dependency>
 
@@ -110,7 +110,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit4</artifactId>
-    <version>3.0.1</version>
+    <version>3.1.0</version>
     <scope>test</scope>
 </dependency>
 
