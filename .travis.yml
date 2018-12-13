@@ -22,6 +22,9 @@ env:
   KAFKA_VERSION=2.0.1
   EXCLUDE_KAFKA_TESTS=0_11_0_x
 script:
+  - ulimit -a
+  - free -m
+  - ulimit -s 82768
   ## Generate dummy SSL Certificates used in tests
   - script/generateCertificatesForTests.sh
   ## Run CheckStyle and License Header checks, compile, and install locally
