@@ -25,9 +25,9 @@
 
 package com.salesforce.kafka.test;
 
-import com.google.common.io.Files;
-
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 
 /**
  * Collection of Utilities.
@@ -39,7 +39,13 @@ class Utils {
      */
     static File createTempDirectory() {
         // Create temp path to store logs
-        final File logDir = Files.createTempDir();
+//        Files.createTempDirectory()
+        final File logDir;
+        try {
+            logDir = Files.createTempDirectory("kafka-unit").toFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         // Ensure its removed on termination.
         logDir.deleteOnExit();
