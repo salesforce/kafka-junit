@@ -39,7 +39,6 @@ class Utils {
      */
     static File createTempDirectory() {
         // Create temp path to store logs
-//        Files.createTempDirectory()
         final File logDir;
         try {
             logDir = Files.createTempDirectory("kafka-unit").toFile();
