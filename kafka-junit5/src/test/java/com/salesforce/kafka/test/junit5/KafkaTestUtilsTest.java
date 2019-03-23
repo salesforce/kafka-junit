@@ -25,7 +25,6 @@
 
 package com.salesforce.kafka.test.junit5;
 
-import com.google.common.base.Charsets;
 import com.salesforce.kafka.test.KafkaTestUtils;
 import com.salesforce.kafka.test.ProducedKafkaRecord;
 import org.apache.kafka.clients.admin.AdminClient;
@@ -43,6 +42,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.Collections;
 import java.util.Iterator;
@@ -196,10 +196,10 @@ class KafkaTestUtilsTest {
         // You can get details about what got produced into Kafka, including the partition and offset for each message.
         for (final ProducedKafkaRecord<byte[], byte[]> producedKafkaRecord: producedRecordsList) {
             // This is the key of the message that was produced.
-            final String key = new String(producedKafkaRecord.getKey(), Charsets.UTF_8);
+            final String key = new String(producedKafkaRecord.getKey(), StandardCharsets.UTF_8);
 
             // This is the value of the message that was produced.
-            final String value = new String(producedKafkaRecord.getValue(), Charsets.UTF_8);
+            final String value = new String(producedKafkaRecord.getValue(), StandardCharsets.UTF_8);
 
             // Other details about topic, partition, and offset it was written onto.
             final String topic = producedKafkaRecord.getTopic();
@@ -228,8 +228,8 @@ class KafkaTestUtilsTest {
             final ConsumerRecord<String, String> consumerRecord = consumerRecordIterator.next();
             final ProducedKafkaRecord<byte[], byte[]> producedKafkaRecord = producedKafkaRecordIterator.next();
 
-            final String expectedKey = new String(producedKafkaRecord.getKey(), Charsets.UTF_8);
-            final String expectedValue = new String(producedKafkaRecord.getValue(), Charsets.UTF_8);
+            final String expectedKey = new String(producedKafkaRecord.getKey(), StandardCharsets.UTF_8);
+            final String expectedValue = new String(producedKafkaRecord.getValue(), StandardCharsets.UTF_8);
             final String actualKey = consumerRecord.key();
             final String actualValue = consumerRecord.value();
 

@@ -25,7 +25,6 @@
 
 package com.salesforce.kafka.test;
 
-import com.google.common.base.Charsets;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.DescribeClusterResult;
@@ -51,6 +50,7 @@ import org.apache.kafka.common.serialization.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -169,7 +169,7 @@ public class KafkaTestUtils {
             final String value = "value" + timeStamp;
 
             // Add to map
-            keysAndValues.put(key.getBytes(Charsets.UTF_8), value.getBytes(Charsets.UTF_8));
+            keysAndValues.put(key.getBytes(StandardCharsets.UTF_8), value.getBytes(StandardCharsets.UTF_8));
         }
 
         return produceRecords(keysAndValues, topicName, partitionId);
