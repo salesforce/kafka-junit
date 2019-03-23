@@ -105,6 +105,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     /**
      * Alternative constructor allowing override of brokerProperties.
      * @param overrideBrokerProperties Define Kafka broker properties.
+     * @param listeners Listener definitions.
      * @throws IllegalArgumentException if overrideBrokerProperties argument is null.
      */
     public KafkaTestServer(
