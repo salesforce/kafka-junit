@@ -27,7 +27,11 @@ package com.salesforce.kafka.test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 
 /**
  * Collection of Utilities.
@@ -39,16 +43,49 @@ class Utils {
      */
     static File createTempDirectory() {
         // Create temp path to store logs
-        final File logDir;
+        final Path logDir;
         try {
-            logDir = Files.createTempDirectory("kafka-unit").toFile();
-        } catch (IOException e) {
+            logDir = Files.createTempDirectory("kafka-unit");
+        } catch (final IOException e) {
             throw new RuntimeException(e);
         }
 
-        // Ensure its removed on termination.
-        logDir.deleteOnExit();
+        // Ensure its removed on termination by recursively removing all files under the temp directory.
+        Utils.recursiveDeleteOnShutdownHook(logDir);
 
-        return logDir;
+        // Return as a File
+        return logDir.toFile();
+    }
+
+    /**
+     * Registers a shutdown hook to recursively cleanup/delete a directory and all of it's contents.
+     * @param path the Path to remove.
+     */
+    private static void recursiveDeleteOnShutdownHook(final Path path) {
+        Runtime.getRuntime().addShutdownHook(new Thread(
+            () -> {
+                try {
+                    Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+                        @Override
+                        public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
+                            Files.delete(file);
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult postVisitDirectory(final Path dir, final IOException exception) throws IOException {
+                            if (exception == null) {
+                                Files.delete(dir);
+                                return FileVisitResult.CONTINUE;
+                            }
+                            // directory iteration failed
+                            throw exception;
+                        }
+                    });
+                } catch (final IOException exception) {
+                    throw new RuntimeException("Failed to delete " + path, exception);
+                }
+            }
+        ));
     }
 }

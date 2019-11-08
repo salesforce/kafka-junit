@@ -2,6 +2,9 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.1.2 (11/08/2019)
+- [ISSUE-36](https://github.com/salesforce/kafka-junit/issues/36) Temporary directories should now be cleaned up properly on JVM shutdown.
+
 ## 3.1.1 (03/22/2019)
 - Replace internal uses of Guava with JDK-comparable methods so that if a transitive dependency on Curator resolves to a more recent version that shades Guava this library will not break.
 
