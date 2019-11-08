@@ -73,17 +73,17 @@ class Utils {
                         }
 
                         @Override
-                        public FileVisitResult postVisitDirectory(final Path dir, final IOException e) throws IOException {
-                            if (e == null) {
+                        public FileVisitResult postVisitDirectory(final Path dir, final IOException exception) throws IOException {
+                            if (exception == null) {
                                 Files.delete(dir);
                                 return FileVisitResult.CONTINUE;
                             }
                             // directory iteration failed
-                            throw e;
+                            throw exception;
                         }
                     });
-                } catch (final IOException e) {
-                    throw new RuntimeException("Failed to delete " + path, e);
+                } catch (final IOException exception) {
+                    throw new RuntimeException("Failed to delete " + path, exception);
                 }
             }
         ));
