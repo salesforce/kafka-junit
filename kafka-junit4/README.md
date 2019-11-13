@@ -256,7 +256,9 @@ a cluster with 4 Kafka brokers. The Kafka brokers will have id's that start and 
 ```
 
 ##### Configuring explicit ports for broker(s)
-If you require specific ports for the Kafka brokers to listen on, you can use the `BrokerListener.onPorts(...)` method when registering a listener.
+Optionally if you require specific ports for the Kafka brokers to listen on, you can use the `BrokerListener.onPorts(...)` method when registering a listener.
+
+Not calling the `onPorts()` method will have the broker(s) listen on randomly assigned ports.
 
 ```java
     /**
