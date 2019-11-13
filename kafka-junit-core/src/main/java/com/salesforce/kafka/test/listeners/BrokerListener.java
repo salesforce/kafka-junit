@@ -54,4 +54,18 @@ public interface BrokerListener {
      * @return Properties to be registered on connecting client.
      */
     Properties getClientProperties();
+
+    /**
+     * The ports configured.
+     * @return Configured ports.
+     */
+    int[] getPorts();
+
+    /**
+     * Internal method to get the next assigned port.  If called more times than configured ports,
+     * this method will generate a random port to be used.
+     *
+     * @return next configured port to use.
+     */
+    int getNextPort();
 }

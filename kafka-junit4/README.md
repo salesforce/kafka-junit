@@ -20,7 +20,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit4</artifactId>
-    <version>3.1.2</version>
+    <version>3.2.0</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -32,7 +32,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit4</artifactId>
-    <version>3.1.2</version>
+    <version>3.2.0</version>
     <scope>test</scope>
 </dependency>
 
@@ -58,7 +58,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit4</artifactId>
-    <version>3.1.2</version>
+    <version>3.2.0</version>
     <scope>test</scope>
 </dependency>
 
@@ -84,7 +84,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit4</artifactId>
-    <version>3.1.2</version>
+    <version>3.2.0</version>
     <scope>test</scope>
 </dependency>
 
@@ -110,7 +110,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit4</artifactId>
-    <version>3.1.2</version>
+    <version>3.2.0</version>
     <scope>test</scope>
 </dependency>
 
@@ -253,6 +253,32 @@ a cluster with 4 Kafka brokers. The Kafka brokers will have id's that start and 
             .withUsername("YourUsername")
             .withPassword("YourPassword")
         );
+```
+
+##### Configuring explicit ports for broker(s)
+If you require specific ports for the Kafka brokers to listen on, you can use the `BrokerListener.onPorts(...)` method when registering a listener.
+
+```java
+    /**
+     * This is an example of how to start a broker on an explicitly defined port of 1234.
+     * The onPorts() can be called on any of the above listener types.
+     */
+    @RegisterExtension
+    public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
+        .registerListener(new PlainListener().onPorts(1234));
+
+    /**
+     * If you are running a multi-broker cluster, you will need to pass a unique port for each 
+     * broker in the cluster.
+     * 
+     * This example will have 2 brokers where:
+     *   The first broker is listening on port 1234.
+     *   The second broker is listening on port 4321.
+     */
+    @RegisterExtension
+    public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
+        .withBrokers(2)
+        .registerListener(new PlainListener().onPorts(1234, 4321));
 ```
 
 ##### Helpful methods on SharedKafkaTestResource

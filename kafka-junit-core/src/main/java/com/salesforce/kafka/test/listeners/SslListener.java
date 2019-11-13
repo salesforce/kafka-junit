@@ -30,7 +30,7 @@ import java.util.Properties;
 /**
  * Define and register an SSL listener on a Kafka broker.
  */
-public class SslListener implements BrokerListener {
+public class SslListener extends AbstractListener<SslListener> {
 
     private String trustStoreFile = "";
     private String trustStorePassword = "";

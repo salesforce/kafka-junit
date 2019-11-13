@@ -2,6 +2,9 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.2.0 (11/13/2019)
+- [ISSUE-38](https://github.com/salesforce/kafka-junit/issues/38) Optionally allow for explicitly defining which ports kakfa brokers listen on.
+
 ## 3.1.2 (11/08/2019)
 - [ISSUE-36](https://github.com/salesforce/kafka-junit/issues/36) Temporary directories should now be cleaned up properly on JVM shutdown.
 

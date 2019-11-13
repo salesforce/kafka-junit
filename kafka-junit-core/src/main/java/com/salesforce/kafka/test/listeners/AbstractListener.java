@@ -25,25 +25,53 @@
 
 package com.salesforce.kafka.test.listeners;
 
-import java.util.Properties;
+import org.apache.curator.test.InstanceSpec;
 
 /**
- * Default implementation.  Defines a PLAINTEXT listener.
+ * Shared Listener class.
+ *
+ * @param <Self> reference to parent class.
  */
-public class PlainListener extends AbstractListener<PlainListener> {
+public abstract class AbstractListener<Self> implements BrokerListener {
+    /**
+     * Defines which port(s) to listen on.
+     */
+    private int[] ports = {};
+    private int portIndex = 0;
 
-    @Override
-    public String getProtocol() {
-        return "PLAINTEXT";
+    /**
+     * Optionally allow for explicitly defining which ports this listener will bind to.
+     * Pass a unique port per broker running.
+     *
+     * If not explicitly called, random ports will be assigned to each listener and broker.
+     *
+     * @param ports the ports to bind to.
+     * @return self for method chaining.
+     */
+    public Self onPorts(final int ... ports) {
+        this.ports = ports;
+        return (Self) this;
     }
 
-    @Override
-    public Properties getBrokerProperties() {
-        return new Properties();
+    /**
+     * The ports configured.
+     * @return Configured ports.
+     */
+    public int[] getPorts() {
+        return ports;
     }
 
-    @Override
-    public Properties getClientProperties() {
-        return new Properties();
+    /**
+     * Internal method to get the next assigned port.  If called more times than configured ports,
+     * this method will generate a random port to be used.
+     *
+     * @return next configured port to use.
+     */
+    public int getNextPort() {
+        if (ports == null || ports.length == 0 || portIndex >= ports.length) {
+            // Return random Port
+            return InstanceSpec.getRandomPort();
+        }
+        return ports[portIndex++];
     }
 }

@@ -35,9 +35,11 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -140,6 +142,9 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
         // Ensure zookeeper instance has been started.
         zkTestServer.start();
 
+        // Validate listeners
+        validateListenerPorts();
+
         // If we have no brokers defined yet...
         if (brokers.isEmpty()) {
             // Loop over brokers, starting with brokerId 1.
@@ -167,6 +172,42 @@ public class KafkaTestCluster implements KafkaCluster, KafkaProvider, AutoClosea
 
         // Block until the cluster is 'up' or the timeout is exceeded.
         waitUntilClusterReady(10_000L);
+    }
+
+    private void validateListenerPorts() {
+        final Set<Integer> registeredPorts = new HashSet<>();
+
+        // Validate listeners that have explicitly defined ports.
+        for (final BrokerListener listener : registeredListeners) {
+            // Listeners with no explicitly defined ports will use a randomly assigned port.
+            if (listener.getPorts().length == 0) {
+                // Skip to next listener.
+                continue;
+            }
+
+            // Otherwise ensure we have at least 1 port per broker
+            else if (listener.getPorts().length < numberOfBrokers) {
+                // TODO Log warning that a random port will be used
+                logger.warn(
+                    "{} will use at least one randomly generated port. "
+                    + "To avoid this warning assign the same number of ports via the onPorts() method to this listener "
+                    + "as brokers you have in your test cluster.",
+                    listener.getClass().getSimpleName()
+                );
+            }
+
+            // Ensure ports are not duplicated.
+            for (final int port : listener.getPorts()) {
+                if (registeredPorts.contains(port)) {
+                    throw new RuntimeException(
+                        "Error configuring listener " + listener.getClass().getSimpleName() + " as port " + port + " "
+                        + "is already registered by a listener. Ensure that all explicitly defined ports passed to "
+                        + "BrokerListener.onPorts() is unique across all listeners."
+                    );
+                }
+                registeredPorts.add(port);
+            }
+        }
     }
 
     /**
