@@ -30,6 +30,7 @@ import com.salesforce.kafka.test.listeners.PlainListener;
 import com.salesforce.kafka.test.listeners.SaslPlainListener;
 import com.salesforce.kafka.test.listeners.SaslSslListener;
 import com.salesforce.kafka.test.listeners.SslListener;
+import org.apache.curator.test.InstanceSpec;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -406,6 +407,52 @@ class KafkaTestServerTest {
             // Just SASL_SSL
             Arguments.of(Collections.singletonList(saslSslListener))
         );
+    }
+
+    /**
+     * Test a single server instance with listener on specified port.
+     */
+    @Test
+    void testListenerWithSpecificPort() throws Exception {
+        // Explicitly define our port
+        final int exportedPort = InstanceSpec.getRandomPort();
+
+        // Create default plain listener
+        final BrokerListener plainListener = new PlainListener()
+            .onPorts(exportedPort);
+
+        final String topicName = "TestTopic-" + System.currentTimeMillis();
+        final int expectedMsgCount = 2;
+
+        final Properties overrideProperties = getDefaultBrokerOverrideProperties();
+
+        // Create our test server instance
+        try (final KafkaTestServer kafkaTestServer = new KafkaTestServer(overrideProperties, Collections.singletonList(plainListener))) {
+            // Start broker
+            kafkaTestServer.start();
+
+            // Validate connect string is as expected.
+            final String connectString = kafkaTestServer.getKafkaConnectString();
+            Assertions.assertEquals("PLAINTEXT://localhost:" + exportedPort, connectString, "Should be using our specified port");
+
+            // Now validate that the service functions.
+            // Create KafkaTestUtils
+            final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestServer);
+
+            // Create topic
+            kafkaTestUtils.createTopic(topicName, 1, (short) 1);
+
+            // Publish 2 messages into topic
+            kafkaTestUtils.produceRecords(expectedMsgCount, topicName, 0);
+
+            // Sanity test - Consume the messages back out before shutting down broker.
+            final List<ConsumerRecord<byte[], byte[]>> records = kafkaTestUtils.consumeAllRecordsFromTopic(topicName);
+            Assertions.assertNotNull(records);
+            Assertions.assertEquals(expectedMsgCount, records.size(), "Should have found 2 records.");
+
+            // Call stop/close on the broker
+            kafkaTestServer.stop();
+        }
     }
 
     private Properties getDefaultBrokerOverrideProperties() {

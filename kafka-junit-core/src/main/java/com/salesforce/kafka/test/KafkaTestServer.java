@@ -29,7 +29,6 @@ import com.salesforce.kafka.test.listeners.BrokerListener;
 import com.salesforce.kafka.test.listeners.PlainListener;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
-import org.apache.curator.test.InstanceSpec;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -262,8 +261,8 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
 
             // Loop over registered listeners and add each
             for (final BrokerListener listener : registeredListeners) {
-                // Generate port to listen on.
-                final int port = InstanceSpec.getRandomPort();
+                // Get port to listen on.
+                final int port = listener.getNextPort();
                 final String listenerDefinition = listener.getProtocol() + "://" + getConfiguredHostname() + ":" + port;
                 listenerProperties.add(
                     new ListenerProperties(listener.getProtocol(), listenerDefinition, listener.getClientProperties())

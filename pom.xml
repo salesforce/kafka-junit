@@ -32,7 +32,7 @@
 
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit</artifactId>
-    <version>3.1.2</version>
+    <version>3.2.0</version>
 
     <!-- Submodules -->
     <modules>

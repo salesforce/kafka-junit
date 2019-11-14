@@ -30,6 +30,7 @@ import com.salesforce.kafka.test.listeners.PlainListener;
 import com.salesforce.kafka.test.listeners.SaslPlainListener;
 import com.salesforce.kafka.test.listeners.SaslSslListener;
 import com.salesforce.kafka.test.listeners.SslListener;
+import org.apache.curator.test.InstanceSpec;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.Node;
@@ -40,6 +41,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -457,6 +459,88 @@ class KafkaTestClusterTest {
             // Just SASL_SSL
             Arguments.of(Collections.singletonList(saslSslListener))
         );
+    }
+
+    /**
+     * Test a cluster instance with listeners on specified ports.
+     */
+    @Test
+    void testListenerWithSpecificPort() throws Exception {
+        // Explicitly define our port
+        final int exportedPort1 = InstanceSpec.getRandomPort();
+        final int exportedPort2 = InstanceSpec.getRandomPort();
+
+        // Create default plain listener
+        final BrokerListener plainListener = new PlainListener()
+            .onPorts(exportedPort1, exportedPort2);
+        final List<BrokerListener> listeners = Collections.singletonList(plainListener);
+
+        final String topicName = "TestTopic-" + System.currentTimeMillis();
+        final int expectedMsgCount = 2;
+        final int numberOfBrokers = 2;
+
+        // Speed up shutdown in our tests
+        final Properties overrideProperties = getDefaultBrokerOverrideProperties();
+
+        // Create our test server instance
+        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers, overrideProperties, listeners)) {
+            // Start broker
+            kafkaTestCluster.start();
+
+            // Validate connect string is as expected.
+            final String connectString = kafkaTestCluster.getKafkaConnectString();
+            final String expectedConnectString = "PLAINTEXT://localhost:" + exportedPort1 + ",PLAINTEXT://localhost:" + exportedPort2;
+            Assertions.assertEquals(expectedConnectString, connectString, "Should be using our specified ports");
+
+            // Create KafkaTestUtils
+            final KafkaTestUtils kafkaTestUtils = new KafkaTestUtils(kafkaTestCluster);
+
+            // Create topic
+            kafkaTestUtils.createTopic(topicName, 1, (short) numberOfBrokers);
+
+            // Publish 2 messages into topic
+            kafkaTestUtils.produceRecords(expectedMsgCount, topicName, 0);
+
+            // Sanity test - Consume the messages back out before shutting down broker.
+            final List<ConsumerRecord<byte[], byte[]>> records = kafkaTestUtils.consumeAllRecordsFromTopic(topicName);
+            Assertions.assertNotNull(records);
+            Assertions.assertEquals(expectedMsgCount, records.size(), "Should have found 2 records.");
+        }
+    }
+
+    /**
+     * Test a cluster instance with listeners on specified ports, where a port is duplicated.
+     */
+    @Test
+    void testListenerWithSpecificPortRepeated() throws Exception {
+        // Explicitly define our port
+        final int port1 = InstanceSpec.getRandomPort();
+        final int port2 = InstanceSpec.getRandomPort();
+        final int port3 = InstanceSpec.getRandomPort();
+
+        // Create plain listeners using the same port.
+        final BrokerListener plainListener1 = new PlainListener()
+            .onPorts(port1, port2);
+
+        final BrokerListener plainListener2 = new PlainListener()
+            .onPorts(port3, port1);
+
+        final List<BrokerListener> listeners = new ArrayList<>();
+        listeners.add(plainListener1);
+        listeners.add(plainListener2);
+
+        // Define how many brokers.
+        final int numberOfBrokers = 2;
+
+        // Speed up shutdown in our tests
+        final Properties overrideProperties = getDefaultBrokerOverrideProperties();
+
+        // Create our test server instance
+        try (final KafkaTestCluster kafkaTestCluster = new KafkaTestCluster(numberOfBrokers, overrideProperties, listeners)) {
+
+            // Start broker, this should throw an exception
+            Assertions.assertThrows(RuntimeException.class, kafkaTestCluster::start);
+        }
     }
 
     private Properties getDefaultBrokerOverrideProperties() {

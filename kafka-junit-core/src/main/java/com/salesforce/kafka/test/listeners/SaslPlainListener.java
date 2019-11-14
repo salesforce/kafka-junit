@@ -39,7 +39,7 @@ import java.util.Properties;
  * In order to make use of this Listener, you **must** start the JVM with the following:
  *  -Djava.security.auth.login.config=/path/to/your/jaas.conf
  */
-public class SaslPlainListener implements BrokerListener {
+public class SaslPlainListener extends AbstractListener<SaslPlainListener> {
     private static final Logger logger = LoggerFactory.getLogger(SaslPlainListener.class);
 
     private String username = "";
