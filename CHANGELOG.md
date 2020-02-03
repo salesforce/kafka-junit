@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   This caused issues with Kafka version 2.1.x on startup and shutdown causing tests to hang.
 
 ### Internal dependency updates
-- JUnit4 from 2.14 to 2.13
+- JUnit4 from 2.12 to 2.13
 - JUnit5 from 5.3.2 to 5.6.0
 
 ## 3.2.0 (11/13/2019)
