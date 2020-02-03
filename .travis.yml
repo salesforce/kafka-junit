@@ -21,6 +21,19 @@ env:
 -
   KAFKA_VERSION=2.0.1
   EXCLUDE_KAFKA_TESTS=0_11_0_x
+-
+  KAFKA_VERSION=2.1.1
+  EXCLUDE_KAFKA_TESTS=0_11_0_x
+-
+  KAFKA_VERSION=2.2.2
+  EXCLUDE_KAFKA_TESTS=0_11_0_x
+-
+  KAFKA_VERSION=2.3.1
+  EXCLUDE_KAFKA_TESTS=0_11_0_x
+-
+  KAFKA_VERSION=2.4.0
+  EXCLUDE_KAFKA_TESTS=0_11_0_x
+
 script:
   ## Generate dummy SSL Certificates used in tests
   - script/generateCertificatesForTests.sh

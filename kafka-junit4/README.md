@@ -5,7 +5,7 @@ one or more "real" kafka brokers running within your tests. No longer do you nee
 
 Kafka-JUnit4 is built on-top of **JUnit 4** as a SharedResource using the **@ClassRule** annotation.
 
-Kafka-JUnit4 works with Kafka versions **0.11.0.x**, **1.0.x**, **1.1.x**, and **2.0.x**. The library requires your project to explicitly declare/include Kafka in your project's POM dependency list.
+Kafka-JUnit4 works with all Kafka versions from **0.11.0.x** through **2.4.x**. The library requires your project to explicitly declare/include Kafka in your project's POM dependency list.
 
 For usage with JUnit5 or more general project information please review top level [README](../README.md).
 
@@ -20,7 +20,107 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit4</artifactId>
-    <version>3.2.0</version>
+    <version>3.2.1</version>
+    <scope>test</scope>
+</dependency>
+```
+
+#### POM for Kafka 2.4.x
+```xml
+<!-- Declare kafka-junit4 dependency -->
+<dependency>
+    <groupId>com.salesforce.kafka.test</groupId>
+    <artifactId>kafka-junit4</artifactId>
+    <version>3.2.1</version>
+    <scope>test</scope>
+</dependency>
+
+<!-- Include Kafka 2.4.x -->
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka_2.11</artifactId>
+    <version>2.4.0</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka-clients</artifactId>
+    <version>2.4.0</version>
+    <scope>test</scope>
+</dependency>
+```
+
+#### POM for Kafka 2.3.x
+```xml
+<!-- Declare kafka-junit4 dependency -->
+<dependency>
+    <groupId>com.salesforce.kafka.test</groupId>
+    <artifactId>kafka-junit4</artifactId>
+    <version>3.2.1</version>
+    <scope>test</scope>
+</dependency>
+
+<!-- Include Kafka 2.3.x -->
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka_2.11</artifactId>
+    <version>2.3.1</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka-clients</artifactId>
+    <version>2.3.1</version>
+    <scope>test</scope>
+</dependency>
+```
+
+#### POM for Kafka 2.2.x
+```xml
+<!-- Declare kafka-junit4 dependency -->
+<dependency>
+    <groupId>com.salesforce.kafka.test</groupId>
+    <artifactId>kafka-junit4</artifactId>
+    <version>3.2.1</version>
+    <scope>test</scope>
+</dependency>
+
+<!-- Include Kafka 2.2.x -->
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka_2.11</artifactId>
+    <version>2.2.2</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka-clients</artifactId>
+    <version>2.2.2</version>
+    <scope>test</scope>
+</dependency>
+```
+
+#### POM for Kafka 2.1.x
+```xml
+<!-- Declare kafka-junit4 dependency -->
+<dependency>
+    <groupId>com.salesforce.kafka.test</groupId>
+    <artifactId>kafka-junit4</artifactId>
+    <version>3.2.1</version>
+    <scope>test</scope>
+</dependency>
+
+<!-- Include Kafka 2.1.x -->
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka_2.11</artifactId>
+    <version>2.1.1</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka-clients</artifactId>
+    <version>2.1.1</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -32,7 +132,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit4</artifactId>
-    <version>3.2.0</version>
+    <version>3.2.1</version>
     <scope>test</scope>
 </dependency>
 
@@ -58,7 +158,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit4</artifactId>
-    <version>3.2.0</version>
+    <version>3.2.1</version>
     <scope>test</scope>
 </dependency>
 
@@ -84,7 +184,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit4</artifactId>
-    <version>3.2.0</version>
+    <version>3.2.1</version>
     <scope>test</scope>
 </dependency>
 
@@ -110,7 +210,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit4</artifactId>
-    <version>3.2.0</version>
+    <version>3.2.1</version>
     <scope>test</scope>
 </dependency>
 

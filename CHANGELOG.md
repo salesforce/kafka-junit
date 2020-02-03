@@ -2,6 +2,20 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.2.1 (02/03/2020)
+[PR-42](https://github.com/salesforce/kafka-junit/pull/42)
+
+### Features
+- Officially added support for Kafka versions 2.1.x, 2.2.x, 2.3.x, 2.4.x.
+
+### Bugfix
+- Fixes bug in `ZookeeperTestServer.start()` where calling start on an already running instance caused the instance to be restarted instead of being a no-operation.
+  This caused issues with Kafka version 2.1.x on startup and shutdown causing tests to hang.
+
+### Internal dependency updates
+- JUnit4 from 2.12 to 2.13
+- JUnit5 from 5.3.2 to 5.6.0
+
 ## 3.2.0 (11/13/2019)
 - [ISSUE-38](https://github.com/salesforce/kafka-junit/issues/38) Optionally allow for explicitly defining which ports kakfa brokers listen on.
 
