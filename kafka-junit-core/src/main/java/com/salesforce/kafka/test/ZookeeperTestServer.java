@@ -44,9 +44,20 @@ public class ZookeeperTestServer implements AutoCloseable {
     private TestingServer zkServer = null;
 
     /**
+     * Internal state flag.
+     */
+    private boolean isStarted = false;
+
+    /**
      * Starts the internal Test zookeeper server instance.
      */
     public void start() {
+        // If we're already started
+        if (isStarted) {
+            // Do nothing.
+            return;
+        }
+
         try {
             if (zkServer == null) {
                 // Define configuration
@@ -72,6 +83,9 @@ public class ZookeeperTestServer implements AutoCloseable {
         } catch (final Exception exception) {
             throw new RuntimeException(exception.getMessage(), exception);
         }
+
+        // Set internal state flag
+        isStarted = true;
     }
 
     /**
@@ -88,6 +102,9 @@ public class ZookeeperTestServer implements AutoCloseable {
         // Otherwise call restart.
         try {
             zkServer.restart();
+
+            // Ensure flag is set correctly.
+            isStarted = true;
         } catch (final Exception exception) {
             throw new RuntimeException(exception.getMessage(), exception);
         }
@@ -109,6 +126,8 @@ public class ZookeeperTestServer implements AutoCloseable {
                 throw new RuntimeException(exception.getMessage(), exception);
             }
         }
+        // Set internal state flag.
+        isStarted = false;
     }
 
     /**
