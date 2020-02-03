@@ -5,7 +5,7 @@ one or more "real" kafka brokers running within your tests. No longer do you nee
 
 Kafka-JUnit4 is built on-top of **JUnit 4** as a SharedResource using the **@ClassRule** annotation.
 
-Kafka-JUnit4 works with all Kafka versions from **0.11.0.x**, to **2.4.x**. The library requires your project to explicitly declare/include Kafka in your project's POM dependency list.
+Kafka-JUnit4 works with all Kafka versions from **0.11.0.x** through **2.4.x**. The library requires your project to explicitly declare/include Kafka in your project's POM dependency list.
 
 For usage with JUnit5 or more general project information please review top level [README](../README.md).
 

@@ -5,7 +5,7 @@ one or more "real" kafka brokers running within your tests. No longer do you nee
 
 Kafka-JUnit5 is built on-top of **JUnit 5** as an Extension using the **@RegisterExtension** annotation.
 
-Kafka-JUnit5 works with all Kafka versions from **0.11.0.x**, to **2.4.x**. The library requires your project to explicitly declare/include Kafka in your project's POM dependency list.
+Kafka-JUnit5 works with all Kafka versions from **0.11.0.x** through **2.4.x**. The library requires your project to explicitly declare/include Kafka in your project's POM dependency list.
 
 For usage with JUnit4 or more general project information please review top level [README](../README.md). 
 
