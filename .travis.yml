@@ -11,33 +11,44 @@ install: true
 env:
 -
   KAFKA_VERSION=0.11.0.3
+  KAFKA_SCALA_VERSION=kafka_2.11
   EXCLUDE_KAFKA_TESTS=1_0_x
+
 -
   KAFKA_VERSION=1.0.2
+  KAFKA_SCALA_VERSION=kafka_2.11
   EXCLUDE_KAFKA_TESTS=NOT-USED
 -
   KAFKA_VERSION=1.1.1
+  KAFKA_SCALA_VERSION=kafka_2.11
   EXCLUDE_KAFKA_TESTS=NOT-USED
 -
   KAFKA_VERSION=2.0.1
+  KAFKA_SCALA_VERSION=kafka_2.11
   EXCLUDE_KAFKA_TESTS=0_11_0_x
 -
   KAFKA_VERSION=2.1.1
+  KAFKA_SCALA_VERSION=kafka_2.11
   EXCLUDE_KAFKA_TESTS=0_11_0_x
 -
   KAFKA_VERSION=2.2.2
+  KAFKA_SCALA_VERSION=kafka_2.11
   EXCLUDE_KAFKA_TESTS=0_11_0_x
 -
   KAFKA_VERSION=2.3.1
+  KAFKA_SCALA_VERSION=kafka_2.11
   EXCLUDE_KAFKA_TESTS=0_11_0_x
 -
   KAFKA_VERSION=2.4.1
+  KAFKA_SCALA_VERSION=kafka_2.11
   EXCLUDE_KAFKA_TESTS=0_11_0_x
 -
   KAFKA_VERSION=2.5.1
+  KAFKA_SCALA_VERSION=kafka_2.12
   EXCLUDE_KAFKA_TESTS=0_11_0_x
 -
   KAFKA_VERSION=2.6.0
+  KAFKA_SCALA_VERSION=kafka_2.12
   EXCLUDE_KAFKA_TESTS=0_11_0_x
 
 
@@ -47,4 +58,4 @@ script:
   ## Run CheckStyle and License Header checks, compile, and install locally
   - mvn clean install -DskipTests=true -DskipCheckStyle=false -Dmaven.javadoc.skip=true -B -V -DkafkaVersion=$KAFKA_VERSION -Dtests.excluded=$EXCLUDE_KAFKA_TESTS
   ## Run test suite
-  - mvn test -B -DkafkaVersion=$KAFKA_VERSION -Dtests.excluded=$EXCLUDE_KAFKA_TESTS -DskipCheckStyle=true -Djava.security.auth.login.config=${PWD}/kafka-junit-core/src/test/resources/jaas.conf
+  - mvn test -B -DkafkaVersion=$KAFKA_VERSION -DkafkaScalaVersion=$KAFKA_SCALA_VERSION -Dtests.excluded=$EXCLUDE_KAFKA_TESTS -DskipCheckStyle=true -Djava.security.auth.login.config=${PWD}/kafka-junit-core/src/test/resources/jaas.conf
