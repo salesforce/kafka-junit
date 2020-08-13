@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Features
 - [PR-46](https://github.com/salesforce/kafka-junit/pull/46) Officially added support for Kafka versions 2.5.x, 2.6.x.
 
+### Internal dependency updates
+- JUnit5 from 5.6.0 to 5.6.2
+
 ## 3.2.1 (02/03/2020)
 [PR-42](https://github.com/salesforce/kafka-junit/pull/42)
 
