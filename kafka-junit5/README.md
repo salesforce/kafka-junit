@@ -26,9 +26,9 @@ Include this library in your project's POM with test scope.  **You'll also need 
 ```
 
 <details>
-  <summary>#### POM for Kafka 2.6.x</summary>
-  <p>
-
+  <summary>POM for Kafka 2.6.x</summary>
+  
+  #### POM for Kafka 2.6.x
 ```xml
 <!-- Declare kafka-junit5 dependency -->
 <dependency>
@@ -52,7 +52,6 @@ Include this library in your project's POM with test scope.  **You'll also need 
     <scope>test</scope>
 </dependency>
 ```
-    </p>
 </details>
 
 #### POM for Kafka 2.5.x
