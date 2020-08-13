@@ -5,12 +5,12 @@
     <parent>
         <artifactId>kafka-junit</artifactId>
         <groupId>com.salesforce.kafka.test</groupId>
-        <version>3.2.1</version>
+        <version>3.2.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kafka-junit-core</artifactId>
-    <version>3.2.1</version>
+    <version>3.2.2</version>
 
     <!-- defined properties -->
     <properties>
@@ -38,14 +38,6 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>2.28.2</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Zookeeper for validation in tests -->
-        <dependency>
-            <groupId>org.apache.zookeeper</groupId>
-            <artifactId>zookeeper</artifactId>
-            <version>3.4.14</version>
             <scope>test</scope>
         </dependency>
 

@@ -32,7 +32,7 @@
 
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit</artifactId>
-    <version>3.2.1</version>
+    <version>3.2.2</version>
 
     <!-- Submodules -->
     <modules>
@@ -85,7 +85,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Define which kafka version -->
-        <kafkaVersion>1.0.2</kafkaVersion>
+        <kafkaVersion>2.5.1</kafkaVersion>
+        <kafkaScalaVersion>kafka_2.12</kafkaScalaVersion>
 
         <!-- Define which Curator Test version -->
         <curatorTestVersion>2.12.0</curatorTestVersion>
@@ -119,7 +120,7 @@
         <!-- Kafka -->
         <dependency>
             <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka_2.11</artifactId>
+            <artifactId>${kafkaScalaVersion}</artifactId>
             <version>${kafkaVersion}</version>
             <exclusions>
                 <!-- Don't bring in kafka's logging framework -->
