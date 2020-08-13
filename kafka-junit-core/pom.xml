@@ -41,14 +41,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Zookeeper for validation in tests -->
-        <dependency>
-            <groupId>org.apache.zookeeper</groupId>
-            <artifactId>zookeeper</artifactId>
-            <version>3.4.14</version>
-            <scope>test</scope>
-        </dependency>
-
         <!-- Streams Validation in tests -->
         <dependency>
             <groupId>org.apache.kafka</groupId>
