@@ -16,9 +16,9 @@ For usage with JUnit5 or more general project information please review top leve
 Include this library in your project's POM with test scope.  **You'll also need to include the appropriate Kafka libraries you want to test against.**
 
 <details>
-  <summary>Example POM for Kafka 2.6.x</summary>
+  <summary>Example POM using Kafka 2.6.x</summary>
   
-  #### Example POM for Kafka 2.6.x
+  #### Example POM using Kafka 2.6.x
 ```xml
 <!-- Declare kafka-junit4 dependency -->
 <dependency>
@@ -45,9 +45,9 @@ Include this library in your project's POM with test scope.  **You'll also need 
 </details>
 
 <details>
-  <summary>Example POM for Kafka 2.5.x</summary>
+  <summary>Example POM using Kafka 2.5.x</summary>
   
-  #### Example POM for Kafka 2.5.x
+  #### Example POM using Kafka 2.5.x
 ```xml
 <!-- Declare kafka-junit4 dependency -->
 <dependency>
@@ -74,9 +74,9 @@ Include this library in your project's POM with test scope.  **You'll also need 
 </details>
 
 <details>
-  <summary>Example POM for Kafka 2.4.x</summary>
+  <summary>Example POM using Kafka 2.4.x</summary>
   
-  #### Example POM for Kafka 2.4.x
+  #### Example POM using Kafka 2.4.x
 ```xml
 <!-- Declare kafka-junit4 dependency -->
 <dependency>
@@ -103,9 +103,9 @@ Include this library in your project's POM with test scope.  **You'll also need 
 </details>
 
 <details>
-  <summary>Example POM for Kafka 2.3.x</summary>
+  <summary>Example POM using Kafka 2.3.x</summary>
   
-  #### Example POM for Kafka 2.3.x
+  #### Example POM using Kafka 2.3.x
 ```xml
 <!-- Declare kafka-junit4 dependency -->
 <dependency>
@@ -132,9 +132,9 @@ Include this library in your project's POM with test scope.  **You'll also need 
 </details>
 
 <details>
-  <summary>Example POM for Kafka 2.2.x</summary>
+  <summary>Example POM using Kafka 2.2.x</summary>
   
-  #### Example POM for Kafka 2.2.x
+  #### Example POM using Kafka 2.2.x
 ```xml
 <!-- Declare kafka-junit4 dependency -->
 <dependency>
@@ -161,9 +161,9 @@ Include this library in your project's POM with test scope.  **You'll also need 
 </details>
 
 <details>
-  <summary>Example POM for Kafka 2.1.x</summary>
+  <summary>Example POM using Kafka 2.1.x</summary>
   
-  #### Example POM for Kafka 2.1.x
+  #### Example POM using Kafka 2.1.x
 ```xml
 <!-- Declare kafka-junit4 dependency -->
 <dependency>
@@ -190,9 +190,9 @@ Include this library in your project's POM with test scope.  **You'll also need 
 </details>
 
 <details>
-  <summary>Example POM for Kafka 2.0.x</summary>
+  <summary>Example POM using Kafka 2.0.x</summary>
   
-  #### Example POM for Kafka 2.0.x
+  #### Example POM using Kafka 2.0.x
 ```xml
 <!-- Declare kafka-junit4 dependency -->
 <dependency>
@@ -219,9 +219,9 @@ Include this library in your project's POM with test scope.  **You'll also need 
 </details>
 
 <details>
-  <summary>Example POM for Kafka 1.1.x</summary>
+  <summary>Example POM using Kafka 1.1.x</summary>
   
-  #### Example POM for Kafka 1.1.x
+  #### Example POM using Kafka 1.1.x
 
 ```xml
 <!-- Declare kafka-junit4 dependency -->
@@ -249,9 +249,9 @@ Include this library in your project's POM with test scope.  **You'll also need 
 </details>
 
 <details>
-  <summary>Example POM for Kafka 1.0.x</summary>
+  <summary>Example POM using Kafka 1.0.x</summary>
   
-  #### Example POM for Kafka 1.0.x
+  #### Example POM using Kafka 1.0.x
 
 ```xml
 <!-- Declare kafka-junit4 dependency -->
@@ -279,9 +279,9 @@ Include this library in your project's POM with test scope.  **You'll also need 
 </details>
 
 <details>
-  <summary>Example POM for Kafka 0.11.0.x</summary>
+  <summary>Example POM using Kafka 0.11.0.x</summary>
   
-  #### Example POM for Kafka 0.11.0.x
+  #### Example POM using Kafka 0.11.0.x
 ```xml
 <!-- Declare kafka-junit4 dependency -->
 <dependency>
