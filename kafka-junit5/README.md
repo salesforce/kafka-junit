@@ -25,6 +25,61 @@ Include this library in your project's POM with test scope.  **You'll also need 
 </dependency>
 ```
 
+<details>
+  <summary>#### POM for Kafka 2.6.x</summary>
+  <p>
+
+```xml
+<!-- Declare kafka-junit5 dependency -->
+<dependency>
+    <groupId>com.salesforce.kafka.test</groupId>
+    <artifactId>kafka-junit5</artifactId>
+    <version>3.2.1</version>
+    <scope>test</scope>
+</dependency>
+
+<!-- Include Kafka 2.6.x -->
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka_2.12</artifactId>
+    <version>2.6.0</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka-clients</artifactId>
+    <version>2.6.0</version>
+    <scope>test</scope>
+</dependency>
+```
+    </p>
+</details>
+
+#### POM for Kafka 2.5.x
+```xml
+<!-- Declare kafka-junit5 dependency -->
+<dependency>
+    <groupId>com.salesforce.kafka.test</groupId>
+    <artifactId>kafka-junit5</artifactId>
+    <version>3.2.1</version>
+    <scope>test</scope>
+</dependency>
+
+<!-- Include Kafka 2.5.x -->
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka_2.12</artifactId>
+    <version>2.5.1</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka-clients</artifactId>
+    <version>2.5.1</version>
+    <scope>test</scope>
+</dependency>
+```
+
 #### POM for Kafka 2.4.x
 ```xml
 <!-- Declare kafka-junit5 dependency -->
@@ -38,7 +93,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <!-- Include Kafka 2.4.x -->
 <dependency>
     <groupId>org.apache.kafka</groupId>
-    <artifactId>kafka_2.11</artifactId>
+    <artifactId>kafka_2.12</artifactId>
     <version>2.4.0</version>
     <scope>test</scope>
 </dependency>
@@ -63,7 +118,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <!-- Include Kafka 2.3.x -->
 <dependency>
     <groupId>org.apache.kafka</groupId>
-    <artifactId>kafka_2.11</artifactId>
+    <artifactId>kafka_2.12</artifactId>
     <version>2.3.1</version>
     <scope>test</scope>
 </dependency>
@@ -88,7 +143,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <!-- Include Kafka 2.2.x -->
 <dependency>
     <groupId>org.apache.kafka</groupId>
-    <artifactId>kafka_2.11</artifactId>
+    <artifactId>kafka_2.12</artifactId>
     <version>2.2.2</version>
     <scope>test</scope>
 </dependency>
