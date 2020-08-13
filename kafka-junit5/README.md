@@ -26,9 +26,9 @@ Include this library in your project's POM with test scope.  **You'll also need 
 ```
 
 <details>
-  <summary>POM for Kafka 2.6.x</summary>
+  <summary>Example POM for Kafka 2.6.x</summary>
   
-  #### POM for Kafka 2.6.x
+  #### Example POM for Kafka 2.6.x
 ```xml
 <!-- Declare kafka-junit5 dependency -->
 <dependency>
@@ -54,7 +54,10 @@ Include this library in your project's POM with test scope.  **You'll also need 
 ```
 </details>
 
-#### POM for Kafka 2.5.x
+<details>
+  <summary>Example POM for Kafka 2.5.x</summary>
+  
+  #### Example POM for Kafka 2.5.x
 ```xml
 <!-- Declare kafka-junit5 dependency -->
 <dependency>
@@ -78,8 +81,12 @@ Include this library in your project's POM with test scope.  **You'll also need 
     <scope>test</scope>
 </dependency>
 ```
+</details>
 
-#### POM for Kafka 2.4.x
+<details>
+  <summary>Example POM for Kafka 2.4.x</summary>
+  
+  #### Example POM for Kafka 2.4.x
 ```xml
 <!-- Declare kafka-junit5 dependency -->
 <dependency>
@@ -103,8 +110,12 @@ Include this library in your project's POM with test scope.  **You'll also need 
     <scope>test</scope>
 </dependency>
 ```
+</details>
 
-#### POM for Kafka 2.3.x
+<details>
+  <summary>Example POM for Kafka 2.3.x</summary>
+  
+  #### Example POM for Kafka 2.3.x
 ```xml
 <!-- Declare kafka-junit5 dependency -->
 <dependency>
@@ -128,8 +139,12 @@ Include this library in your project's POM with test scope.  **You'll also need 
     <scope>test</scope>
 </dependency>
 ```
+</details>
 
-#### POM for Kafka 2.2.x
+<details>
+  <summary>Example POM for Kafka 2.2.x</summary>
+  
+  #### Example POM for Kafka 2.2.x
 ```xml
 <!-- Declare kafka-junit5 dependency -->
 <dependency>
@@ -153,8 +168,12 @@ Include this library in your project's POM with test scope.  **You'll also need 
     <scope>test</scope>
 </dependency>
 ```
+</details>
 
-#### POM for Kafka 2.1.x
+<details>
+  <summary>Example POM for Kafka 2.1.x</summary>
+  
+  #### Example POM for Kafka 2.1.x
 ```xml
 <!-- Declare kafka-junit5 dependency -->
 <dependency>
@@ -178,8 +197,12 @@ Include this library in your project's POM with test scope.  **You'll also need 
     <scope>test</scope>
 </dependency>
 ```
+</details>
 
-#### POM for Kafka 2.0.x
+<details>
+  <summary>Example POM for Kafka 2.0.x</summary>
+  
+  #### Example POM for Kafka 2.0.x
 ```xml
 <!-- Declare kafka-junit5 dependency -->
 <dependency>
@@ -203,8 +226,12 @@ Include this library in your project's POM with test scope.  **You'll also need 
     <scope>test</scope>
 </dependency>
 ```
+</details>
 
-#### POM for Kafka 1.1.x
+<details>
+  <summary>Example POM for Kafka 1.1.x</summary>
+  
+  #### Example POM for Kafka 1.1.x
 
 ```xml
 <!-- Declare kafka-junit5 dependency -->
@@ -229,8 +256,12 @@ Include this library in your project's POM with test scope.  **You'll also need 
     <scope>test</scope>
 </dependency>
 ```
+</details>
 
-#### POM for Kafka 1.0.x
+<details>
+  <summary>Example POM for Kafka 1.0.x</summary>
+  
+  #### Example POM for Kafka 1.0.x
 
 ```xml
 <!-- Declare kafka-junit5 dependency -->
@@ -255,9 +286,12 @@ Include this library in your project's POM with test scope.  **You'll also need 
     <scope>test</scope>
 </dependency>
 ```
+</details>
 
-#### POM for Kafka 0.11.0.x
-
+<details>
+  <summary>Example POM for Kafka 0.11.0.x</summary>
+  
+  #### Example POM for Kafka 0.11.0.x
 ```xml
 <!-- Declare kafka-junit5 dependency -->
 <dependency>
@@ -281,6 +315,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
     <scope>test</scope>
 </dependency>
 ```
+</details>
 
 #### KafkaTestServer
 
