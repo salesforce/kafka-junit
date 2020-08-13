@@ -15,16 +15,6 @@ For usage with JUnit4 or more general project information please review top leve
 
 Include this library in your project's POM with test scope.  **You'll also need to include the appropriate Kafka libraries you want to test against.**
 
-```xml
-<!-- Declare kafka-junit5 dependency -->
-<dependency>
-    <groupId>com.salesforce.kafka.test</groupId>
-    <artifactId>kafka-junit5</artifactId>
-    <version>3.2.1</version>
-    <scope>test</scope>
-</dependency>
-```
-
 <details>
   <summary>Example POM for Kafka 2.6.x</summary>
   
