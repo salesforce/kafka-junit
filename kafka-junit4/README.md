@@ -394,13 +394,8 @@ a cluster with 4 Kafka brokers. The Kafka brokers will have id's that start and 
     public static final SharedKafkaTestResource sharedKafkaTestResource = new SharedKafkaTestResource()
         // Register and configure SASL PLAIN authentication on cluster.
         .registerListener(new SaslPlainListener()
-            // SSL Options
-            .withClientAuthRequested()
-            .withKeyStoreLocation("/path/to/your/kafka.keystore.jks")
-            .withKeyStorePassword("YourKeyStorePassword")
-            .withTrustStoreLocation("/path/to/your/kafka.truststore.jks")
-            .withTrustStorePassword("YourTrustStorePassword")
-            .withKeyPassword("YourKeyPassword")
+            .withUsername("kafkaclient")
+            .withPassword("client-secret")
         );
 ```
 
