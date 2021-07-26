@@ -32,31 +32,31 @@ jobs:
 
           - kafka_version: 2.0.1
             kafka_scala_version: kafka_2.11
-            exclude_kafka_tests: NOT-USED
+            exclude_kafka_tests: 0_11_0_x
 
           - kafka_version: 2.1.1
             kafka_scala_version: kafka_2.11
-            exclude_kafka_tests: NOT-USED
+            exclude_kafka_tests: 0_11_0_x
 
           - kafka_version: 2.2.2
             kafka_scala_version: kafka_2.12
-            exclude_kafka_tests: NOT-USED
+            exclude_kafka_tests: 0_11_0_x
 
           - kafka_version: 2.3.1
             kafka_scala_version: kafka_2.12
-            exclude_kafka_tests: NOT-USED
+            exclude_kafka_tests: 0_11_0_x
 
           - kafka_version: 2.4.1
             kafka_scala_version: kafka_2.12
-            exclude_kafka_tests: NOT-USED
+            exclude_kafka_tests: 0_11_0_x
 
           - kafka_version: 2.5.1
             kafka_scala_version: kafka_2.12
-            exclude_kafka_tests: NOT-USED
+            exclude_kafka_tests: 0_11_0_x
 
           - kafka_version: 2.6.0
             kafka_scala_version: kafka_2.12
-            exclude_kafka_tests: NOT-USED
+            exclude_kafka_tests: 0_11_0_x
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
