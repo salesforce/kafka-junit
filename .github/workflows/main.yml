@@ -1,0 +1,28 @@
+name: CI Test Suite
+
+  # Triggers the workflow on push, pull, or manually
+on: [push, pull_request, workflow_dispatch]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      
+      ## Generate dummy SSL Certificates used in tests
+      - name: Generate Certificates for Tests
+        run: script/generateCertificatesForTests.sh
+
+      ## Run CheckStyle and License Header checks, compile, and install locally
+      - name: Run checkstyle, license check, compile and install locally
+        run: mvn clean install -DskipTests=true -DskipCheckStyle=false -Dmaven.javadoc.skip=true -B -V -DkafkaVersion=$KAFKA_VERSION -Dtests.excluded=$EXCLUDE_KAFKA_TESTS
+
+      ## Run test suite
+      - name: Run test suite
+        run: mvn test -B -DkafkaVersion=$KAFKA_VERSION -DkafkaScalaVersion=$KAFKA_SCALA_VERSION -Dtests.excluded=$EXCLUDE_KAFKA_TESTS -DskipCheckStyle=true -Djava.security.auth.login.config=${PWD}/kafka-junit-core/src/test/resources/jaas.conf
