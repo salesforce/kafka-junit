@@ -85,7 +85,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Define which kafka version -->
-        <kafkaVersion>2.5.1</kafkaVersion>
+        <kafkaVersion>2.7.1</kafkaVersion>
         <kafkaScalaVersion>kafka_2.12</kafkaScalaVersion>
 
         <!-- Define which Curator Test version -->
@@ -96,7 +96,7 @@
 
         <!-- JUnit versions -->
         <junit4.version>4.13</junit4.version>
-        <junit5.version>5.6.2</junit5.version>
+        <junit5.version>5.7.2</junit5.version>
         <junit5PlatformProvider.version>1.3.2</junit5PlatformProvider.version>
 
         <!-- test toggling -->
@@ -106,7 +106,7 @@
 
         <!-- plugin versions -->
         <checkstyle.version>3.1.0</checkstyle.version>
-        <javadoc.version>3.2.0</javadoc.version>
+        <javadoc.version>3.3.0</javadoc.version>
         <surefire.version>2.22.2</surefire.version>
 
         <!-- excluded tests based on specific kafka versions -->
@@ -201,6 +201,7 @@
                         <exclude>**/.md</exclude>
                         <exclude>**/.bak</exclude>
                         <exclude>**.yml</exclude>
+                        <exclude>.github/**</exclude>
                         <exclude>**.yaml</exclude>
                         <exclude>**.xml</exclude>
                         <exclude>**.versionsBackup</exclude>

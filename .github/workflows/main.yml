@@ -1,0 +1,102 @@
+name: CI Test Suite
+
+# Triggers the workflow on pull requests, manually, or pushes to master
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - kafka_version: 0.11.0.3
+            kafka_scala_version: kafka_2.11
+            exclude_kafka_tests: 1_0_x
+
+          - kafka_version: 1.0.2
+            kafka_scala_version: kafka_2.11
+            exclude_kafka_tests: NOT-USED
+
+          - kafka_version: 1.1.1
+            kafka_scala_version: kafka_2.11
+            exclude_kafka_tests: NOT-USED
+
+          - kafka_version: 2.0.1
+            kafka_scala_version: kafka_2.11
+            exclude_kafka_tests: 0_11_0_x
+
+          - kafka_version: 2.1.1
+            kafka_scala_version: kafka_2.11
+            exclude_kafka_tests: 0_11_0_x
+
+          - kafka_version: 2.2.2
+            kafka_scala_version: kafka_2.12
+            exclude_kafka_tests: 0_11_0_x
+
+          - kafka_version: 2.3.1
+            kafka_scala_version: kafka_2.12
+            exclude_kafka_tests: 0_11_0_x
+
+          - kafka_version: 2.4.1
+            kafka_scala_version: kafka_2.12
+            exclude_kafka_tests: 0_11_0_x
+
+          - kafka_version: 2.5.1
+            kafka_scala_version: kafka_2.12
+            exclude_kafka_tests: 0_11_0_x
+
+          - kafka_version: 2.6.2
+            kafka_scala_version: kafka_2.12
+            exclude_kafka_tests: 0_11_0_x
+
+          - kafka_version: 2.7.1
+            kafka_scala_version: kafka_2.12
+            exclude_kafka_tests: 0_11_0_x
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      ## Run tests against Open JDK8
+      - uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 8
+
+      ## Cache maven dependencies
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      
+      ## Generate dummy SSL Certificates used in tests
+      - name: Generate Certificates for Tests
+        run: script/generateCertificatesForTests.sh
+
+      ## Run CheckStyle and License Header checks, compile, and install locally
+      - name: Run checkstyle, license check, compile and install locally
+        env:
+          KAFKA_VERSION: ${{ matrix.kafka_version }}
+          EXCLUDE_KAFKA_TESTS: ${{ matrix.exclude_kafka_tests }}
+        run: mvn clean install -DskipTests=true -DskipCheckStyle=false -Dmaven.javadoc.skip=true -B -V -DkafkaVersion=$KAFKA_VERSION -Dtests.excluded=$EXCLUDE_KAFKA_TESTS
+
+      ## Run test suite
+      - name: Run test suite
+        env:
+          KAFKA_VERSION: ${{ matrix.kafka_version }}
+          KAFKA_SCALA_VERSION: ${{ matrix.kafka_scala_version }}
+          EXCLUDE_KAFKA_TESTS: ${{ matrix.exclude_kafka_tests }}
+        run: mvn test -B -DkafkaVersion=$KAFKA_VERSION -DkafkaScalaVersion=$KAFKA_SCALA_VERSION -Dtests.excluded=$EXCLUDE_KAFKA_TESTS -DskipCheckStyle=true -Djava.security.auth.login.config=${PWD}/kafka-junit-core/src/test/resources/jaas.conf
