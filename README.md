@@ -1,13 +1,11 @@
 # kafka-junit
 
-[![Build Status](https://travis-ci.org/salesforce/kafka-junit.svg?branch=master)](https://travis-ci.org/salesforce/kafka-junit)
-
 This library wraps Apache Kafka's [KafkaServerStartable](https://github.com/apache/kafka/blob/1.1/core/src/main/scala/kafka/server/KafkaServerStartable.scala#L32) class and allows you to easily create and run tests against
 one or more "real" kafka brokers. No longer do you need to setup and coordinate with an external kafka cluster for your tests! The library transparently supports running a single or multi-broker cluster.  Running a multi-broker cluster allows you to validate how your software reacts under various error scenarios, such as when one or more brokers become unavailable.
 
 ## Features
 - Support for JUnit 4 and JUnit 5.
-- Support for all Kafka versions from 0.11.0.x through 2.6.x
+- Support for all Kafka versions from 0.11.0.x through 2.7.x
 - Support for running either single broker cluster, or multi-broker clusters.
 - Support for PLAINTEXT, SASL_PLAINTEXT, SASL_SSL, and SSL listeners.
 
