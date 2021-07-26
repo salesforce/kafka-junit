@@ -32,13 +32,13 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>org.apache.kafka</groupId>
     <artifactId>kafka_2.12</artifactId>
-    <version>2.6.0</version>
+    <version>2.6.2</version>
     <scope>test</scope>
 </dependency>
 <dependency>
     <groupId>org.apache.kafka</groupId>
     <artifactId>kafka-clients</artifactId>
-    <version>2.6.0</version>
+    <version>2.6.2</version>
     <scope>test</scope>
 </dependency>
 ```
