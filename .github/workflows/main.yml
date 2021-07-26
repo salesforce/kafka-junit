@@ -15,6 +15,49 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        include:
+          - kafka_version: 0.11.0.3
+            kafka_scala_version: kafka_2.11
+            exclude_tests: 1_0_x
+
+          - kafka_version: 1.0.2
+            kafka_scala_version: kafka_2.11
+            exclude_tests: NOT-USED
+
+          - kafka_version: 1.1.1
+            kafka_scala_version: kafka_2.11
+            exclude_tests: NOT-USED
+
+          - kafka_version: 2.0.1
+            kafka_scala_version: kafka_2.11
+            exclude_tests: NOT-USED
+
+          - kafka_version: 2.1.1
+            kafka_scala_version: kafka_2.11
+            exclude_tests: NOT-USED
+
+          - kafka_version: 2.2.2
+            kafka_scala_version: kafka_2.12
+            exclude_tests: NOT-USED
+
+          - kafka_version: 2.3.1
+            kafka_scala_version: kafka_2.12
+            exclude_tests: NOT-USED
+
+          - kafka_version: 2.4.1
+            kafka_scala_version: kafka_2.12
+            exclude_tests: NOT-USED
+
+          - kafka_version: 2.5.1
+            kafka_scala_version: kafka_2.12
+            exclude_tests: NOT-USED
+
+          - kafka_version: 2.6.0
+            kafka_scala_version: kafka_2.12
+            exclude_tests: NOT-USED
+
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
