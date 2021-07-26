@@ -106,7 +106,7 @@
 
         <!-- plugin versions -->
         <checkstyle.version>3.1.0</checkstyle.version>
-        <javadoc.version>3.2.0</javadoc.version>
+        <javadoc.version>3.3.0</javadoc.version>
         <surefire.version>2.22.2</surefire.version>
 
         <!-- excluded tests based on specific kafka versions -->
