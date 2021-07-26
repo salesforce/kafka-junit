@@ -201,6 +201,7 @@
                         <exclude>**/.md</exclude>
                         <exclude>**/.bak</exclude>
                         <exclude>**.yml</exclude>
+                        <exclude>.github/**</exclude>
                         <exclude>**.yaml</exclude>
                         <exclude>**.xml</exclude>
                         <exclude>**.versionsBackup</exclude>
