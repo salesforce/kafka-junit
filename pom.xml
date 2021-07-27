@@ -32,7 +32,7 @@
 
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit</artifactId>
-    <version>3.2.2</version>
+    <version>3.2.3</version>
 
     <!-- Submodules -->
     <modules>
@@ -85,8 +85,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Define which kafka version -->
-        <kafkaVersion>2.8.0</kafkaVersion>
-        <kafkaScalaVersion>kafka_2.12</kafkaScalaVersion>
+        <kafkaVersion>0.11.0.3</kafkaVersion>
+        <kafkaScalaVersion>kafka_2.11</kafkaScalaVersion>
 
         <!-- Define which Curator Test version -->
         <curatorTestVersion>2.12.0</curatorTestVersion>
@@ -156,6 +156,14 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>${slf4jVersion}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- API, java.xml.bind module -->
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.3.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
