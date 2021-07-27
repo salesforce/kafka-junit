@@ -287,16 +287,15 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
             // Handle differences between Kafka versions.
             final Class<?> cl = Class.forName("kafka.server.KafkaServer");
             final Time time = Time.SYSTEM;
-            final Option<String> threadNamePrefix = Option.apply("TestServer[" + brokerConfig.get("broker.id") + "]");
+            final Option<String> threadNamePrefix = Option.apply("TestBroker:" + brokerProperties.get("broker.id"));
             try {
-                // kafka_2.12 < 2.8.0
+                // kafka versions < 2.8.0
                 final Constructor<?> constructor = cl.getConstructor(KafkaConfig.class, Time.class, Option.class, Seq.class);
-                final Set<KafkaMetricsReporter> reporters = Collections.emptySet();
                 broker = (KafkaServer) constructor.newInstance(
-                        brokerConfig, time, threadNamePrefix, JavaConverters.asScalaSet(reporters).toSeq()
+                        brokerConfig, time, threadNamePrefix, scala.collection.immutable.Seq$.MODULE$.<KafkaMetricsReporter>empty()
                 );
             } catch (final NoSuchMethodException e) {
-                // kafka_2.12 a>= 2.8.0
+                // kafka versions >= 2.8.0
                 final Constructor<?> constructor = cl.getConstructor(KafkaConfig.class, Time.class, Option.class, boolean.class);
                 broker = (KafkaServer) constructor.newInstance(
                         brokerConfig, time, threadNamePrefix, false
