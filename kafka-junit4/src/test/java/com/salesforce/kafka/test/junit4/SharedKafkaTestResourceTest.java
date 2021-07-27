@@ -88,7 +88,7 @@ public class SharedKafkaTestResourceTest extends AbstractSharedKafkaTestResource
                 }
                 Thread.sleep(1000L);
             } catch (final RuntimeException timeoutException) {
-                // Swallow and retry
+                // Swallow and retry, sometimes times out describing the cluster due to the broker going away
             }
         }
 

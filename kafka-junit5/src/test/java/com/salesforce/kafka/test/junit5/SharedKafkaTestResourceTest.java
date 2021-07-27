@@ -79,11 +79,15 @@ class SharedKafkaTestResourceTest extends AbstractSharedKafkaTestResourceTest {
         List<Node> nodes = Collections.emptyList();
         for (int attempts = 0; attempts <= 5; attempts++) {
             // Describe the cluster and wait for it to go to 1 broker.
-            nodes = getKafkaTestUtils().describeClusterNodes();
-            if (nodes.size() == 1) {
-                break;
+            try {
+                nodes = getKafkaTestUtils().describeClusterNodes();
+                if (nodes.size() == 1) {
+                    break;
+                }
+                Thread.sleep(1000L);
+            } catch (final RuntimeException timeoutException) {
+                // Swallow and retry, sometimes times out describing the cluster due to the broker going away
             }
-            Thread.sleep(1000L);
         }
 
         // We should only have 1 node now, and it should not include broker Id 2.
