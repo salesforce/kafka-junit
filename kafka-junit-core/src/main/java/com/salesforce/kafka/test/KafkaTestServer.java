@@ -27,14 +27,16 @@ package com.salesforce.kafka.test;
 
 import com.salesforce.kafka.test.listeners.BrokerListener;
 import com.salesforce.kafka.test.listeners.PlainListener;
+import kafka.metrics.KafkaMetricsReporter;
 import kafka.server.KafkaConfig;
-import kafka.server.KafkaServerStartable;
+import kafka.server.KafkaServer;
+import org.apache.kafka.common.utils.Time;
+import scala.Option;
+import scala.collection.JavaConverters;
+import scala.collection.Seq;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
+import java.lang.reflect.Constructor;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -53,7 +55,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
     /**
      * Internal Test Kafka service.
      */
-    private KafkaServerStartable broker;
+    private KafkaServer broker;
 
     /**
      * Holds the broker configuration.
@@ -277,8 +279,20 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
             // Retain the brokerConfig.
             brokerConfig = new KafkaConfig(brokerProperties);
 
-            // Create and start kafka service.
-            broker = new KafkaServerStartable(brokerConfig);
+            // Handle differences between Kafka versions.
+            final Class<?> cl = Class.forName("kafka.server.KafkaServer");
+            final Time time = Time.SYSTEM;
+            final Option<String> threadNamePrefix = Option.apply("TestServer[" + brokerConfig.get("broker.id") + "]");
+            try {
+                // kafka_2.12 < 2.8.0
+                final Constructor<?> constructor = cl.getConstructor(KafkaConfig.class, Time.class, Option.class, Seq.class);
+                final Set<KafkaMetricsReporter> reporters = Collections.emptySet();
+                broker = (KafkaServer) constructor.newInstance(brokerConfig, time, threadNamePrefix, JavaConverters.asScalaSet(reporters).toSeq());
+            } catch (final NoSuchMethodException e) {
+                // kafka_2.12 a>= 2.8.0
+                final Constructor<?> constructor = cl.getConstructor(KafkaConfig.class, Time.class, Option.class, boolean.class);
+                broker = (KafkaServer) constructor.newInstance(brokerConfig, time, threadNamePrefix, false);
+            }
         }
         // Start broker.
         broker.startup();
