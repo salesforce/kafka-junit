@@ -99,13 +99,8 @@ jobs:
 
       ## Run test suite
       - name: Run test suite
-        uses: nick-invision/retry@v2.4.0
         env:
           KAFKA_VERSION: ${{ matrix.kafka_version }}
           KAFKA_SCALA_VERSION: ${{ matrix.kafka_scala_version }}
           EXCLUDE_KAFKA_TESTS: ${{ matrix.exclude_kafka_tests }}
-        with:
-          retry_on: error
-          timeout_minutes: 15
-          max_attempts: 3
-          command: mvn test -B -DkafkaVersion=$KAFKA_VERSION -DkafkaScalaVersion=$KAFKA_SCALA_VERSION -Dtests.excluded=$EXCLUDE_KAFKA_TESTS -DskipCheckStyle=true -Djava.security.auth.login.config=${PWD}/kafka-junit-core/src/test/resources/jaas.conf
+        run: mvn test -B -DkafkaVersion=$KAFKA_VERSION -DkafkaScalaVersion=$KAFKA_SCALA_VERSION -Dtests.excluded=$EXCLUDE_KAFKA_TESTS -DskipCheckStyle=true -Djava.security.auth.login.config=${PWD}/kafka-junit-core/src/test/resources/jaas.conf
