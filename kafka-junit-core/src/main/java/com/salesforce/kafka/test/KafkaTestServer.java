@@ -32,7 +32,6 @@ import kafka.server.KafkaConfig;
 import kafka.server.KafkaServer;
 import org.apache.kafka.common.utils.Time;
 import scala.Option;
-import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
 import java.lang.reflect.Constructor;
@@ -41,7 +40,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -284,7 +282,7 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
             // Retain the brokerConfig.
             brokerConfig = new KafkaConfig(brokerProperties);
 
-            // Handle differences between Kafka versions.
+            // Attempt to transparently handle differences between Kafka versions.
             final Class<?> cl = Class.forName("kafka.server.KafkaServer");
             final Time time = Time.SYSTEM;
             final Option<String> threadNamePrefix = Option.apply("TestBroker:" + brokerProperties.get("broker.id"));
@@ -294,12 +292,21 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
                 broker = (KafkaServer) constructor.newInstance(
                         brokerConfig, time, threadNamePrefix, scala.collection.immutable.Seq$.MODULE$.<KafkaMetricsReporter>empty()
                 );
-            } catch (final NoSuchMethodException e) {
-                // kafka versions >= 2.8.0
-                final Constructor<?> constructor = cl.getConstructor(KafkaConfig.class, Time.class, Option.class, boolean.class);
-                broker = (KafkaServer) constructor.newInstance(
-                        brokerConfig, time, threadNamePrefix, false
-                );
+            } catch (final NoSuchMethodException e1) {
+                try {
+                    // kafka versions >= 2.8.0
+                    final Constructor<?> constructor = cl.getConstructor(KafkaConfig.class, Time.class, Option.class, boolean.class);
+                    broker = (KafkaServer) constructor.newInstance(
+                            brokerConfig, time, threadNamePrefix, false
+                    );
+                } catch (final NoSuchMethodException e2) {
+                    // Throw a (hopefully?) more user friendly error message.
+                    throw new RuntimeException(
+                        "Unable to detect version of Kafka provided!\n\n" +
+                        "Please check the documentation at https://github.com/salesforce/kafka-junit/ to ensure you're providing " +
+                        "the appropriate kafka libraries in your project, or if a newer version of the library exists."
+                    );
+                }
             }
         }
         // Start broker.
