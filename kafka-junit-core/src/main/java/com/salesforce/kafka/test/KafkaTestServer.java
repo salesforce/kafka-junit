@@ -302,9 +302,9 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
                 } catch (final NoSuchMethodException e2) {
                     // Throw a (hopefully?) more user friendly error message.
                     throw new RuntimeException(
-                        "Unable to detect version of Kafka provided!\n\n" +
-                        "Please check the documentation at https://github.com/salesforce/kafka-junit/ to ensure you're providing " +
-                        "the appropriate kafka libraries in your project, or if a newer version of the library exists."
+                        "Unable to detect version of Kafka provided!\n\n"
+                        + "Please check the documentation at https://github.com/salesforce/kafka-junit/ to ensure you're providing "
+                        + "the appropriate kafka libraries in your project, or if a newer version of the library exists."
                     );
                 }
             }
