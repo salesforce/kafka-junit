@@ -28,7 +28,6 @@ package com.salesforce.kafka.test.junit4;
 import com.salesforce.kafka.test.KafkaBroker;
 import com.salesforce.kafka.test.KafkaTestUtils;
 import org.apache.kafka.common.Node;
-import org.apache.kafka.common.errors.TimeoutException;
 import org.junit.ClassRule;
 import org.junit.Test;
 
