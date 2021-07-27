@@ -36,7 +36,12 @@ import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
 import java.lang.reflect.Constructor;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -287,11 +292,15 @@ public class KafkaTestServer implements KafkaCluster, KafkaProvider, AutoCloseab
                 // kafka_2.12 < 2.8.0
                 final Constructor<?> constructor = cl.getConstructor(KafkaConfig.class, Time.class, Option.class, Seq.class);
                 final Set<KafkaMetricsReporter> reporters = Collections.emptySet();
-                broker = (KafkaServer) constructor.newInstance(brokerConfig, time, threadNamePrefix, JavaConverters.asScalaSet(reporters).toSeq());
+                broker = (KafkaServer) constructor.newInstance(
+                        brokerConfig, time, threadNamePrefix, JavaConverters.asScalaSet(reporters).toSeq()
+                );
             } catch (final NoSuchMethodException e) {
                 // kafka_2.12 a>= 2.8.0
                 final Constructor<?> constructor = cl.getConstructor(KafkaConfig.class, Time.class, Option.class, boolean.class);
-                broker = (KafkaServer) constructor.newInstance(brokerConfig, time, threadNamePrefix, false);
+                broker = (KafkaServer) constructor.newInstance(
+                        brokerConfig, time, threadNamePrefix, false
+                );
             }
         }
         // Start broker.
