@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright (c) 2017-2020, Salesforce.com, Inc.
+    Copyright (c) 2017-2021, Salesforce.com, Inc.
     All rights reserved.
 
     Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
@@ -32,13 +32,13 @@
     <parent>
         <artifactId>kafka-junit</artifactId>
         <groupId>com.salesforce.kafka.test</groupId>
-        <version>3.2.2</version>
+        <version>3.2.3</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <!-- Module Definition & Version -->
     <artifactId>kafka-junit4</artifactId>
-    <version>3.2.2</version>
+    <version>3.2.3</version>
 
     <!-- defined properties -->
     <properties>
@@ -50,7 +50,7 @@
         <dependency>
             <groupId>com.salesforce.kafka.test</groupId>
             <artifactId>kafka-junit-core</artifactId>
-            <version>3.2.2</version>
+            <version>3.2.3</version>
         </dependency>
 
         <!-- JUnit is Required -->

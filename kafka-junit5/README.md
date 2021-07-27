@@ -24,7 +24,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit5</artifactId>
-    <version>3.2.2</version>
+    <version>3.2.3</version>
     <scope>test</scope>
 </dependency>
 
@@ -52,7 +52,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit5</artifactId>
-    <version>3.2.2</version>
+    <version>3.2.3</version>
     <scope>test</scope>
 </dependency>
 
@@ -81,7 +81,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit5</artifactId>
-    <version>3.2.2</version>
+    <version>3.2.3</version>
     <scope>test</scope>
 </dependency>
 
@@ -110,7 +110,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit5</artifactId>
-    <version>3.2.2</version>
+    <version>3.2.3</version>
     <scope>test</scope>
 </dependency>
 
@@ -139,7 +139,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit5</artifactId>
-    <version>3.2.2</version>
+    <version>3.2.3</version>
     <scope>test</scope>
 </dependency>
 
@@ -168,7 +168,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit5</artifactId>
-    <version>3.2.2</version>
+    <version>3.2.3</version>
     <scope>test</scope>
 </dependency>
 
@@ -197,7 +197,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit5</artifactId>
-    <version>3.2.2</version>
+    <version>3.2.3</version>
     <scope>test</scope>
 </dependency>
 
@@ -226,7 +226,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit5</artifactId>
-    <version>3.2.2</version>
+    <version>3.2.3</version>
     <scope>test</scope>
 </dependency>
 
@@ -255,7 +255,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit5</artifactId>
-    <version>3.2.2</version>
+    <version>3.2.3</version>
     <scope>test</scope>
 </dependency>
 
@@ -285,7 +285,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit5</artifactId>
-    <version>3.2.2</version>
+    <version>3.2.3</version>
     <scope>test</scope>
 </dependency>
 
@@ -315,7 +315,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit5</artifactId>
-    <version>3.2.2</version>
+    <version>3.2.3</version>
     <scope>test</scope>
 </dependency>
 
@@ -344,7 +344,7 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit5</artifactId>
-    <version>3.2.2</version>
+    <version>3.2.3</version>
     <scope>test</scope>
 </dependency>
 

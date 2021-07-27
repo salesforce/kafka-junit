@@ -2,6 +2,13 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.2.3 (07/27/2021)
+### Features
+- Officially added support for Kafka versions 2.7.x, and 2.8.x
+
+### Internal dependency updates
+- JUnit5 from 5.6.2 to 5.7.2
+
 ## 3.2.2 (08/13/2020)
 ### Features
 - [PR-46](https://github.com/salesforce/kafka-junit/pull/46) Officially added support for Kafka versions 2.5.x, 2.6.x.
