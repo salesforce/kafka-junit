@@ -28,6 +28,7 @@ package com.salesforce.kafka.test.junit4;
 import com.salesforce.kafka.test.KafkaBroker;
 import com.salesforce.kafka.test.KafkaTestUtils;
 import org.apache.kafka.common.Node;
+import org.apache.kafka.common.errors.TimeoutException;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -80,11 +81,15 @@ public class SharedKafkaTestResourceTest extends AbstractSharedKafkaTestResource
         List<Node> nodes = Collections.emptyList();
         for (int attempts = 0; attempts <= 5; attempts++) {
             // Describe the cluster and wait for it to go to 1 broker.
-            nodes = getKafkaTestUtils().describeClusterNodes();
-            if (nodes.size() == 1) {
-                break;
+            try {
+                nodes = getKafkaTestUtils().describeClusterNodes();
+                if (nodes.size() == 1) {
+                    break;
+                }
+                Thread.sleep(1000L);
+            } catch (final RuntimeException timeoutException) {
+                // Swallow and retry
             }
-            Thread.sleep(1000L);
         }
 
         // We should only have 1 node now, and it should not include broker Id 2.
