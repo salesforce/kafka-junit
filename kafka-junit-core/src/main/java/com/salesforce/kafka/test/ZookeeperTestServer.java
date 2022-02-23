@@ -29,6 +29,8 @@ import org.apache.curator.test.InstanceSpec;
 import org.apache.curator.test.TestingServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.HashMap;
+import java.util.Map;
 
 import java.io.IOException;
 
@@ -61,15 +63,18 @@ public class ZookeeperTestServer implements AutoCloseable {
         try {
             if (zkServer == null) {
                 // Define configuration
+                final Map<String, Object> customProperties = new HashMap<>();
+                customProperties.put("admin.enableServer", "false");
                 final InstanceSpec zkInstanceSpec = new InstanceSpec(
-                    Utils.createTempDirectory(),
-                    -1,
-                    -1,
-                    -1,
-                    false,
-                    -1,
-                    -1,
-                    1000
+                    Utils.createTempDirectory(), //dataDirectory
+                    -1, //port
+                    -1, //electionPort
+                    -1, //quorumPort
+                    false, //deleteDataDirectoryOnClose
+                    -1, //serverId
+                    -1, //tickTime
+                    1000, //maxClientCnxns
+                    customProperties
                 );
 
                 // Create instance

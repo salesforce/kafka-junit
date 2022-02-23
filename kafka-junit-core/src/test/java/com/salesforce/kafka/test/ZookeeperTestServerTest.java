@@ -34,6 +34,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -52,12 +55,29 @@ class ZookeeperTestServerTest {
 
             // Validate the zookeeper server appears to be functioning.
             testZookeeperConnection(zookeeperTestServer.getConnectString());
+            testZookeeperAdminDisabled();
 
             // Call start again
             zookeeperTestServer.start();
 
             // Validate the zookeeper server appears to be functioning.
             testZookeeperConnection(zookeeperTestServer.getConnectString());
+        }
+    }
+
+    private void testZookeeperAdminDisabled() throws MalformedURLException {
+        final URL adminUrl = new URL("http", "127.0.0.1", 8080,"/stat");
+        try {
+            final HttpURLConnection adminConnection = (HttpURLConnection) adminUrl.openConnection();
+            adminConnection.setRequestMethod("GET");
+            final String responseServer = adminConnection.getHeaderField("Server");
+            final int responseCode = adminConnection.getResponseCode();
+            if (responseServer != null) {
+                Assertions.assertFalse(responseServer.startsWith("Jetty"), "Jetty Server started");
+            }
+            Assertions.fail("Admin Server " + responseServer + " replied with status code " + responseCode);
+        } catch (IOException e) {
+            // Admin Server not started
         }
     }
 
