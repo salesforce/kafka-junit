@@ -54,15 +54,15 @@ jobs:
             kafka_scala_version: kafka_2.12
             exclude_kafka_tests: 0_11_0_x
 
-          - kafka_version: 2.6.2
+          - kafka_version: 2.6.3
             kafka_scala_version: kafka_2.12
             exclude_kafka_tests: 0_11_0_x
 
-          - kafka_version: 2.7.1
+          - kafka_version: 2.7.2
             kafka_scala_version: kafka_2.12
             exclude_kafka_tests: 0_11_0_x
 
-          - kafka_version: 2.8.0
+          - kafka_version: 2.8.1
             kafka_scala_version: kafka_2.12
             exclude_kafka_tests: 0_11_0_x
 

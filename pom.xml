@@ -87,7 +87,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
 
         <!-- Define which kafka version -->
-        <kafkaVersion>2.8.0</kafkaVersion>
+        <kafkaVersion>2.8.1</kafkaVersion>
         <kafkaScalaVersion>kafka_2.12</kafkaScalaVersion>
 
         <!-- Define which Curator Test version -->
