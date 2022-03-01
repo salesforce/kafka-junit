@@ -60,12 +60,7 @@
     <developers>
         <developer>
             <name>Stephen Powis</name>
-            <email>spowis@salesforce.com</email>
-            <organization>Salesforce</organization>
-        </developer>
-        <developer>
-            <name>Stan Lemon</name>
-            <email>slemon@salesforce.com</email>
+            <email>stephen.powis@gmail.com</email>
             <organization>Salesforce</organization>
         </developer>
     </developers>
