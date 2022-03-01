@@ -207,17 +207,9 @@
                 <version>3.0</version>
                 <configuration>
                     <header>LICENSE.txt</header>
-                    <excludes>
-                        <exclude>**/.md</exclude>
-                        <exclude>**/.bak</exclude>
-                        <exclude>**.yml</exclude>
-                        <exclude>.github/**</exclude>
-                        <exclude>**.yaml</exclude>
-                        <exclude>**.xml</exclude>
-                        <exclude>**.versionsBackup</exclude>
-                        <exclude>script/**</exclude>
-                        <exclude>**/resources/**</exclude>
-                    </excludes>
+                    <includes>
+                        <include>**/.java</include>
+                    </includes>
                 </configuration>
                 <executions>
                     <execution>
