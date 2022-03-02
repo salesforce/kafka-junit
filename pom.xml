@@ -32,7 +32,7 @@
 
     <groupId>com.salesforce.kafka.test</groupId>
     <artifactId>kafka-junit</artifactId>
-    <version>3.2.3</version>
+    <version>3.2.4</version>
 
     <!-- Submodules -->
     <modules>
@@ -60,12 +60,7 @@
     <developers>
         <developer>
             <name>Stephen Powis</name>
-            <email>spowis@salesforce.com</email>
-            <organization>Salesforce</organization>
-        </developer>
-        <developer>
-            <name>Stan Lemon</name>
-            <email>slemon@salesforce.com</email>
+            <email>stephen.powis@gmail.com</email>
             <organization>Salesforce</organization>
         </developer>
     </developers>
@@ -87,18 +82,18 @@
         <maven.compiler.source>1.8</maven.compiler.source>
 
         <!-- Define which kafka version -->
-        <kafkaVersion>2.8.0</kafkaVersion>
+        <kafkaVersion>2.8.1</kafkaVersion>
         <kafkaScalaVersion>kafka_2.12</kafkaScalaVersion>
 
         <!-- Define which Curator Test version -->
         <curatorTestVersion>2.12.0</curatorTestVersion>
 
         <!-- For logging in tests -->
-        <slf4jVersion>1.7.30</slf4jVersion>
+        <slf4jVersion>1.7.36</slf4jVersion>
 
         <!-- JUnit versions -->
-        <junit4.version>4.13</junit4.version>
-        <junit5.version>5.7.2</junit5.version>
+        <junit4.version>4.13.2</junit4.version>
+        <junit5.version>5.8.2</junit5.version>
         <junit5PlatformProvider.version>1.3.2</junit5PlatformProvider.version>
 
         <!-- test toggling -->
@@ -207,17 +202,9 @@
                 <version>3.0</version>
                 <configuration>
                     <header>LICENSE.txt</header>
-                    <excludes>
-                        <exclude>**/.md</exclude>
-                        <exclude>**/.bak</exclude>
-                        <exclude>**.yml</exclude>
-                        <exclude>.github/**</exclude>
-                        <exclude>**.yaml</exclude>
-                        <exclude>**.xml</exclude>
-                        <exclude>**.versionsBackup</exclude>
-                        <exclude>script/**</exclude>
-                        <exclude>**/resources/**</exclude>
-                    </excludes>
+                    <includes>
+                        <include>**/.java</include>
+                    </includes>
                 </configuration>
                 <executions>
                     <execution>
