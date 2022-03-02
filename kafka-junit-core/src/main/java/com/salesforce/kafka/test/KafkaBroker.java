@@ -42,6 +42,10 @@ public class KafkaBroker {
         this.kafkaTestServer = kafkaTestServer;
     }
 
+    /**
+     * Returns the id associated with this broker.
+     * @return id of the broker.
+     */
     public int getBrokerId() {
         return kafkaTestServer.getBrokerId();
     }

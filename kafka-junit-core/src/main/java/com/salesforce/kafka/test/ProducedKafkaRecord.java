@@ -79,22 +79,42 @@ public class ProducedKafkaRecord<K, V> {
         );
     }
 
+    /**
+     * Which topic the record was written onto.
+     * @return Topic the record was written onto.
+     */
     public String getTopic() {
         return topic;
     }
 
+    /**
+     * Which partition the record was written onto.
+     * @return Partition the record was written onto.
+     */
     public int getPartition() {
         return partition;
     }
 
+    /**
+     * The offset the record was written into.
+     * @return Offset of the produced record.
+     */
     public long getOffset() {
         return offset;
     }
 
+    /**
+     * The key of the produced record.
+     * @return Key of the produced record.
+     */
     public K getKey() {
         return key;
     }
 
+    /**
+     * The value of the produced record.
+     * @return Value of the produced record.
+     */
     public V getValue() {
         return value;
     }

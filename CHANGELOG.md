@@ -2,6 +2,8 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.2.5 (UNRELEASED)
+
 ## 3.2.4 (03/01/2022)
 ### Bugfixes
 - [ISSUE-49](https://github.com/salesforce/kafka-junit/issues/49) [PR-63](https://github.com/salesforce/kafka-junit/pull/63) Zookeeper AdminServer will no longer be started.  This allows for more easily running tests in parallel.  Thanks [@gquintana](https://github.com/gquintana) for the contribution!
