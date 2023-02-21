@@ -3,6 +3,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 3.2.5 (UNRELEASED)
+- Add official support for Kafka versions 3.0.x through 3.4.x
+
 ### Internal dependency updates
 - JUnit5 from 5.8.2 to 5.9.2
 - Fix CI Build scripts
