@@ -57,7 +57,7 @@ rm $CA_CERT_FILE
 keytool -keystore $KEYSTORE_WORKING_DIRECTORY/$KEYSTORE_FILENAME -alias localhost -import \
   -file $KEYSTORE_SIGNED_CERT -storepass password -keypass password
 
-rm $KEYSTORE_SIGN_REQUEST_SRL
+rm -f $KEYSTORE_SIGN_REQUEST_SRL
 rm $KEYSTORE_SIGN_REQUEST
 rm $KEYSTORE_SIGNED_CERT
 rm $trust_store_private_key_file
