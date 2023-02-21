@@ -28,6 +28,7 @@ package com.salesforce.kafka.test.kafka_1_0_x;
 import com.salesforce.kafka.test.KafkaTestServer;
 import com.salesforce.kafka.test.KafkaTestUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
@@ -79,7 +80,10 @@ class StreamsBuilderSmokeTest {
             final Properties config = new Properties();
             config.put(StreamsConfig.APPLICATION_ID_CONFIG, "testStreamProcessor");
             config.setProperty(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaTestServer.getKafkaConnectString());
+            config.put("default.key.serde", Serdes.String().getClass().getName());
+            config.put("default.value.serde", Serdes.String().getClass().getName());
             config.put("group.id", "test-stream-group");
+
             config.put("auto.offset.reset", "earliest");
 
             // Build the stream
@@ -104,11 +108,16 @@ class StreamsBuilderSmokeTest {
                 kafkaStreams.start();
 
                 // Since stream processing is async, we need to wait for the Stream processor to start, consume messages
-                // from the input topic, and process them. We'll wait for Wait for it to do its thing up to 10 seconds.
-                for (int timeoutCounter = 0; timeoutCounter <= 10; timeoutCounter++) {
+                // from the input topic, and process them. We'll wait for it to do its thing up to 20 seconds.
+                for (int timeoutCounter = 0; timeoutCounter <= 20; timeoutCounter++) {
                     // If we've processed all of our records
                     if (recordCounter.get() >= numberOfRecords) {
                         // Break out of sleep loop.
+                        break;
+                    }
+
+                    // If we've shutdown.
+                    if (kafkaStreams.state().hasCompletedShutdown()) {
                         break;
                     }
                     // Otherwise, we need to wait longer, sleep 1 second.
