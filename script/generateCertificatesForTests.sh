@@ -5,15 +5,15 @@ cd "$(dirname "$0")"
 
 set -e
 
-export KEYSTORE_FILENAME="kafka.keystore.jks"
-export VALIDITY_IN_DAYS=3650
-export DEFAULT_TRUSTSTORE_FILENAME="kafka.truststore.jks"
-export TRUSTSTORE_WORKING_DIRECTORY="generated/truststore"
-export KEYSTORE_WORKING_DIRECTORY="generated/keystore"
-export CA_CERT_FILE="ca-cert"
-export KEYSTORE_SIGN_REQUEST="cert-file"
-export KEYSTORE_SIGN_REQUEST_SRL="ca-cert.srl"
-export KEYSTORE_SIGNED_CERT="cert-signed"
+KEYSTORE_FILENAME="kafka.keystore.jks"
+VALIDITY_IN_DAYS=3650
+DEFAULT_TRUSTSTORE_FILENAME="kafka.truststore.jks"
+TRUSTSTORE_WORKING_DIRECTORY="generated/truststore"
+KEYSTORE_WORKING_DIRECTORY="generated/keystore"
+CA_CERT_FILE="ca-cert"
+KEYSTORE_SIGN_REQUEST="cert-file"
+KEYSTORE_SIGN_REQUEST_SRL="ca-cert.srl"
+KEYSTORE_SIGNED_CERT="cert-signed"
 
 rm -rf generated
 mkdir -p $TRUSTSTORE_WORKING_DIRECTORY
