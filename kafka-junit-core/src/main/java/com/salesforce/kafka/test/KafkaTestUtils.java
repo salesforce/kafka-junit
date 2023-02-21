@@ -138,6 +138,7 @@ public class KafkaTestUtils {
 
         return kafkaRecords;
     }
+
     /**
      * Produce some records into the defined kafka topic.
      *
@@ -147,13 +148,13 @@ public class KafkaTestUtils {
      * @return List of ProducedKafkaRecords.
      */
     public List<ProducedKafkaRecord<byte[], byte[]>> produceRecords(
-            final Map<byte[], byte[]> keysAndValues,
-            final String topicName,
-            final int partitionId
+        final Map<byte[], byte[]> keysAndValues,
+        final String topicName,
+        final int partitionId
     ) {
         return produceRecords( keysAndValues.entrySet().stream()
-                .map(entry -> new ProducerRecord<>(topicName, partitionId, entry.getKey(), entry.getValue()))
-                .collect(Collectors.toList())
+            .map(entry -> new ProducerRecord<>(topicName, partitionId, entry.getKey(), entry.getValue()))
+            .collect(Collectors.toList())
         );
     }
 
@@ -171,14 +172,14 @@ public class KafkaTestUtils {
         final int partitionId
     ) {
         return produceRecords(IntStream.range(0, numberOfRecords)
-                .mapToObj(index -> {
-                    // Construct key and value generating random & unique data
-                    final long timeStamp = Clock.systemUTC().millis();
-                    final byte[] key = ("key" + timeStamp).getBytes(StandardCharsets.UTF_8);
-                    final byte[] value = ("value" + timeStamp).getBytes(StandardCharsets.UTF_8);
-                    return new ProducerRecord<>(topicName, partitionId, key, value);
-                })
-                .collect(Collectors.toList())
+            .mapToObj(index -> {
+                // Construct key and value generating random & unique data
+                final long timeStamp = Clock.systemUTC().millis();
+                final byte[] key = ("key" + timeStamp).getBytes(StandardCharsets.UTF_8);
+                final byte[] value = ("value" + timeStamp).getBytes(StandardCharsets.UTF_8);
+                return new ProducerRecord<>(topicName, partitionId, key, value);
+            })
+            .collect(Collectors.toList())
         );
     }
 
