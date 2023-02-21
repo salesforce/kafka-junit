@@ -3,6 +3,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 3.2.5 (UNRELEASED)
+### Internal dependency updates
+- JUnit5 from 5.8.2 to 5.9.2
+- Fix CI Build scripts
 
 ## 3.2.4 (03/01/2022)
 ### Bugfixes
