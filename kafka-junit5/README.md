@@ -5,7 +5,7 @@ one or more "real" kafka brokers running within your tests. No longer do you nee
 
 Kafka-JUnit5 is built on-top of **JUnit 5** as an Extension using the **@RegisterExtension** annotation.
 
-Kafka-JUnit5 works with all Kafka versions from **0.11.0.x** through **2.8.x**. The library requires your project to explicitly declare/include Kafka in your project's POM dependency list.
+Kafka-JUnit5 works with all Kafka versions from **0.11.0.x** through **3.4.x**. The library requires your project to explicitly declare/include Kafka in your project's POM dependency list.
 
 For usage with JUnit4 or more general project information please review top level [README](../README.md). 
 
@@ -14,6 +14,151 @@ For usage with JUnit4 or more general project information please review top leve
 ### Usage & Examples
 
 Include this library in your project's POM with test scope.  **You'll also need to include the appropriate Kafka libraries you want to test against.**
+
+<details>
+  <summary>Example POM using Kafka 3.4.x</summary>
+
+#### Example POM using Kafka 3.4.x
+```xml
+<!-- Declare kafka-junit5 dependency -->
+<dependency>
+    <groupId>com.salesforce.kafka.test</groupId>
+    <artifactId>kafka-junit5</artifactId>
+    <version>3.2.3</version>
+    <scope>test</scope>
+</dependency>
+
+<!-- Include Kafka 3.4.x -->
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka_2.12</artifactId>
+    <version>3.4.0</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka-clients</artifactId>
+    <version>3.4.0</version>
+    <scope>test</scope>
+</dependency>
+```
+</details>
+
+<details>
+  <summary>Example POM using Kafka 3.3.x</summary>
+
+#### Example POM using Kafka 3.3.x
+```xml
+<!-- Declare kafka-junit5 dependency -->
+<dependency>
+    <groupId>com.salesforce.kafka.test</groupId>
+    <artifactId>kafka-junit5</artifactId>
+    <version>3.2.3</version>
+    <scope>test</scope>
+</dependency>
+
+<!-- Include Kafka 3.3.x -->
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka_2.12</artifactId>
+    <version>3.3.2</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka-clients</artifactId>
+    <version>3.3.2</version>
+    <scope>test</scope>
+</dependency>
+```
+</details>
+
+<details>
+  <summary>Example POM using Kafka 3.2.x</summary>
+
+#### Example POM using Kafka 3.2.x
+```xml
+<!-- Declare kafka-junit5 dependency -->
+<dependency>
+    <groupId>com.salesforce.kafka.test</groupId>
+    <artifactId>kafka-junit5</artifactId>
+    <version>3.2.3</version>
+    <scope>test</scope>
+</dependency>
+
+<!-- Include Kafka 3.2.x -->
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka_2.12</artifactId>
+    <version>3.2.3</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka-clients</artifactId>
+    <version>3.2.3</version>
+    <scope>test</scope>
+</dependency>
+```
+</details>
+
+<details>
+  <summary>Example POM using Kafka 3.1.x</summary>
+
+#### Example POM using Kafka 3.1.x
+```xml
+<!-- Declare kafka-junit5 dependency -->
+<dependency>
+    <groupId>com.salesforce.kafka.test</groupId>
+    <artifactId>kafka-junit5</artifactId>
+    <version>3.2.3</version>
+    <scope>test</scope>
+</dependency>
+
+<!-- Include Kafka 3.1.x -->
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka_2.12</artifactId>
+    <version>3.1.2</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka-clients</artifactId>
+    <version>3.1.2</version>
+    <scope>test</scope>
+</dependency>
+```
+</details>
+
+<details>
+  <summary>Example POM using Kafka 3.0.x</summary>
+
+#### Example POM using Kafka 3.0.x
+```xml
+<!-- Declare kafka-junit5 dependency -->
+<dependency>
+    <groupId>com.salesforce.kafka.test</groupId>
+    <artifactId>kafka-junit5</artifactId>
+    <version>3.2.3</version>
+    <scope>test</scope>
+</dependency>
+
+<!-- Include Kafka 3.0.x -->
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka_2.12</artifactId>
+    <version>3.0.2</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.apache.kafka</groupId>
+    <artifactId>kafka-clients</artifactId>
+    <version>3.0.2</version>
+    <scope>test</scope>
+</dependency>
+```
+</details>
 
 <details>
   <summary>Example POM using Kafka 2.8.x</summary>
@@ -32,13 +177,13 @@ Include this library in your project's POM with test scope.  **You'll also need 
 <dependency>
     <groupId>org.apache.kafka</groupId>
     <artifactId>kafka_2.12</artifactId>
-    <version>2.8.1</version>
+    <version>2.8.2</version>
     <scope>test</scope>
 </dependency>
 <dependency>
     <groupId>org.apache.kafka</groupId>
     <artifactId>kafka-clients</artifactId>
-    <version>2.8.1</version>
+    <version>2.8.2</version>
     <scope>test</scope>
 </dependency>
 ```
