@@ -65,6 +65,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * A collection of re-usable patterns for interacting with embedded Kafka server.
@@ -89,15 +90,11 @@ public class KafkaTestUtils {
     /**
      * Produce some records into the defined kafka topic.
      *
-     * @param keysAndValues Records you want to produce.
-     * @param topicName the topic to produce into.
-     * @param partitionId the partition to produce into.
+     * @param records Records to produce
      * @return List of ProducedKafkaRecords.
      */
     public List<ProducedKafkaRecord<byte[], byte[]>> produceRecords(
-        final Map<byte[], byte[]> keysAndValues,
-        final String topicName,
-        final int partitionId
+        final Collection<ProducerRecord<byte[], byte[]>> records
     ) {
         // Defines customized producer properties.  Ensure data written to all ISRs.
         final Properties producerProperties = new Properties();
@@ -114,11 +111,7 @@ public class KafkaTestUtils {
             ByteArraySerializer.class,
             producerProperties
         )) {
-            for (final Map.Entry<byte[], byte[]> entry: keysAndValues.entrySet()) {
-                // Construct filter
-                final ProducerRecord<byte[], byte[]> record
-                    = new ProducerRecord<>(topicName, partitionId, entry.getKey(), entry.getValue());
-
+            for (ProducerRecord<byte[], byte[]> record: records) {
                 producedRecords.add(record);
 
                 // Send it.
@@ -133,7 +126,7 @@ public class KafkaTestUtils {
         // Loop thru the futures, and build KafkaRecord objects
         final List<ProducedKafkaRecord<byte[], byte[]>> kafkaRecords = new ArrayList<>();
         try {
-            for (int x = 0; x < keysAndValues.size(); x++) {
+            for (int x = 0; x < records.size(); x++) {
                 final RecordMetadata metadata = producerFutures.get(x).get();
                 final ProducerRecord<byte[], byte[]> producerRecord = producedRecords.get(x);
 
@@ -144,6 +137,24 @@ public class KafkaTestUtils {
         }
 
         return kafkaRecords;
+    }
+    /**
+     * Produce some records into the defined kafka topic.
+     *
+     * @param keysAndValues Records you want to produce.
+     * @param topicName the topic to produce into.
+     * @param partitionId the partition to produce into.
+     * @return List of ProducedKafkaRecords.
+     */
+    public List<ProducedKafkaRecord<byte[], byte[]>> produceRecords(
+            final Map<byte[], byte[]> keysAndValues,
+            final String topicName,
+            final int partitionId
+    ) {
+        return produceRecords( keysAndValues.entrySet().stream()
+                .map(entry -> new ProducerRecord<>(topicName, partitionId, entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList())
+        );
     }
 
     /**
@@ -159,20 +170,16 @@ public class KafkaTestUtils {
         final String topicName,
         final int partitionId
     ) {
-        final Map<byte[], byte[]> keysAndValues = new HashMap<>();
-
-        // Generate random & unique data
-        for (int index = 0; index < numberOfRecords; index++) {
-            // Construct key and value
-            final long timeStamp = Clock.systemUTC().millis();
-            final String key = "key" + timeStamp;
-            final String value = "value" + timeStamp;
-
-            // Add to map
-            keysAndValues.put(key.getBytes(StandardCharsets.UTF_8), value.getBytes(StandardCharsets.UTF_8));
-        }
-
-        return produceRecords(keysAndValues, topicName, partitionId);
+        return produceRecords(IntStream.range(0, numberOfRecords)
+                .mapToObj(index -> {
+                    // Construct key and value generating random & unique data
+                    final long timeStamp = Clock.systemUTC().millis();
+                    final byte[] key = ("key" + timeStamp).getBytes(StandardCharsets.UTF_8);
+                    final byte[] value = ("value" + timeStamp).getBytes(StandardCharsets.UTF_8);
+                    return new ProducerRecord<>(topicName, partitionId, key, value);
+                })
+                .collect(Collectors.toList())
+        );
     }
 
     /**
