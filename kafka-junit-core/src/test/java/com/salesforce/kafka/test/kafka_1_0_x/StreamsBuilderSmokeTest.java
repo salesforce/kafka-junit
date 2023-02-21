@@ -80,10 +80,9 @@ class StreamsBuilderSmokeTest {
             final Properties config = new Properties();
             config.put(StreamsConfig.APPLICATION_ID_CONFIG, "testStreamProcessor");
             config.setProperty(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaTestServer.getKafkaConnectString());
-            config.put("default.key.serde", Serdes.String().getClass().getName());
-            config.put("default.value.serde", Serdes.String().getClass().getName());
+            config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
+            config.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
             config.put("group.id", "test-stream-group");
-
             config.put("auto.offset.reset", "earliest");
 
             // Build the stream
@@ -116,10 +115,6 @@ class StreamsBuilderSmokeTest {
                         break;
                     }
 
-                    // If we've shutdown.
-                    if (kafkaStreams.state().hasCompletedShutdown()) {
-                        break;
-                    }
                     // Otherwise, we need to wait longer, sleep 1 second.
                     Thread.sleep(1000L);
                 }
