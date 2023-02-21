@@ -2,6 +2,8 @@
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.2.6 (UNRELEASED)
+
 ## 3.2.5 (02/21/2023)
 - Add official support for Kafka versions 3.0.x through 3.4.x
 - [gquintana](https://github.com/gquintana) added the following method to  `KafkaTestUtils` to allow for additional control over the records being produced.
