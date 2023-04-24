@@ -86,7 +86,7 @@
         <kafkaScalaVersion>kafka_2.12</kafkaScalaVersion>
 
         <!-- Define which Curator Test version -->
-        <curatorTestVersion>2.12.0</curatorTestVersion>
+        <curatorTestVersion>4.3.0</curatorTestVersion>
 
         <!-- For logging in tests -->
         <slf4jVersion>1.7.36</slf4jVersion>
