@@ -73,8 +73,7 @@ public class ZookeeperTestServer implements AutoCloseable {
                     false, //deleteDataDirectoryOnClose
                     -1, //serverId
                     -1, //tickTime
-                    1000, //maxClientCnxns
-                    customProperties
+                    1000 //maxClientCnxns
                 );
 
                 // Create instance

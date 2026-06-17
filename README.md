@@ -5,7 +5,7 @@ one or more "real" kafka brokers. No longer do you need to setup and coordinate 
 
 ## Features
 - Support for JUnit 4 and JUnit 5.
-- Support for all Kafka versions from 0.11.0.x through 3.4.x
+- Support for all Kafka versions from 0.11.0.x through 3.8.x
 - Support for running either single broker cluster, or multi-broker clusters.
 - Support for PLAINTEXT, SASL_PLAINTEXT, SASL_SSL, and SSL listeners.
 
@@ -73,4 +73,3 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## License
 
 BSD 3-Clause [View License](LICENSE.txt).
- 

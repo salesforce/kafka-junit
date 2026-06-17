@@ -4,6 +4,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 3.2.6 (UNRELEASED)
 
+- Add support for JDK21
+- Add official support for Kafka versions 3.5.x through 3.8.x
+- Kafka Scala version from kafka_2.12 to kafka_2.13
+- JUnit5 from 5.9.2 to 5.11.0
+- Apache Curator from 2.12.0 to 5.7.0
+
 ## 3.2.5 (02/21/2023)
 - Add official support for Kafka versions 3.0.x through 3.4.x
 - [gquintana](https://github.com/gquintana) added the following method to  `KafkaTestUtils` to allow for additional control over the records being produced.
